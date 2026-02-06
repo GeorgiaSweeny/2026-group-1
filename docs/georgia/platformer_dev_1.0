@@ -1,0 +1,178 @@
+/*
+========================================
+VERSION: 1.0
+SYSTEM: Player / Movement / Physics
+AUTHOR: Georgia Sweeny
+DESCRIPTION:
+- Basic implementation of player movement WAD (jump, left/right)
+- Physics for jump and basic collisions for top of platforms and ground
+========================================
+NOTES:
+- I followed Jason Erdreich's Retro Platformer Tutorial up to basic surface collisions - part 4
+- (https://youtube.com/playlist?list=PLBDInqUM5B26FjwMMZqGDxqQr1kX5V9Ul&si=14_vdmdTRlw1TKSw)
+- I then optimised and reworked the code to follow a more Engine-Style code structure.
+- Player cannot currently hit bottom or sides of platforms
+- Plan to add full box bounds and double jump. Will update with new features/fixes.
+========================================
+*/
+
+//---global---//
+
+//game state
+var state = 0; //tracks game state to run
+
+//gravity 
+var fallSpeed = 2;
+var minHeight = 429; //height of ground
+
+//player (object)
+var player = {
+  //cooridnates
+  x: 400,
+  y: 10,
+  //dimensions
+  w: 30,
+  h: 70,
+  //vertical velocity
+  vy: 2,
+  //jumpHeight ≈ (jumpPower²) / (2 * fallSpeed)
+  jumpPower: 25, //clears 144 pixels by 12th frame then falls
+  
+  onGround: false
+};
+
+
+//platforms (objects)
+var platforms = [
+  { x: 200, y: 400, w: 200, h: 32 },
+  //this block is 144px/max jump height above 1st
+  { x: 350, y: 256, w: 32, h: 32 }, 
+  { x: 505, y: 156, w: 32, h: 32 }
+];
+
+
+//---setup---//
+function setup() {
+  createCanvas(800, 512); //screen size
+  rectMode(CENTER);
+  textSize(20);
+  textAlign(LEFT);
+}
+
+//---draw---//
+function draw() {
+  //call functions
+  applyGravity();
+  keyIsDownMovement();
+  
+  //game state
+  if(state === 0){
+    game();
+  }
+  
+}
+
+//---game: state 0---//
+function game() {
+  
+  //appearence
+  background(150, 230, 240); //sky blue
+  //grass
+  stroke(150, 250, 125);
+  fill(100, 200, 75); //green
+  rect(width/2, 512, width, 96);
+  //window frame
+  noFill();
+  stroke(0);
+  strokeWeight(15);
+  rect(width/2, height/2, width, height);
+  
+  //instructions
+  strokeWeight(2);
+  fill(255);
+  text('A/D: Left/Right\nW: Jump', 16, 32);
+  describe('The text "A/D: Left/Right W: Jump" written in white');
+  
+  stroke(0);
+  line(155, 250, 155, 375)
+  strokeWeight(1);
+  fill(255, 0, 0);
+  text('Max jump height ->', 150, 240);
+  
+  text('<- GOAL\nThis one is tricky ;)', 550, 140);
+  
+  //draw platforms
+  stroke(230, 130, 0);
+  strokeWeight(5);
+  fill(250, 180, 0); //yellow
+  for (let i = 0; i < platforms.length; i++) {
+    rect(platforms[i].x, platforms[i].y, 
+         platforms[i].w, platforms[i].h)
+  }
+  
+  //draw player
+  stroke(150, 0, 170);
+  fill(180, 0, 200); //purple
+  rect(player.x, player.y, player.w, player.h);
+}
+
+//---physics---//
+
+//collision check
+function isLandingOnPlatform(player, platform) {
+  return (
+    player.x + player.w / 2 > platform.x - platform.w / 2 &&
+    player.x - player.w / 2 < platform.x + platform.w / 2 &&
+    player.y + player.h / 2 >= platform.y - platform.h / 2 &&
+    player.y + player.h / 2 <= platform.y - platform.h / 2 + player.vy &&
+    player.vy > 0
+  );
+}
+
+//gravity
+function applyGravity(){
+  player.onGround = false;
+  
+  //apply gravity
+  player.vy += fallSpeed;
+  player.y += player.vy;
+
+  // ground collision
+  if (player.y >= minHeight) {
+    player.y = minHeight;
+    player.vy = 0;
+    player.onGround = true;
+  }
+  
+  //platform collisions
+  for (let p of platforms) {
+    if (isLandingOnPlatform(player, p)) {
+      player.y = p.y - p.h / 2 - player.h / 2;
+      player.vy = 0;
+      player.onGround = true;
+      break;
+    }
+  }
+}
+
+//---playerControls---//
+
+//movement: jump
+function keyPressed() {
+  if((key === 'w' || key === 'W') && player.onGround) {
+    player.vy = -player.jumpPower;
+    player.jumpCounter = 0;
+    player.onGround = false;
+  }
+}
+
+//movement: left/right
+function keyIsDownMovement(){
+  
+  if(keyIsDown(65)) { 
+    player.x -= 5; //A: move left
+  }
+  if(keyIsDown(68)) {
+    player.x += 5; //D: move right
+  }
+}
