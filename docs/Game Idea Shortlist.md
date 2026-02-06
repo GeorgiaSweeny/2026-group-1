@@ -44,9 +44,10 @@
     Higher levels - Introduction of  Currents, water that pushes player into walls
 
 **Metroidvania Style Echolocation Game**
+    (Georgia Sweeny)
     
     ## Game Pitch 🔊🗺️
-    (Georgia Sweeny)
+    
     **Style:**
     
     - [**Metroidvania](https://www.google.com/search?sca_esv=f2c259abd1bdf684&sxsrf=ANbL-n6rl62eVKMWB0w4A3mvdJ1UO80R4g%3A1769746593742&q=Metroidvania&sa=X&ved=2ahUKEwja2b_os7KSAxW9QEEAHa_nAqAQxccNegQIPBAB&mstk=AUtExfAQrleS-4oEbHE7xOBupJGTLfDwD9stetvmUAkPy7RzTyN0Ab-uL0VKUdSYoB5jf3uOliRZ6BPcVX9--RX5OqIUHuKss-MBKDQUQK8fwTooPh6spHMVyA92hYputWQB8rDpwfURwTHmek4bNJELrMuryPITTNI-hCp2krWNuo4INmlpm1Zg-GC5ccGA-OQeTOUG7F20ROq06n4SNOJ-dW0-OtbxPdrylAAh7rU7B11FUJ18et1U-9mRQM_TDbLuXaKBZpqiKjK395Ms6bz2DB8X&csui=3):** Large, non-linear map that opens up as you gain new traversal abilities (e.g., double jump, wall climb).
