@@ -47,6 +47,10 @@ GROUP PHOTO. Add a group photo here.
 - 5% ~250 words 
 - Describe your game, what is based on, what makes it novel? (what's the "twist"?) 
 
+### Paper Prototype 
+![Descriptive Alt Text](docs/paper-prototype/FlappyBird.gif)
+
+
 ### Requirements 
 
 - 15% ~750 words
