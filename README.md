@@ -49,6 +49,7 @@ GROUP PHOTO. Add a group photo here.
 
 ### Paper Prototype 
 ![Descriptive Alt Text](docs/paper-prototype/FlappyBird.gif)
+![Descriptive Alt Text](docs/paper-prototype/SubGame.gif)
 
 
 ### Requirements 
