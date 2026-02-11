@@ -25,7 +25,17 @@ IMAGE. Add an image of your game here, keep this updated with a snapshot of your
 
 LINK. Add a link here to your deployed game, you can also make the image above link to your game if you wish. Your game lives in the [/docs](/docs) folder, and is published using Github pages. 
 
-VIDEO. Include a demo video of your game here (you don't have to wait until the end, you can insert a work in progress video)
+**DEMO v2.3** *(11/02/26)*
+
+
+
+https://github.com/user-attachments/assets/7f6a8c2a-c20e-4220-b267-f1d39c76ae9f
+
+
+
+
+
+
 
 ## Group 1
 
