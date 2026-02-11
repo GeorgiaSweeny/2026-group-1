@@ -2,7 +2,7 @@
 
 *(UPDATED: 11/02/26)*
 
-The LightingSystem was extracted from the RenderSystem to reduce coupling between visual masking logic and drawing logic. This improves modularity, allows independent testing of visibility behaviour, and supports incremental development of the sonar mechanic without destabilising rendering.
+The SonarSystem, RoomSystem, CameraSystem, and EnemySystem were added, and the LightingSystem was separated from the RenderSystem. These changes improve modularity, clarify system responsibilities, and allow independent development of sonar, lighting, and enemy mechanics without affecting core rendering or player movement logic.
 
 ## Overview
 
@@ -20,21 +20,40 @@ The most up to date *non-modular* version of this project that will run on the w
 
 ```
 
-InputSystem       → intent
-PlayerSystem      → apply intent
-PhysicsSystem     → resolve motion
-ResourceSystem    → manage power drain & replenishment
-TorchSystem       → torch state & power usage
-LightingSystem    → visibility rules & masking
-RenderSystem      → draw visible state
-Engine            → orchestrates
+InputSystem        → intent
+PlayerSystem       → apply intent (movement + jump)
+PhysicsSystem      → resolve motion & collisions
+ResourceSystem     → manage power drain & replenishment
+TorchSystem        → torch state & power usage
+SonarSystem        → pulse logic & detection + alerts
+RoomSystem         → current room state & transitions
+CameraSystem       → viewport tracking & clamping
+LightingSystem     → visibility rules & masking
+EnemySystem        → AI movement & reactions
+RenderSystem       → draw visible state
+Engine             → orchestrates
 
 ```
 **Key Separation:**
-- LightingSystem decides what is visible
-- RenderSystem decides how it is drawn
-- 
-This prevents lighting logic from contaminating drawing logic.
+**LightingSystem** decides what is visible this frame (torch + sonar).
+
+**RenderSystem** decides how everything is drawn based on visibility and camera offset.
+
+**CameraSystem** decides what portion of the world is in view.
+
+**RoomSystem** decides which room/world data is currently active.
+
+**SonarSystem** decides what tiles/entities are revealed and alerts enemies.
+
+**EnemySystem** decides enemy movement, behaviour, and reactions to player actions.
+
+This prevents:
+
+- Lighting logic contaminating drawing logic.
+
+- World / room logic interfering with rendering.
+
+- Enemy AI / sonar logic interfering with core physics or player control.
 
 ---
 
@@ -52,17 +71,23 @@ This prevents lighting logic from contaminating drawing logic.
 |                                      darknessLayer, input bridge
 ├─ /gameEngine
 │   └─ engine.js          # Engine class, runs update loop, registers systems
+|
 ├─ /systems               # Modular game systems
 │   ├─ inputSystem.js     # Handles input logic, sets player.intent
 │   ├─ playerSystem.js    # Applies input intent to player (movement/jump)
 │   ├─ physicsSystem.js   # Gravity, collisions, landing checks
 │   ├─ torchSystem.js     # Torch behaviour, flicker, power drain
-|   ├─lightingSystem.js   # Handles visibility rules & masking logic 
-│   └─ renderSystem.js    # Draws everything: background, platforms, player,
-|                                             torch, UI
+│   ├─ sonarSystem.js     # Handles sonar pulses & detection data
+│   ├─ enemySystem.js     # Updates enemies and AI reactions
+│   ├─ roomSystem.js      # Manages current room & transitions
+│   ├─ cameraSystem.js    # Controls viewport follow & bounds clamp
+│   ├─ lightingSystem.js  # Handles visibility rules & masking logic 
+│   └─ renderSystem.js    # Draws background, platforms, player, torch, enemies, UI
+|
 ├─ /entities              # Optional: reusable classes
 │   ├─ player.js          # Player class / data structure
-│   └─ torch.js           # Torch class
+|   ├─ torch.js           # Torch class
+│   └─ room.js            # Room objects
 |          
 ├─ /assets                # Images, sprites, sounds
 │   ├─/images
@@ -94,9 +119,13 @@ This prevents lighting logic from contaminating drawing logic.
 | **playerSystem.js**    | Applies movement and jump logic based on intent.                                                  |
 | **physicsSystem.js**   | Handles gravity and AABB collision resolution.                                                    |
 | **resourceSystem.js**  | Manages power drain, replenishment, and game-over checks.                                         |
+| **sonarSystem.js**     | Handles sonar pulse triggering, cooldown; tracks revealed areas and alerts enemies.               |
+| **enemySystem.js**     | Updates enemy AI, movement, and reactions to sonar pulses.                                        |
 | **torchSystem.js**     | Manages torch state, flicker timing, torch radius.                                                |
-| **lightingSystem.js**  | Controls darkness overlay, sonar reveal masks, torch light masking, fade logic.                   |
-| **renderSystem.js**    | Draws background, platforms, player, enemies, and composites `darknessLayer` onto canvas.         |
+| **lightingSystem.js**  | Controls darkness overlay, torch and sonar masking, fade logic.                                   |
+| **roomSystem.js**      | Loads and stores current room; manages exits and transitions.                                     |
+| **cameraSystem.js**    | Follows player; clamps to room bounds; exposes camera offset.                                     |
+| **renderSystem.js**    | Draws background, platforms, player, enemies, and composites `darknessLayer`; draws UI.           |
 | **entities/player.js** | Player class definition and default stats.                                                        |
 | **entities/torch.js**  | Torch configuration and radius defaults.                                                          |
 
@@ -116,53 +145,63 @@ SYSTEM UPDATES (in order)
 
 1. InputSystem
    → sets player.intent
+   → reads key states / discrete actions
 
 2. PlayerSystem
-   → applies movement
+   → applies movement & jump logic
+   → triggers sonar pulse requests
 
 3. PhysicsSystem
-   → resolves gravity & collisions
+   → applies gravity
+   → resolves collisions
+   → clamps player to room bounds
 
 4. ResourceSystem
-   → drains power & handles pickups
+   → drains player power over time
+   → handles pickups & replenishment
 
-5. TorchSystem
-   → updates torch state
+5. SonarSystem
+   → manages sonar pulse expansion
+   → reveals environment temporarily
+   → alerts nearby enemies
 
-6. LightingSystem
-   → updates visibility masks (torch + sonar)
+6. EnemySystem
+   → updates enemy AI
+   → moves enemies
+   → reacts to sonar and player actions
 
-7. RenderSystem
-   → draws visible world
-   → composites darknessLayer
-   → draws UI
+7. TorchSystem
+   → drains power when active
+   → updates flicker timing
+   → exposes light source data
+
+8. LightingSystem
+   → collects all light sources
+   → combines torch + sonar + enemy lights
+   → prepares visibility mask data
+
+9. RoomSystem
+   → manages room state
+   → handles transitions between rooms
+   → exposes active room data
+
+10. CameraSystem
+    → follows player
+    → clamps to active room bounds
+    → calculates render offsets
+
+11. RenderSystem
+    → applies camera offset
+    → draws background, platforms, player, enemies
+    → draws darknessLayer
+    → applies lighting mask
+    → draws UI (unaffected by camera)
+
 |
 ▼
 Main canvas updated
 
 ```
-
-- `deltaTime` ensures all movement/power drain is **frame-rate independent**.
-- **darknessLayer** is an offscreen buffer: drawn each frame by Render System, composited onto main canvas for torch lighting.
-
-
-### Why LightingSystem Comes Before RenderSystem
-
-**Lighting determines:**
-
-- What should be visible this frame
-
-**Rendering then:**
-
-- Draws the scene
-
-- Applies the darkness mask
-
-- Displays final composited frame
-
-
-This seperation stops the render file from becoming long, unclear and difficult to test.
-
 
 ---
 
@@ -183,10 +222,24 @@ functionkeyPressed() {
 
 ## 5. Entity / System Guidelines
 
-- **Entities**: just data and state; no p5 rendering or logic outside their system
-- **Systems**: update player/game state; optionally have `draw()` for rendering; no side-effects on unrelated systems
-- **Render system**: read-only; only draws current state; uses `darknessLayer` for lighting
-- **Engine**: orchestrates updates & draws all systems each frame
+**Entities:**
+
+- Just data and state
+- No rendering
+- No game logic
+
+**Systems:**
+- Update player/game state
+- May expose read-only data for rendering
+- No cross-system mutation
+
+**Render system:**
+-Read-only
+- Uses camera offset
+- Uses darknessLayer for lighting
+
+**Engine:**
+- Orchestrates updates & draw calls each frame
 
 ---
 
@@ -198,6 +251,152 @@ functionkeyPressed() {
 4. Keep systems modular: they shouldn’t know about unrelated systems.
 5. Use `deltaTime` for any time-based updates (movement, power drain, flicker).
 6. For new features, create a new system and register it in `sketch.js`.
+
+
+---
+
+## 7. Unified Engine + Systems + Input Bridge + Render Flow
+```jsx
+        ┌──────────────────────┐
+        │        p5.js         │
+        │   (runtime / DOM)    │
+        └───────────┬──────────┘
+                    │ keyPressed() / keyIsDown()
+                    ▼
+        ┌──────────────────────┐
+        │     Input Bridge     │  ← Lives in sketch.js
+        │ (global p5 callbacks)│
+        └───────────┬──────────┘
+                    │ forwards events
+                    ▼
+        ┌─────────────────────-─┐
+        │     Input System      │
+        │  - update(deltaTime)  │
+        │  - onKeyPressed()     │
+        │  - sets player.intent │
+        └───────────┬────────-──┘
+                    │
+                    ▼
+        ┌──────────────────────┐
+        │     Player System    │
+        │  - reads intent...   │
+        │  - apply movement    │
+        │  - jump logic        │
+        └───────────┬──────────┘
+                    │
+                    ▼
+        ┌────────────────────-──┐
+        │    Physics System     │
+        │  - apply gravity      │
+        │  - resolve collisions │
+        │  - clamp to room      │
+        └───────────┬─────────-─┘
+                    │
+                    ▼
+	    ┌──────────────────────┐
+        │     Resource System  │
+        │  - drain power       │
+        │  - handle pickups    │
+        └───────────┬──────────┘
+                    │
+                    ▼
+        ┌────────────────────---──┐
+        │     Sonar System        │
+	    │  - drain power          |
+        │  - expand pulse         │
+        │  - reveal environment   │
+        │  - alert nearby enemies │ 
+        └───────────┬─────────---─┘
+                    │
+                    ▼
+	    ┌──────────────────────┐
+        │     Enemy System     │
+        │  - update AI         │
+        │  - move enemies      │
+        │  - respond to sonar  │
+        └───────────┬──────────┘
+                    │
+                    ▼
+        ┌──────────────────────┐
+        │     Torch System     │
+        │  - drain power       │
+        │  - flicker timing    │
+        │  - active state      │
+        │  - exposes light     │
+        └───────────┬──────────┘
+                    │
+                    ▼
+        ┌────────────────────--──┐
+        │   Lighting System      │
+        │  - collects lights     │
+        │  - calculates radius   │
+        │  - prepares light      │
+        │    data for render     │
+        │  (prepare light mask)  │
+        └───────────┬────────--──┘
+                    │
+                    ▼
+	    ┌──────────────────────┐
+        │     Room System      │
+        │  - manage room state │
+        │  - handle transitions│
+	    │  - expose active room│
+        └───────────┬──────────┘
+                    │
+                    ▼
+        ┌──────────────────---────┐
+        │    Camera System        │
+        │  - follow player        │
+        │  - clamp to active room │
+        │  - compute offsets      │
+        └───────────┬────────---──┘
+                    │
+                    ▼
+        ┌──────────────────────┐
+        │     Render System    │
+        │  - draw background   │
+        │  - draw platforms    │
+        │  - draw player       │
+        │  - draw enemies      │
+        │  - draw darknessLayer│
+        │  - apply lights      │
+        │  - draw UI           │
+        └───────────┬──────────┘
+                    │
+                    ▼
+        ┌──────────────────────┐
+        │       Canvas         │
+        │   (visual output)    │
+        └──────────────────────┘
+```
+
+
+### Why This Order Is Solid
+**Input → Player → Physics**
+
+Movement must resolve before everything else.
+
+**Room after Physics**
+
+Room boundaries and transitions rely on resolved position.
+
+**Sonar before Lighting**
+
+Sonar modifies visibility data.
+
+**Torch before Lighting**
+
+Torch exposes light data that lighting aggregates.
+
+**Lighting before Render**
+
+Lighting prepares the mask; render applies it.
+
+**Camera before Render**
+
+Camera offset must be known before drawing.
+
+---
 
 # 7. File / Feature Templates
 
@@ -304,148 +503,6 @@ Q2:
 
 Answer: **Player system** or **Physics system — never Input or Render.**
 
----
-
-## 8. Engine + Systems + Input Bridge Diagram
-
-```jsx
-        ┌──────────────────────┐
-        │        p5.js         │
-        │   (runtime / DOM)    │
-        └───────────┬──────────┘
-                    │ keyPressed() / keyIsDown()
-                    ▼
-        ┌──────────────────────┐
-        │     Input Bridge     │  ← Lives in sketch.js
-        │ (global p5 callbacks)│
-        └───────────┬──────────┘
-                    │ forwards key events
-                    ▼
-        ┌──────────────────────┐
-        │     Input System     │
-        │  - update()          │
-        │  - onKeyPressed()    │
-        │  - sets player.intent│
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Player System    │
-        │  - reads intent      │
-        │  - applies movement  │
-        │  - jump logic        │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │    Physics System    │
-        │  - gravity           │
-        │  - collision         │
-        │  - ground checks     │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Torch System     │
-        │  - drain power       │
-        │  - flicker timing    │
-        │  - active state      │
-        │  - exposes light     |
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │   Lighting System    │
-        │  - collects lights   │
-        │  - calculates radius │
-        │  - prepares light    │
-        │    data for render   │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Render System    │
-        │  - draw background   │
-        │  - draw platforms    │
-        │  - draw player       │
-        │  - draw darknessLayer│
-        │  - applyLights()     │
-        │  - draw UI           │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │       Canvas         │
-        │   (visual output)    │
-        └──────────────────────┘
-```
-
-
----
-
-## 9. Engine Update + Render Flow
-
-```jsx
-p5.js runtime ──► requestAnimationFrame(engine.update)
-
-        │
-        ▼
-┌───────────────────────────────┐
-│        Engine.update(time)    │
-│ ───────────────────────────── │
-│ deltaTime = time - lastTime   │
-│ lastTime = time               │
-└──────────────┬────────────────┘
-               │
-               ▼
-      ┌───────────────────------┐
-      │   SYSTEM LOOP           │
-      │ for each system s       │
-      │   s.update?.(deltaTime) │
-      └───────┬──────────------─┘
-              │
-              ▼
-  ┌───────────────────────────────┐
-  │ SYSTEM UPDATES (order matters)│
-  ├───────────────────────────────┤
-  │ 1. Input System               │
-  │    - updates player.intent    │
-  │    - sets discrete actions    │
-  ├───────────────────────────────┤
-  │ 2. Player System              │
-  │    - reads intent             │
-  │    - applies movement/jump    │
-  ├───────────────────────────────┤
-  │ 3. Physics System             │
-  │    - gravity & collisions     │
-  │    - landing on platforms     │
-  ├───────────────────────────────┤
-  │ 4. Torch System               │
-  │    - updates flicker timers   │
-  │    - drains player power      │
-  │    - toggles light on/off     │
-  └───────────────┬───────────────┘
-                  │
-                  ▼
-       ┌────────────────────----─┐
-       │ Render System           │
-       │ - draw background       │
-       │ - draw platforms        │
-       │ - draw player           │
-       │ - draw darknessLayer    │   
-       │    • drawDarknessBase() │
-       │    • applyTorchLight()  │
-       │ - draw UI               │
-       └───────────────┬─────--──┘
-                       │
-                       ▼
-               Main Canvas
-               (pixels updated)
-
-```
-
----
-
 ## Definitions
 
 ### Entities
@@ -457,7 +514,7 @@ Entities are **plain objects**, not classes.
 - Makes refactoring and debugging easier
 - Supports future upgrades (*items, stats, abilities*)
 
-Example: player, torch (instance)
+*Example: player*
 
 ```jsx
 var player = {
@@ -474,7 +531,39 @@ var player = {
   
   onGround
 };
+
+*Example: rooms (instance of class from system)*
 ```
+//======================================
+// Room System
+//======================================
+
+export class Room {
+  constructor(config) {
+    this.width = config.width;
+    this.height = config.height;
+
+    this.platforms = config.platforms || [];
+    this.resources = config.resources || [];
+    this.enemies = config.enemies || [];
+
+    this.playerSpawn = config.playerSpawn || { x: 0, y: 0 };
+  }
+}
+
+//======================================
+// entities/room.js
+// - contains all room objects
+//======================================
+
+new Room({
+  width: 3000,
+  height: 1200,
+  type: "tutorial", //(boss, hub, jellyfish_maze) helps add enemies, special physics or conditions
+  platforms: [...],
+  enemies: [...]
+})
+
 
 ---
 
