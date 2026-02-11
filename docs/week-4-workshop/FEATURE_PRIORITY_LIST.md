@@ -30,7 +30,7 @@ These systems are essential to demonstrate the game concept and learning outcome
 
 Without these, the game does not function.
 
-1. Player Controls
+## 1. Player Controls
 
 **Why:**
 A platformer must feel responsive and predictable.
