@@ -1,11 +1,41 @@
 # HOW TO WRITE GOOD TESTS - USING jest.js FRAMEWORK
+**jest.js** is a commonly used testing fraamework, it provides features that make testing and debugging code easier.
+We will be using it to help us write rubust tests that act the specification/requirements for each feature we code.
 </br>
 <div align="center">
 <img width="607" height="470" alt="image" src="https://github.com/user-attachments/assets/27e91f7c-8021-4419-897f-20c096f769f5" />
 </div> </br>
 
-**jest.js** is a commonly used testing fraamework, it provides features that make testing and debugging code easier.
-We will be using it to help us write rubust tests that act the specification/requirements for each feature we code.
+## INSTALLING NPM SO YOU CAN USE JEST
+I have already added jest.js to the repo, it's in package.json -  package-lock.json contains the version of jest.js so we all use the same one.
+
+All you have to do is make sure you **have npm package manager installed** in your IDE (coding environment) or machine.
+Simply run this in your terminal:
+```
+npm install <-- makes sure you have (only need to do the first time)
+
+npm test <-- this will run the test files
+
+```
+
+CURRENTLY THERE ARE NO TEST FILES SO WHEN I RUN nmp test...
+```
+georgia@eduroam-148-68 game_files (main) $ npm test
+
+> sep@1.0.0 test
+> jest
+
+No tests found, exiting with code 1
+Run with `--passWithNoTests` to exit with code 0
+In /Users/georgia/COMSCI/SEP/2026-group-1/game_files
+  25 files checked.
+  testMatch: **/__tests__/**/*.?([mc])[jt]s?(x), **/?(*.)+(spec|test).?([mc])[jt]s?(x) - 0 matches
+  testPathIgnorePatterns: /node_modules/ - 25 matches
+  testRegex:  - 0 matches
+Pattern:  - 0 matches
+georgia@eduroam-148-68 game_files (main) $ 
+```
+WAHOO!!! It's all working :D
 
 ## TESTS DESCRIBE:
 - **Given:** declare and set up data
