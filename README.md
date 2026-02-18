@@ -10,7 +10,7 @@
 			[ADD PROMO IMAGE]
 		</div>
 		<div align="center">
- 			<h3 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/="">Play Current Version - V2.5</a></h3>
+ 			<h3 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/">Play Current Version - V2.5</a></h3>
 		</div>
 	</body>
 </html>
