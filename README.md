@@ -27,7 +27,7 @@ https://github.com/user-attachments/assets/7f6a8c2a-c20e-4220-b267-f1d39c76ae9f.
 
 # Our Team - Group 1
 
-![Group1](/docs/images/Group1.jpeg)
+![Group1](/project-docs/images/Group1.jpeg)
 
 </br>
 
