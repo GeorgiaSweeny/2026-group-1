@@ -8,6 +8,24 @@ DESCRIPTION:
 imported Tiled JSON: https://www.mapeditor.org/
 - Exposes room state to physics/render systems
 ========================================
+                      ┌───────────────────────────┐
+                      │       TILED EDITOR        │
+                      ├───────────────────────────┤
+                      │ Tileset PNG (Tiled only)  │
+                      │ Tileset JSON (Tiled only) │
+                      │ Room JSONs                │
+                      └─────────────┬─────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────Engine Uses───────────────────────────────────────┐
+│                                                                               │
+│ Room JSONs    ──► Engine loads object layers                                  │
+│                   (player, enemies, hazards, exits)                           │
+│ Assets Folder ──► Engine uses sprites, backgrounds, tiles                     │
+│                   (final art)                                                 │
+│ config.js     ──► Engine reads gameplay constants (damage, collectable values)│
+│                   (damage, collectable values)                                │
+└───────────────────────────────────────────────────────────────────────────────┘
 */
 
 //======================================
