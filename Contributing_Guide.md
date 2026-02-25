@@ -1,11 +1,42 @@
 # Contributing Guide
 
-This project follows a **clear separation of concerns** to keep the game easy to extend, debug, and merge as a team. Before adding or changing features, read this page once — it will save everyone time.
+This project follows a **clear separation of concerns** to keep the game easy to extend, debug, and merge as a team. Before adding or changing features, read this page and the Code_Architure_Guide which explains the modular code structure in detail.
 
 ---
 
-## Core Principles (Read This First)
+## Branch Protection Rules for `main`
+<div>
+  <div align="left">
+  The source code in `docs/` main branch is protected. Changes to `/docs/` must go through a pull request (PR) - a branch rule is set up to automatically request review from the designated code owner (code reviewer role). Team members can freely edit all files on feature branches; CODEOWNERS is only enforced when merging into main branch `docs/`. 
+  </br>
+  <img align="left" width="512" height="768" alt="codeowners-protection-rule" src="https://github.com/user-attachments/assets/fbdde968-80e2-4dde-8c62-c20766deda46" />
+  </div>
+</div>
+</br>
+</br>
 
+- **Protected Branch** -`main` /docs/ cannot be pushed to directly by team members. All changes must go through a pull request (PR).
+
+- **Code Owner Review for** `/docs/` - Changes to the `/docs/` folder automatically request a review from the designated code owner (code reviewer). This ensures source code updates are checked before merging.
+
+- **Standard Approval for Other Changes** - Non-`docs/` changes in main do not require review.
+
+- **Bypass Disabled** - Admins cannot bypass these rules, so PRs must follow the workflow. (since all the team are admins)
+
+- **Effect on Feature Branches** - Team members can freely edit all files on feature branches (including `/docs/`). CODEOWNERS is only enforced when merging into `main`, so it does not block development or commits on feature branches.
+
+### Workflow Summary
+1. Work on a feature branch  
+2. Push changes to origin  
+3. Open PR targeting `main`  
+4. PR requires code owner approval for `/docs/` changes  
+5. Merge into `main` once approved
+
+</br>
+</br>
+</br>
+
+## Core Principles (Read This First)
 * **Systems change game state**
 * **Render draws, never decides**
 * **Input produces intent, not movement**
