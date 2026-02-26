@@ -33,154 +33,69 @@ TODO / LIMITATIONS:
 // SONAR SYSTEM
 //======================================
 
-//This code makes a maze from the bottom of the screen to the top which emits a sonar pulse to uncover the route out the maze
+//This code makes a maze from the bottom of the screen to the top, which emits a sonar pulse to uncover the route out the maze
 
-let walls = [];
-let pulses = [];
-
-//size of each wall block
-let resolution = 20;
-
-function setup() {
-  createCanvas(600, 600);
-
-  let cols = width / resolution;
-  let rows = height / resolution;
-
-  let xOffset = 0;
-
-  for (let y = 0; y < rows; y++) {
-    let pathCentre = map(noise(xOffset), 0, 1, 1, width);
-
-    for (let x = 0; x < cols; x++) {
-      let xPos = x * resolution;
-      let yPos = y * resolution;
-
-      let d = dist(xPos, yPos, pathCentre, yPos);
-
-      if (d > 70) {
-        walls.push(new Wall(xPos, yPos, resolution, resolution));
-      }
-    }
-    xOffset += 0.1;
-  }
-}
-
-function draw() {
-  background(10, 15, 25);
-
-  // We loop backwards so we can delete finished pulses without errors
-  for (let i = pulses.length - 1; i >= 0; i--) {
-    let p = pulses[i];
-    p.update();
-    p.show();
-
-    // Check if pulse hits any wall
-    for (let wall of walls) {
-      wall.checkPulse(p);
-    }
-
-    if (p.isFinished()) {
-      // Remove pulse from array to save memory
-      pulses.splice(i, 1);
-    }
-  }
-
-  // 3. Handle Walls (Drawing and Fading)
-  for (let wall of walls) {
-    wall.update();
-    wall.show();
-  }
-
-  // UI Instruction
-  fill(255);
-  noStroke();
-  textSize(14);
-  text("Click to Emit Sonar Pulse. Find the path out...", 10, 20);
-}
-
-function mousePressed() {
-  // Spawn a new pulse at mouse location
-  pulses.push(new Pulse(mouseX, mouseY));
-}
-
+// Pulse.js
 class Pulse {
   constructor(x, y) {
-    this.x = x;
-    this.y = y;
-    this.radius = 1;
-    // How fast sound travels
-    this.speed = 5;
-    // Opacity of the ring itself
-    this.life = 255;
+    this.particles = [];
+    const numRays = 360;
+    this.speed = 0.2;
+
+    for (let i = 0; i < numRays; i++) {
+      const angle = radians(i);
+      this.particles.push({
+        pos: createVector(x, y),
+        vel: p5.Vector.fromAngle(angle).mult(this.speed),
+        life: 255,
+      });
+    }
   }
 
-  update() {
-    this.radius += this.speed;
-    // Fade the ring out slowly
-    this.life -= 5;
+  update(dt) {
+    for (let p of this.particles) {
+      if (p.life <= 0) continue;
+
+      p.life -= 0.2 * dt;
+
+      const moveStep = p5.Vector.mult(p.vel, dt);
+      const nextPos = p5.Vector.add(p.pos, moveStep);
+
+      for (let wall of walls) {
+        if (
+          nextPos.x >= wall.x &&
+          nextPos.x <= wall.x + wall.w &&
+          nextPos.y >= wall.y &&
+          nextPos.y <= wall.y + wall.h
+        ) {
+          if (typeof wall.illuminate === "function") wall.illuminate();
+
+          p.life = 0;
+          break;
+        }
+      }
+
+      if (p.life > 0) {
+        p.pos = nextPos;
+      }
+    }
   }
 
   show() {
-    noFill();
-    // Light blue sonar color
-    stroke(100, 255, 100, this.life);
     strokeWeight(2);
-    circle(this.x, this.y, this.radius * 2);
+    for (let p of this.particles) {
+      if (p.life > 0) {
+        stroke(0, 220, 0, p.life);
+        point(p.pos.x, p.pos.y);
+      }
+    }
   }
 
   isFinished() {
-    // Kill pulse if it's transparent or too huge
-    return this.life <= 0;
+    return this.particles.every((p) => p.life <= 0);
   }
 }
 
-class Wall {
-  constructor(x, y, w, h) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    // Starts invisible
-    this.alpha = 0;
-  }
-
-  checkPulse(pulse) {
-    // Calculate distance between Wall Center and Pulse Center
-    let centreX = this.x + this.w / 2;
-    let centreY = this.y + this.h / 2;
-    let d = dist(pulse.x, pulse.y, centreX, centreY);
-
-    // check if the distance is roughly equal to the radius
-    // We use a "buffer" of 15 pixels so it doesn't have to be pixel perfect
-    if (d < pulse.radius && d > pulse.radius - 20) {
-      this.alpha = constrain(this.alpha + 50, 0, 255);
-    }
-  }
-
-  update() {
-    // Always fade to black
-    if (this.alpha > 0) {
-      // make walls stay visible longer/shorter
-      this.alpha -= 5.5;
-    }
-  }
-
-  show() {
-    if (this.alpha > 1) {
-      // Draw the rect with the current Alpha
-      noStroke();
-      // Colour of sea
-      fill(40, 60, 80, this.alpha);
-      rect(this.x, this.y, this.w, this.h);
-
-      stroke(100, 200, 220, this.alpha);
-      strokeWeight(1);
-      noFill();
-      rect(this.x, this.y, this.w, this.h);
-    }
-  }
-}
 //======================================
 // END
 //======================================
