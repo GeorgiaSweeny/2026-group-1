@@ -4,10 +4,12 @@ VERSION: 1.0
 SYSTEM: SONAR SYSTEM
 AUTHOR: BEN MOUNCE
 DESCRIPTION:
-- Experimenting with the sonar system which creates a pulse from the
-  point where the user has clicked on the screen. Within the sonar area
-  it reveals and then fades out the walls to the maze so the player can
-  use the pulse to see where to go.
+- Experimenting with the sonar system, which creates a pulse originating 
+  from the player that hits the walls and exposes the wall for a short 
+  period of time to help guide the player in the right direction to 
+  progress in the level. The pulse may, however, alert enemies to the 
+  presence of the character.
+ 
 
 RULES:
 - Render system must not modify game state
