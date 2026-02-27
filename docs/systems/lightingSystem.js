@@ -58,8 +58,8 @@ export function createLightingSystem(player, enemies = []) {
             const intensity = player.torch.getIntensity(player.power.getPercent());
             if (intensity > 0) {
                lightSources.push({
-                  x: player.x,
-                  y: player.y,
+                  x: player.position.x,
+                  y: player.position.y,
                   radius: player.torch.radius,
                   intensity
                });

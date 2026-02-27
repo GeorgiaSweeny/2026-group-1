@@ -50,15 +50,16 @@ export function createPlayerSystem(player) {
   // returning object literals → commas between entries
   return {
     update(deltaTime) {
-      const speed = PLAYER.MOVE_SPEED;
-      if (player.intent?.left) player.x -= speed;
-      if (player.intent?.right) player.x += speed;
-
-      if (player.intent?.jump && player.onGround) {
-        player.vy = -player.jumpPower;
-        player.onGround = false;
-      }
-      if (player.intent) player.intent.jump = false;
+      // calculate player speed (can be changed by a function), pass speed to player class
+      var speed = PLAYER.MOVE_SPEED * deltaTime; // add * timescale to change simulation time
+      // set initial velocity to 0, if no button pressed player does not move, I can change it later through player class
+      player.setVelocityX();
+      player.setVelocityY();
+      // set velocity of player based on movement intent decided in inputSystem
+      if(player.moveIntent.right ){player.setVelocityX(speed)}
+      if(player.moveIntent.left){player.setVelocityX(speed)}
+      if(player.moveIntent.up){player.setVelocityY(speed)}
+      if(player.moveIntent.down){player.setVelocityY(speed)}
     },
   };
 }

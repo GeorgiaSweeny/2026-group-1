@@ -9,6 +9,8 @@ DESCRIPTION:
 ========================================
 */
 
+import { DEBUG_COLOR } from "../config.js";
+
 //======================================
 // RENDER SYSTEM
 //======================================
@@ -41,16 +43,16 @@ export function createRenderSystem({
 
       noStroke();
       fill(platformColor);
-
+      
       for (const p of platforms) {
-         rect(p.x, p.y, p.w, p.h);
+         rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
       }
    }
 
    function drawPlayer() {
       stroke(150, 0, 25);
       fill(225, 0, 50);
-      rect(player.x, player.y, player.w, player.h);
+      rect(player.getCornerX(), player.getCornerY(), player.getWidth(), player.getHeight());
    }
 
    function drawUI() {
@@ -69,7 +71,6 @@ export function createRenderSystem({
       for (const light of lightSources) {
          const { x, y, radius, intensity = 1 } = light;
          const scaledRadius = radius * (0.8 + 0.2 * intensity);
-
          const gradient = ctx.createRadialGradient(
             x, y, scaledRadius * 0.1,
             x, y, scaledRadius
@@ -87,6 +88,15 @@ export function createRenderSystem({
       image(darknessLayer, 0, 0);
    }
 
+   function debugHitbox(drawThis){
+      if(drawThis){
+         let walls = getPlatforms();
+         for(let i in walls){
+            walls[i].debugDrawHitbox(DEBUG_COLOR.WALL);
+         }
+         player.debugDrawHitbox(DEBUG_COLOR.PLAYER);
+      }
+   }
    return {
       draw() {
          const lightSources = getLightSources?.() ?? [];
@@ -96,6 +106,7 @@ export function createRenderSystem({
          drawPlayer();
          drawLighting(lightSources);
          drawUI();
+         debugHitbox(DEBUG_COLOR.DRAW);
       }
    };
 }
