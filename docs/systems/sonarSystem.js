@@ -1,43 +1,69 @@
-/*
+/**
 ========================================
-VERSION: 1.0
+VERSION: 4.0
 SYSTEM: SONAR SYSTEM
-AUTHOR: BEN MOUNCE
+AUTHOR: Ben Mounce
 DESCRIPTION:
-- Experimenting with the sonar system, which creates a pulse originating 
-  from the player that hits the walls and exposes the wall for a short 
-  period of time to help guide the player in the right direction to 
-  progress in the level. The pulse may, however, alert enemies to the 
-  presence of the character.
- 
+- Emits a sonar pulse from the player that travels outward 
+  in rays and momentarily reveals walls and other environmental
+  objects touched by the pulse. Intended as a gameplay aid 
+  to reveal hidden routes and optionally alert enemies
 
 RULES:
-- Render system must not modify game state
-- Render system must only read from entities and systems
-- No timing or logic updates in draw functions
+- Rendering code must not modify game state; rendering should
+  only read from entities and systems
+- All timing or state-updates must happen in update functions,
+  do not perform logic inside draw/render functions
+- Timing must be frame-rate independent and always pass 
+deltaTime to update functions so fades and lifetimes behave 
+  consistently
 ========================================
 DESIGN GOALS:
+- Provide a simple, testable Pulse implementation that emits
+  multiple rays from a given origin and notifies the intersected
+  walls through wall.illuminate()
+- Keep pulse logic separate from rendering and input handling.
+  The pulse exposes update(dt) and show(). Input should 
+  trigger, creating a pulse instance when the player requests
+  a ping
 ========================================
 RESPONSIBILITIES:
-
+- Produce rays/particles that move outward from an origin
+- Detect intersections with axis-aligned rectangular walls 
+  and call wall.illuminate() when a collision occurs
+- Manage individual particle lifetimes and provide isFinished()
+  to allow higher-level code to dispose of completed pulses
+========================================
 DEPENDENCIES:
-
+- Walls array in scope as each wall should have x,y,w,h, and 
+an optional illuminate() method
+- p5.js vector helpers and drawing helpers if using the 
+  existing show() implementation
+- deltaTime passed to update(dt) should be in milliseconds
+========================================
 USAGE:
-
+- Create a pulse at the player's position when the player pings:
+const pulse = new Pulse(player.x, player.y);
+- In the engine loop:
+pulse.update(deltaTime);
+pulse.show();
+if (pulse.isFinished()) { // remove pulse // }
 ========================================
 NOTES:
+- The implementation uses a configurable number of rays and 
+  a speed multiplier; adjust these for performance/visual 
+  tradeoffs
+- Particle life is represented as an alpha from 0 -> 255 and
+  decays using deltaTime to remain frame-rate independent
 ========================================
 TODO / LIMITATIONS:
+- No built-in cooldown, audio, or enemy alerting
 ========================================
-*/
+**/
 
 //======================================
 // SONAR SYSTEM
 //======================================
-
-//This code makes a maze from the bottom of the screen to the top, which emits a sonar pulse to uncover the route out the maze
-
-// Pulse.js
 class Pulse {
   constructor(x, y) {
     this.particles = [];
@@ -97,7 +123,7 @@ class Pulse {
     return this.particles.every((p) => p.life <= 0);
   }
 }
-
 //======================================
 // END
 //======================================
+
