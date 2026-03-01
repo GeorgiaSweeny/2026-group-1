@@ -58,6 +58,9 @@ export class Wall extends Hitbox{
   }
 }
 
+// functions that handle collision between hitboxes
+
+// aabb collision resolution 
 export function isColliding(hitbox1, hitbox2){
     return(((hitbox1.position.x - (hitbox1.w / 2)) <= (hitbox2.nextPos.x + (hitbox2.w / 2))) &&
            ((hitbox1.position.x + (hitbox1.w / 2)) >= (hitbox2.nextPos.x - (hitbox2.w / 2))) &&

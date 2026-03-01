@@ -60,6 +60,7 @@ export function createInputSystem(player) {
       const rightKey = INPUT.D_KEY;
       const upKey = INPUT.W_KEY;
       const downKey = INPUT.S_KEY;
+      
       // set player move intent in player class
       player.moveIntent.left = keyIsDown(leftKey) || keyIsDown(INPUT.LEFT_ARROW_KEY);
       player.moveIntent.right = keyIsDown(rightKey) || keyIsDown(INPUT.RIGHT_ARROW_KEY);

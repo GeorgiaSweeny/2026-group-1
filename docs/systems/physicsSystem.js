@@ -44,7 +44,6 @@ NOTES:
 ========================================
 */
 
-import { DEBUG_COLOR } from "../config.js";
 import { isColliding, resolveWallCollision } from "./hitboxSystem.js";
 
 //======================================
@@ -59,7 +58,7 @@ export function createPhysicsSystem(player, platformsOrGetter) {
   //---INTERNAL FUNCTIONS---//
 
 //======================================
-// COLLISON SYSTEM - Author:
+// COLLISON SYSTEM - Author: Nick
 //======================================
 /* Note from Georgia: (to be removed)
 

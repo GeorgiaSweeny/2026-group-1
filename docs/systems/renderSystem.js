@@ -88,6 +88,7 @@ export function createRenderSystem({
       image(darknessLayer, 0, 0);
    }
 
+   // draw by changing DRAW to true in config, shows hitbox boundaries
    function debugHitbox(drawThis){
       if(drawThis){
          let walls = getPlatforms();
@@ -97,6 +98,7 @@ export function createRenderSystem({
          player.debugDrawHitbox(DEBUG_COLOR.PLAYER);
       }
    }
+
    return {
       draw() {
          const lightSources = getLightSources?.() ?? [];
