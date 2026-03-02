@@ -33,7 +33,6 @@ export const INPUT = {
   RIGHT_ARROW_KEY: 39,
   
   // ACTION KEYS - functions take strings
-  JUMP_KEY: [87, 38],
   TOGGLE_TORCH_KEY: ['L', 'l']
 };
 
@@ -48,7 +47,6 @@ then scale up, rather than designing in native 1080p*/
 export const CANVAS = {
   WIDTH: 640,
   HEIGHT: 360,
-
   TILE_SIZE: 16
 };
 
@@ -58,11 +56,9 @@ export const CANVAS = {
 export const PLAYER = {
   WIDTH: CANVAS.TILE_SIZE,
   HEIGHT: CANVAS.TILE_SIZE,
-  START_X: CANVAS.TILE_SIZE * 2,
+  START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  JUMP_POWER: 25,
-  MOVE_SPEED: 5,
-  FALL_SPEED: 2
+  MOVE_SPEED: 0.2,
 };
 
 //======================
@@ -85,16 +81,18 @@ export const TORCH = {
 };
 
 //======================
-// GAME CONFIG
-//======================
-export const GAME = {
-  GROUND_Y: CANVAS.HEIGHT - CANVAS.TILE_SIZE * 1.25
-};
-
-//======================
 // TILE TYPE CONFIG
 //======================
 export const TILE_TYPE = {
   0: 'empty', // water
   1: 'rock'
 };
+
+//======================
+// HITBOX DEBUG
+//======================
+export const DEBUG_COLOR = {
+  DRAW : false,
+  WALL : "wall",
+  PLAYER : "player",
+}

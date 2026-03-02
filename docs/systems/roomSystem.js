@@ -15,6 +15,7 @@ imported Tiled JSON: https://www.mapeditor.org/
 //======================================
 import { CANVAS } from '../config.js';
 import { pointToPixels, rectToPixels, toPixels } from '../utils/toPixels.js';
+import { Wall } from './hitboxSystem.js';
 
 function getTiledProperty(mapData, key, fallback = null) {
   const props = mapData?.properties;
@@ -38,8 +39,8 @@ function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
       if (!gid) continue;
 
       result.push({
-        x: x * tileWidth + tileWidth / 2,
-        y: y * tileHeight + tileHeight / 2,
+        x: x,
+        y: y,
         w: tileWidth,
         h: tileHeight
       });
@@ -78,12 +79,9 @@ function normalizeTiledRoom(roomKey, mapData) {
 
     if (layer?.type === 'objectgroup' && layerName === 'platforms') {
       for (const obj of layer.objects ?? []) {
-        normalized.platforms.push({
-          x: (obj.x ?? 0) + (obj.width ?? tileWidth) / 2,
-          y: (obj.y ?? 0) + (obj.height ?? tileHeight) / 2,
-          w: obj.width ?? tileWidth,
-          h: obj.height ?? tileHeight
-        });
+        normalized.platforms.push(
+          new Wall((obj.x ?? 0), (obj.y ?? 0), (obj.width ?? tileWidth), (obj.height ?? tileHeight))
+        );
       }
       continue;
     }
@@ -95,8 +93,8 @@ function normalizeTiledRoom(roomKey, mapData) {
 
       if (spawn) {
         normalized.playerStart = {
-          x: (spawn.x ?? 0) + (spawn.width ?? 0) / 2,
-          y: (spawn.y ?? 0) + (spawn.height ?? 0) / 2
+          x: (spawn.x ?? 0),
+          y: (spawn.y ?? 0)
         };
       }
       continue;
@@ -146,12 +144,9 @@ function normalizeLegacyRoom(roomKey, roomConfig) {
     for (let y = 0; y < roomConfig.tiles.length; y++) {
       for (let x = 0; x < roomConfig.tiles[y].length; x++) {
         if (!roomConfig.tiles[y][x]) continue;
-        normalized.platforms.push({
-          x: toPixels(x) + CANVAS.TILE_SIZE / 2,
-          y: toPixels(y) + CANVAS.TILE_SIZE / 2,
-          w: CANVAS.TILE_SIZE,
-          h: CANVAS.TILE_SIZE
-        });
+        normalized.platforms.push(
+          new Wall(toPixels(x), toPixels(y), CANVAS.TILE_SIZE, CANVAS.TILE_SIZE)
+        );
       }
     }
   }
