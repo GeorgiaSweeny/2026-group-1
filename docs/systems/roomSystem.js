@@ -192,7 +192,13 @@ export function createRoomSystem({ initialRoom = null, roomData = {} } = {}) {
 
     currentRoom = roomKey;
     currentConfig = normalized;
-    platforms = [...(normalized.platforms ?? [])];
+    platforms = [...(normalized.platforms ?? [])].map(p => ({
+      ...p,
+      illumination: 0,
+      illuminate() {
+        this.illumination = 255;
+      }
+    }));
     entities = [...(normalized.entities ?? [])];
     playerStart = normalized.playerStart ?? null;
   }
@@ -200,6 +206,12 @@ export function createRoomSystem({ initialRoom = null, roomData = {} } = {}) {
   function updateRoomLogic(deltaTime) {
     for (const entity of entities) {
       entity.update?.(deltaTime);
+    }
+    
+    for (let platform of platforms) {
+      if (platform.illumination && platform.illumination > 0) {
+        platform.illumination = Math.max(0, platform.illumination - 0.2 * deltaTime);
+      }
     }
   }
 

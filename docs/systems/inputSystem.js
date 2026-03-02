@@ -70,11 +70,11 @@ export function createInputSystem(player) {
         player.intent.jump = true;
       }
 
-      if (INPUT.TOGGLE_TORCH_KEY.includes(key)) {
+      if (INPUT.TOGGLE_TORCH_KEY.includes(key) || keyLower === 'l') {
         player.intent.toggleTorch = true;
       }
 
-      if (INPUT.EMIT_SONAR_KEY.includes(key)) {
+      if (INPUT.EMIT_SONAR_KEY.includes(key) || keyLower === 'k') {
         player.intent.emitSonar = true;
       }
     }

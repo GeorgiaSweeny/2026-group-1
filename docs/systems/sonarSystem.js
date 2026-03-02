@@ -64,6 +64,35 @@ TODO / LIMITATIONS:
 //======================================
 // SONAR SYSTEM
 //======================================
+
+export function createSonarSystem(player, getWalls) {
+  let pulses = [];
+
+  return {
+    update(dt) {
+      if (player.intent.emitSonar) {
+        pulses.push(new Pulse(player.x, player.y));
+        player.intent.emitSonar = false;
+      }
+
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        pulses[i].update(dt, getWalls());
+        if (pulses[i].isFinished()) {
+          pulses.splice(i, 1);
+        }
+      }
+    },
+    draw() {
+      push();
+      for (let pulse of pulses) {
+        pulse.show();
+      }
+      pop();
+    }
+  };
+}
+
+// Pulse.js
 class Pulse {
   constructor(x, y) {
     this.particles = [];
@@ -80,7 +109,7 @@ class Pulse {
     }
   }
 
-  update(dt) {
+  update(dt, walls) {
     for (let p of this.particles) {
       if (p.life <= 0) continue;
 
@@ -89,17 +118,21 @@ class Pulse {
       const moveStep = p5.Vector.mult(p.vel, dt);
       const nextPos = p5.Vector.add(p.pos, moveStep);
 
-      for (let wall of walls) {
-        if (
-          nextPos.x >= wall.x &&
-          nextPos.x <= wall.x + wall.w &&
-          nextPos.y >= wall.y &&
-          nextPos.y <= wall.y + wall.h
-        ) {
-          if (typeof wall.illuminate === "function") wall.illuminate();
-
-          p.life = 0;
-          break;
+      if (walls && walls.length) {
+        for (let wall of walls) {
+          
+          if (
+            nextPos.x >= wall.x &&
+            nextPos.x <= wall.x + wall.w &&
+            nextPos.y >= wall.y &&
+            nextPos.y <= wall.y + wall.h
+          ) {
+            if (typeof wall.illuminate === "function") {
+              wall.illuminate();
+            }
+            p.life = 0;
+            break;
+          }
         }
       }
 
@@ -113,7 +146,7 @@ class Pulse {
     strokeWeight(2);
     for (let p of this.particles) {
       if (p.life > 0) {
-        stroke(0, 220, 0, p.life);
+        stroke(0, 255, 0, p.life);
         point(p.pos.x, p.pos.y);
       }
     }
@@ -123,7 +156,7 @@ class Pulse {
     return this.particles.every((p) => p.life <= 0);
   }
 }
+
 //======================================
 // END
 //======================================
-

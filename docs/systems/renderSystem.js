@@ -35,18 +35,6 @@ export function createRenderSystem({
       }
    }
 
-   function drawPlatforms() {
-      const platforms = getPlatforms?.() ?? [];
-      const platformColor = getPlatformColor?.() ?? '#5a6e82';
-
-      noStroke();
-      fill(platformColor);
-
-      for (const p of platforms) {
-         rect(p.x, p.y, p.w, p.h);
-      }
-   }
-
    function drawPlayer() {
       stroke(150, 0, 25);
       fill(225, 0, 50);
@@ -92,9 +80,33 @@ export function createRenderSystem({
          const lightSources = getLightSources?.() ?? [];
 
          drawBackground();
-         drawPlatforms();
+         
+         // Draw base platforms in darkness
+         const platforms = getPlatforms?.() ?? [];
+         const platformColor = getPlatformColor?.() ?? '#5a6e82';
+         noStroke();
+         fill(platformColor);
+         for (const p of platforms) {
+            rect(p.x, p.y, p.w, p.h);
+         }
+
          drawPlayer();
          drawLighting(lightSources);
+         
+         // Draw illuminated platforms OVER the darkness
+         noStroke();
+         for (const p of platforms) {
+            if (p.illumination > 0) {
+               const c = color(platformColor);
+               const illuminateColor = color(0, 255, 255);
+               // the alpha makes it fade away smoothly atop the darkness
+               const mixedColor = lerpColor(c, illuminateColor, p.illumination / 255);
+               mixedColor.setAlpha(p.illumination); 
+               fill(mixedColor);
+               rect(p.x, p.y, p.w, p.h);
+            }
+         }
+
          drawUI();
       }
    };

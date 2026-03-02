@@ -126,8 +126,8 @@ function setup() {
   engine.register(physicsSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
-  engine.register(sonarSystem);
   engine.register(renderSystem);
+  engine.register(sonarSystem);
 }
 
 function draw() {
