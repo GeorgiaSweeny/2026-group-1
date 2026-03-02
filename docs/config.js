@@ -34,7 +34,8 @@ export const INPUT = {
   
   // ACTION KEYS - functions take strings
   JUMP_KEY: [87, 38],
-  TOGGLE_TORCH_KEY: ['L', 'l']
+  TOGGLE_TORCH_KEY: ['L', 'l'],
+  EMIT_SONAR_KEY: ['K', 'k']
 };
 
 //======================

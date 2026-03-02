@@ -19,6 +19,7 @@ import { createTorchSystem } from './systems/torchSystem.js';
 import { createRenderSystem } from './systems/renderSystem.js';
 import { createLightingSystem } from './systems/lightingSystem.js';
 import { createRoomSystem } from './systems/roomSystem.js';
+import { createSonarSystem } from './systems/sonarSystem.js';
 import { CANVAS, PLAYER, GAME, TORCH } from './config.js';
 import { Player } from './entities/player.js';
 import { room_test } from './data/rooms/room_test.js';
@@ -34,6 +35,7 @@ let torchSystem;
 let renderSystem;
 let lightingSystem;
 let roomSystem;
+let sonarSystem;
 
 let assets = {};
 const roomData = {
@@ -103,6 +105,8 @@ function setup() {
   torchSystem = createTorchSystem(player.torch, player, {
     drainRate: TORCH.DRAIN_RATE
   });
+  
+  sonarSystem = createSonarSystem(player, () => roomSystem.getPlatforms());
 
   lightingSystem = createLightingSystem(player, []);
 
@@ -122,6 +126,7 @@ function setup() {
   engine.register(physicsSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
+  engine.register(sonarSystem);
   engine.register(renderSystem);
 }
 

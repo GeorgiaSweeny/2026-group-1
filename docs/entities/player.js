@@ -60,6 +60,7 @@ export class Player {
          right: false,
          jump: false,
          toggleTorch: false,
+         emitSonar: false,
       };
 
       // component
