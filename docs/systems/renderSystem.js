@@ -19,7 +19,8 @@ export function createRenderSystem({
    getPlatformColor,
    assets,
    darknessLayer,
-   getLightSources
+   getLightSources,
+   getSonarCooldown
 }) {
    function drawBackground() {
       const bg = getBackground?.();
@@ -44,7 +45,18 @@ export function createRenderSystem({
    function drawUI() {
       fill(255);
       noStroke();
+      textAlign(LEFT);
+      textSize(20);
       text(`Power: ${Math.round(player.power.current)}`, 20, 30);
+      
+      const cooldownPercent = getSonarCooldown?.() ?? 0;
+      if (cooldownPercent > 0) {
+         fill('#d61b1bff');
+         text(`Sonar: Cooling Down`, 20, 60);
+      } else {
+         fill('#64ff64ff');
+         text(`Press K to Sonar: Ready`, 20, 60);
+      }
    }
 
    function drawLighting(lightSources = []) {
@@ -93,13 +105,12 @@ export function createRenderSystem({
          drawPlayer();
          drawLighting(lightSources);
          
-         // Draw illuminated platforms OVER the darkness
+         // Draw platforms over darkness
          noStroke();
          for (const p of platforms) {
             if (p.illumination > 0) {
                const c = color(platformColor);
-               const illuminateColor = color(0, 255, 255);
-               // the alpha makes it fade away smoothly atop the darkness
+               const illuminateColor = color('#5a6e82');
                const mixedColor = lerpColor(c, illuminateColor, p.illumination / 255);
                mixedColor.setAlpha(p.illumination); 
                fill(mixedColor);

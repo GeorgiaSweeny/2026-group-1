@@ -86,6 +86,13 @@ export const TORCH = {
 };
 
 //======================
+// SONAR CONFIG
+//======================
+export const SONAR = {
+  COOLDOWN_MS: 3000 // 3 seconds before next use
+};
+
+//======================
 // GAME CONFIG
 //======================
 export const GAME = {

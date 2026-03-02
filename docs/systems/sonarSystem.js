@@ -64,14 +64,23 @@ TODO / LIMITATIONS:
 //======================================
 // SONAR SYSTEM
 //======================================
+import { SONAR } from '../config.js';
 
 export function createSonarSystem(player, getWalls) {
   let pulses = [];
+  let cooldownTimer = 0;
 
   return {
     update(dt) {
+      if (cooldownTimer > 0) {
+        cooldownTimer -= dt;
+      }
+
       if (player.intent.emitSonar) {
-        pulses.push(new Pulse(player.x, player.y));
+        if (cooldownTimer <= 0) {
+          pulses.push(new Pulse(player.x, player.y));
+          cooldownTimer = SONAR.COOLDOWN_MS;
+        }
         player.intent.emitSonar = false;
       }
 
@@ -88,6 +97,10 @@ export function createSonarSystem(player, getWalls) {
         pulse.show();
       }
       pop();
+    },
+    getCooldownPercent() {
+      if (cooldownTimer <= 0) return 0;
+      return cooldownTimer / SONAR.COOLDOWN_MS;
     }
   };
 }

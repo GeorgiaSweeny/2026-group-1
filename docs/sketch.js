@@ -117,7 +117,8 @@ function setup() {
     getPlatformColor: () => roomSystem.getPlatformColor(),
     assets,
     darknessLayer,
-    getLightSources: () => lightingSystem.getLightSources()
+    getLightSources: () => lightingSystem.getLightSources(),
+    getSonarCooldown: () => sonarSystem.getCooldownPercent()
   });
 
   engine = new Engine();
