@@ -33,13 +33,10 @@ export const INPUT = {
   RIGHT_ARROW_KEY: 39,
   
   // ACTION KEYS - functions take strings
-<<<<<<< HEAD
   JUMP_KEY: [87, 38],
   TOGGLE_TORCH_KEY: ['L', 'l'],
-  EMIT_SONAR_KEY: ['K', 'k']
-=======
+  EMIT_SONAR_KEY: ['K', 'k'],
   TOGGLE_TORCH_KEY: ['L', 'l']
->>>>>>> main
 };
 
 //======================
@@ -87,11 +84,10 @@ export const TORCH = {
 };
 
 //======================
-<<<<<<< HEAD
 // SONAR CONFIG
 //======================
 export const SONAR = {
-  COOLDOWN_MS: 3000 // 3 seconds before next use
+  COOLDOWN_MS: 3000
 };
 
 //======================
@@ -102,8 +98,6 @@ export const GAME = {
 };
 
 //======================
-=======
->>>>>>> main
 // TILE TYPE CONFIG
 //======================
 export const TILE_TYPE = {
