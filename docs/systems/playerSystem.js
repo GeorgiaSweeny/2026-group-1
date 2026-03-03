@@ -18,11 +18,11 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Maintain player positional and state data
-- Apply player-controlled movement intent (left / right / up / down)
-- Trigger player actions (torch toggle) via input
+- Apply player-controlled movement intent (left / right)
+- Trigger player actions (jump, torch toggle) via input
 
 DEPENDENCIES:
-- player object: {x, y, w, h, vy, power}
+- player object: {x, y, w, h, vy, onGround, power}
 - Input state (keyIsDown / keyPressed handlers)
 - Power system for action gating (e.g. torch usage)
 
@@ -32,6 +32,7 @@ engine.register(playerSystem);
 ========================================
 NOTES:
 - Player movement intent is applied before physics resolution
+- Jump logic depends on onGround state set by Physics System
 - Player system does not resolve collisions
 ========================================
 TODO / LIMITATIONS:
@@ -40,9 +41,9 @@ TODO / LIMITATIONS:
 ========================================
 */
 
-//======================================
+//======================
 // PLAYER SYSTEM
-//======================================
+//======================
 import { PLAYER } from '../config.js';
 
 export function createPlayerSystem(player) {
@@ -61,7 +62,6 @@ export function createPlayerSystem(player) {
     },
   };
 }
-
 //======================================
 // END
 //======================================
