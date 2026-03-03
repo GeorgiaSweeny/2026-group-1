@@ -1,63 +1,238 @@
 /*
 ========================================
-VERSION: 2.4
-SYSTEM: PHYSICS SYSTEM
-AUTHORs: Georgia Sweeny, 
+VERSION: 4.0
+SYSTEM: PHYSICS SYSTEM (SUBMARINE MODE)
+AUTHORS: Georgia - Inital setup, 
+         Archie - Refactored for submarine physics
 DESCRIPTION:
-- Physics System: Handles vertical motion, gravity, and collision resolution
-- Updates player state such as position, velocity, and onGround status
+- Physics System: Handles submarine-style movement with momentum and drag
+- Implements friction, velocity damping, and wall collision with bounce
+- No gravity - free 360° movement in underwater environment
 
 RULES:
 - No rendering or drawing in update functions
 - Does not modify other systems directly
 - Purely updates entity state based on physics
-========================================
+
 DESIGN GOALS:
-- Separate physics logic from input and rendering
-- Frame-rate independent movement using deltaTime if needed
-- Maintain clean boundaries between systems
-========================================
+- Submarine feels "floaty" with momentum
+- Smooth deceleration when no input
+- Wall collisions cause bounce based on velocity
+- Simple, readable implementation
+
 RESPONSIBILITIES:
-- Apply gravity to the player
-- Resolve collisions with ground and platforms
-- Update player.onGround flag
-- Maintain consistent vertical motion behavior
+- Apply drag/friction to velocity
+- Resolve collisions with room boundaries (walls)
+- Bounce player off walls based on velocity
+- Update player position based on velocity
 
 DEPENDENCIES:
-- player object: {x, y, w, h, vy, onGround}
-- platforms array: [{x, y, w, h}]
-- Configuration: fallSpeed, groundY
+- player object: {x, y, w, h, vx, vy}
+- room dimensions: {width, height}
+- Configuration: drag, bounceDamping
 
 CONFIG:
-- fallSpeed (number): gravity applied each frame (default from PLAYER.FALL_SPEED)
-- groundY (number): y-coordinate of the floor (default from GAME.GROUND_Y)
+- drag (0-1): velocity damping per frame (default 0.92)
+- bounceDamping (0-1): velocity reduction on wall hit (default 0.5)
+- minVelocity: threshold below which velocity becomes 0
 
 USAGE:
-const physicsSystem = createPhysicsSystem(player, platforms, { fallSpeed: 3 });
+const physicsSystem = createPhysicsSystem(player, () => currentRoom);
 engine.register(physicsSystem);
 ========================================
 NOTES:
-- Currently only vertical collisions handled (ground, top of platform)
-- Horizontal movement / collisions handled elsewhere
-- No friction, acceleration, or drag applied yet
-- Can be extended to use deltaTime for true frame-rate independence
+- Player.vx and player.vy represent velocity (momentum)
+- PlayerSystem adds to velocity, PhysicsSystem applies it to position
+- Wall collision uses AABB (axis-aligned bounding box) detection
+- Bounce direction reverses velocity component perpendicular to wall
 ========================================
 */
 
 //======================================
-// PHYSICS SYSTEM - 
+// PHYSICS SYSTEM
 //======================================
-import { PLAYER, GAME } from '../config.js';
-
-export function createPhysicsSystem(player, platformsOrGetter, { fallSpeed = PLAYER.FALL_SPEED, groundY = GAME.GROUND_Y } = {}) {
-  const getPlatforms = typeof platformsOrGetter === 'function'
-    ? platformsOrGetter
-    : () => platformsOrGetter;
-
-  //---INTERNAL FUNCTIONS---//
 
 //======================================
-// COLLISON SYSTEM - Author:
+// SUBMARINE PHYSICS SYSTEM
+//======================================
+import { PLAYER } from '../config.js';
+import { CANVAS } from '../config.js';
+
+export function createPhysicsSystem(
+  player, 
+  roomStateGetter,
+  { 
+    drag = PLAYER.DRAG,         
+    bounceDamping = PLAYER.BOUNCE_DAMPING,   
+    minVelocity = PLAYER.MIN_VELOCITY      
+  } = {}
+) {
+  const getRoomState = typeof roomStateGetter === 'function' ? roomStateGetter : () => roomStateGetter;
+
+  function getPlayerDimensions() {
+    const width = player.w ?? player.size ?? PLAYER.WIDTH;
+    const height = player.h ?? player.size ?? PLAYER.HEIGHT;
+    return { width, height };
+  }
+
+//======================================
+  // MOMENTUM & DRAG
+  //======================================
+  function applyDrag() {
+    // Apply friction/water resistance
+    player.vx *= drag;
+    player.vy *= drag;
+
+    // Stop tiny movements (prevents endless drift)
+    if (Math.abs(player.vx) < minVelocity) player.vx = 0;
+    if (Math.abs(player.vy) < minVelocity) player.vy = 0;
+  }
+
+  function applyVelocity() {
+    // Update position based on velocity
+    player.x += player.vx;
+    player.y += player.vy;
+  }
+
+  //======================================
+  // WALL COLLISION & BOUNCE
+  //======================================
+
+  // Currently assumes wall = screen edges, will be refactored to use room data for actual walls/obstacles
+
+
+  function checkWallCollisions(roomWidth, roomHeight) {
+
+    // TODO!!: Refactor to use room dimensions and actual wall data instead of canvas edges
+
+    // const room = getRoom();
+    // if (!room) return;
+
+    // const roomWidth = room.width * room.tilewidth;
+    // const roomHeight = room.height * room.tileheight;
+
+    // const halfW = player.w / 2;
+    // const halfH = player.h / 2;
+
+
+    const { width, height } = getPlayerDimensions();
+    const halfW = width / 2;
+    const halfH = height / 2;
+    
+    // Left wall
+    if (player.x - halfW < 0) {
+      player.x = halfW;
+      player.vx = Math.abs(player.vx) * bounceDamping; // Bounce right
+    }
+
+    // Right wall
+    if (player.x + halfW > roomWidth) {
+      player.x = roomWidth - halfW;
+      player.vx = -Math.abs(player.vx) * bounceDamping; // Bounce left
+    }
+
+    // Top wall
+    if (player.y - halfH < 0) {
+      player.y = halfH;
+      player.vy = Math.abs(player.vy) * bounceDamping; // Bounce down
+    }
+
+    // Bottom wall
+    if (player.y + halfH > roomHeight) {
+      player.y = roomHeight - halfH;
+      player.vy = -Math.abs(player.vy) * bounceDamping; // Bounce up
+    }
+  }
+
+  //======================================
+  // OBSTACLE COLLISION (PLATFORMS)
+  //======================================
+  function checkObstacleCollisions(obstacles) {
+    if (!obstacles || obstacles.length === 0) return;
+
+    const { width: playerW, height: playerH } = getPlayerDimensions();
+
+    for (const obs of obstacles) {
+      const obsW = obs.w ?? obs.width ?? 0;
+      const obsH = obs.h ?? obs.height ?? 0;
+      if (!obsW || !obsH) continue;
+
+      // AABB collision detection
+      const playerLeft = player.x - playerW / 2;
+      const playerRight = player.x + playerW / 2;
+      const playerTop = player.y - playerH / 2;
+      const playerBottom = player.y + playerH / 2;
+
+      const obsLeft = obs.x - obsW / 2;
+      const obsRight = obs.x + obsW / 2;
+      const obsTop = obs.y - obsH / 2;
+      const obsBottom = obs.y + obsH / 2;
+
+      const isColliding = 
+        playerRight > obsLeft &&
+        playerLeft < obsRight &&
+        playerBottom > obsTop &&
+        playerTop < obsBottom;
+
+      if (isColliding) {
+        // Calculate overlap on each axis
+        const overlapLeft = playerRight - obsLeft;
+        const overlapRight = obsRight - playerLeft;
+        const overlapTop = playerBottom - obsTop;
+        const overlapBottom = obsBottom - playerTop;
+
+        // Find smallest overlap (penetration depth)
+        const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+        // Push player out and bounce
+        if (minOverlap === overlapLeft) {
+          player.x -= overlapLeft;
+          player.vx = -Math.abs(player.vx) * bounceDamping;
+        } else if (minOverlap === overlapRight) {
+          player.x += overlapRight;
+          player.vx = Math.abs(player.vx) * bounceDamping;
+        } else if (minOverlap === overlapTop) {
+          player.y -= overlapTop;
+          player.vy = -Math.abs(player.vy) * bounceDamping;
+        } else if (minOverlap === overlapBottom) {
+          player.y += overlapBottom;
+          player.vy = Math.abs(player.vy) * bounceDamping;
+        }
+      }
+    }
+  }
+
+  //======================================
+  // PHYSICS - UPDATE PHASE
+  //======================================
+  return {
+    update() {
+      const roomState = getRoomState?.() ?? null;
+      const roomWidth = roomState?.width ?? CANVAS.WIDTH;
+      const roomHeight = roomState?.height ?? CANVAS.HEIGHT;
+      const obstacles = roomState?.platforms ?? [];
+
+      applyDrag();           // Apply water resistance
+      applyVelocity();       // Move player based on velocity
+      checkWallCollisions(roomWidth, roomHeight); // Bounce off room boundaries
+      
+      // // DEBUG: Check after physics
+      // console.log("After physics:", {
+      //   x: player.x, 
+      //   y: player.y, 
+      //   vx: player.vx, 
+      //   vy: player.vy
+      // });
+
+      checkObstacleCollisions(obstacles);
+    }
+  };
+}
+
+// TO BE ADDED: HITBOX BASED COLLISION ...
+
+//======================================
+// COLLISON SYSTEM - Author: Nick
 //======================================
 /* Note from Georgia: (to be removed)
 
@@ -82,7 +257,7 @@ and online info for how people have used it in other projects which might be use
 Write your behavior tests first, it should help when writing the functions 
 - maybe we will start loving tests? xD
 Add error messages if you think it would be helpful
-*/
+
 
   // Landing collision detection
   function isLandingOnPlatform(player, platform) {
@@ -101,12 +276,6 @@ Add error messages if you think it would be helpful
     player.vy += fallSpeed;
     player.y += player.vy;
 
-    // Ground collision
-    if (player.y >= groundY) {
-      player.y = groundY;
-      player.vy = 0;
-      player.onGround = true;
-    }
 
     // Platform collisions
     for (const p of getPlatforms()) {
@@ -121,28 +290,7 @@ Add error messages if you think it would be helpful
 //======================================
 // COLLISON SYSTEM - END
 //======================================
-
-//======================================
-// UNDERWATER PHYSICS - Author: Georgia
-//======================================
-// ........
-// underwater movement logic
-//======================================
-// UNDERWATER SYSTEM - END
-//======================================
-
-//======================================
-// PHYSICS - UPDATE PHASE
-//======================================
-
-  return {
-    update() {
-      // applyUnderWaterPhysics(); <-- georgia will add this
-      // applyCollisions(); <-- suggested wrapper name for collsions to live in
-      applyGravity();// can safely remove current wrapper and code above
-    }
-  };
-}
+*/
 
 //======================================
 // END

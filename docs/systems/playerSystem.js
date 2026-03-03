@@ -18,11 +18,11 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Maintain player positional and state data
-- Apply player-controlled movement intent (left / right)
-- Trigger player actions (jump, torch toggle) via input
+- Apply player-controlled movement intent (left / right / up / down)
+- Trigger player actions (torch toggle) via input
 
 DEPENDENCIES:
-- player object: {x, y, w, h, vy, onGround, power}
+- player object: {x, y, w, h, vy, power}
 - Input state (keyIsDown / keyPressed handlers)
 - Power system for action gating (e.g. torch usage)
 
@@ -32,7 +32,6 @@ engine.register(playerSystem);
 ========================================
 NOTES:
 - Player movement intent is applied before physics resolution
-- Jump logic depends on onGround state set by Physics System
 - Player system does not resolve collisions
 ========================================
 TODO / LIMITATIONS:
@@ -41,27 +40,30 @@ TODO / LIMITATIONS:
 ========================================
 */
 
-//======================
+//======================================
 // PLAYER SYSTEM
-//======================
+//======================================
 import { PLAYER } from '../config.js';
 
 export function createPlayerSystem(player) {
-  // returning object literals → commas between entries
-  return {
-    update(deltaTime) {
-      const speed = PLAYER.MOVE_SPEED;
-      if (player.intent?.left) player.x -= speed;
-      if (player.intent?.right) player.x += speed;
+   // returning object literals → commas between entries
+   return {
+      update(deltaTime) {
+         const acceleration = PLAYER.ACCELERATION;
 
-      if (player.intent?.jump && player.onGround) {
-        player.vy = -player.jumpPower;
-        player.onGround = false;
+         // Horizontal/vertical movement 
+         if (player.intent?.left) player.vx -= acceleration;
+         if (player.intent?.right) player.vx += acceleration;
+         if (player.intent?.up) player.vy -= acceleration;
+         if (player.intent?.down) player.vy += acceleration;
+
+         // Update facing direction based on horizontal velocity
+         if (player.vx > 0) player.facing = 1;
+         else if (player.vx < 0) player.facing = -1;
       }
-      if (player.intent) player.intent.jump = false;
-    },
-  };
+   };
 }
+
 //======================================
 // END
 //======================================

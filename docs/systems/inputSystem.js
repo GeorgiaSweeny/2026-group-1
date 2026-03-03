@@ -1,8 +1,8 @@
 /*
 ========================================
-VERSION: 2.4
+VERSION: 2.5
 SYSTEM: INPUT SYSTEM
-AUTHOR: Georgia Sweeny
+AUTHOR/s: Georgia, Archie
 DESCRIPTION:
 - Captures player input and converts it into intent flags
 - Input system separates user actions from game logic
@@ -20,12 +20,11 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Listen for keyboard events (keyPressed, keyIsDown)
-- Update player intent object with left/right movement
-- Update player intent for discrete actions (jump, toggle torch)
+- Update player intent object with left/right/up/down movement
+- Update player intent for discrete actions (toggle torch)
 
 DEPENDENCIES:
 - Browser keyboard events (p5.js keyIsDown / keyPressed)
-- Player object with `intent` and `onGround` properties
 
 USAGE:
 import { createInputSystem } from './inputSystem.js';
@@ -58,17 +57,17 @@ export function createInputSystem(player) {
     update() {
       const leftKey = INPUT.A_KEY;
       const rightKey = INPUT.D_KEY;
+      const downKey = INPUT.S_KEY;
+      const upKey = INPUT.W_KEY;
       player.intent.left = keyIsDown(leftKey) || keyIsDown(INPUT.LEFT_ARROW_KEY);
       player.intent.right = keyIsDown(rightKey) || keyIsDown(INPUT.RIGHT_ARROW_KEY);
+      player.intent.down = keyIsDown(downKey) || keyIsDown(INPUT.DOWN_ARROW_KEY);
+      player.intent.up = keyIsDown(upKey) || keyIsDown(INPUT.UP_ARROW_KEY);
     },
 
+    
     onKeyPressed(key, keyCodeValue) {
       const keyLower = typeof key === 'string' ? key.toLowerCase() : '';
-      const jumpPressed = INPUT.JUMP_KEY.includes(keyCodeValue) || keyLower === 'w';
-
-      if (jumpPressed && player.onGround) {
-        player.intent.jump = true;
-      }
 
       if (INPUT.TOGGLE_TORCH_KEY.includes(key)) {
         player.intent.toggleTorch = true;
