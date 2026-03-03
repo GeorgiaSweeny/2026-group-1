@@ -164,7 +164,7 @@ class Pulse {
     strokeWeight(2);
     for (let p of this.particles) {
       if (p.life > 0) {
-        stroke(0, 255, 0, p.life);
+        stroke(109, 147, 197, p.life);
         point(p.pos.x, p.pos.y);
       }
     }
