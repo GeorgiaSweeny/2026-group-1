@@ -25,6 +25,10 @@ export function createRenderSystem({
    getResources
 
 }) {
+   let elapsedTime = 0;
+   const oscillationSpeed = 2; // Hz
+   const oscillationAmount = 10; // pixels
+
    function drawBackground() {
       const bg = getBackground?.();
 
@@ -102,13 +106,18 @@ export function createRenderSystem({
             } else {
                fill(255, 0, 0);
             }
+            // Apply oscillation to power resources
+            const oscillationOffset = Math.sin(elapsedTime * oscillationSpeed * 0.001) * oscillationAmount;
+            rect(r.x, r.y + oscillationOffset, r.width, r.height);
+         } else {
+            rect(r.x, r.y, r.width, r.height);
          }
-         rect(r.x, r.y, r.width, r.height);
       }
    }
 
       return {
-         draw() {
+         draw(deltaTime) {
+            elapsedTime += deltaTime;
             const lightSources = getLightSources?.() ?? [];
 
             drawBackground();

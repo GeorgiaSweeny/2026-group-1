@@ -110,6 +110,14 @@ function setup() {
 
   resourceManagementSystem = createResourceManagementSystem(player, roomSystem);
 
+  //handlers for different item types
+  resourceManagementSystem.registerHandler('power', (player, item) => {
+    player.power.current = Math.max(
+      0,
+      Math.min(player.power.current + item.amount, player.power.maxPower)
+    );
+  });
+
   renderSystem = createRenderSystem({
     player,
     getPlatforms: () => roomSystem.getPlatforms(),
