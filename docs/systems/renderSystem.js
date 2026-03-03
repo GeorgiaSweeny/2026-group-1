@@ -6,6 +6,8 @@ AUTHOR: Georgia Sweeny
 DESCRIPTION:
 - Draws room background, platforms, player, UI.
   and ligthing
+
+- Power modifiers added by Monal
 ========================================
 */
 
@@ -19,8 +21,14 @@ export function createRenderSystem({
    getPlatformColor,
    assets,
    darknessLayer,
-   getLightSources
+   getLightSources,
+   getResources
+
 }) {
+   let elapsedTime = 0;
+   const oscillationSpeed = 2; // Hz
+   const oscillationAmount = 10; // pixels
+
    function drawBackground() {
       const bg = getBackground?.();
 
@@ -87,18 +95,41 @@ export function createRenderSystem({
       image(darknessLayer, 0, 0);
    }
 
-   return {
-      draw() {
-         const lightSources = getLightSources?.() ?? [];
+   function drawResources() {
+      const resources = getResources?.() ?? [];
 
-         drawBackground();
-         drawPlatforms();
-         drawPlayer();
-         drawLighting(lightSources);
-         drawUI();
+      for (const r of resources) {
+         noStroke();
+         if (r.resourceType === 'power') {
+            if (r.amount > 0) {
+               fill(0, 255, 0);
+            } else {
+               fill(255, 0, 0);
+            }
+            // Apply oscillation to power resources
+            const oscillationOffset = Math.sin(elapsedTime * oscillationSpeed * 0.001) * oscillationAmount;
+            rect(r.x, r.y + oscillationOffset, r.width, r.height);
+         } else {
+            rect(r.x, r.y, r.width, r.height);
+         }
       }
-   };
-}
+   }
+
+      return {
+         draw(deltaTime) {
+            elapsedTime += deltaTime;
+            const lightSources = getLightSources?.() ?? [];
+
+            drawBackground();
+            drawPlatforms();
+            drawResources(); 
+            drawPlayer();
+            drawLighting(lightSources);
+            drawUI();
+            
+         }
+      };
+   }
 //======================================
 // END
 //======================================

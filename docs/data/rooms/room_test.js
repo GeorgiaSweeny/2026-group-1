@@ -25,7 +25,10 @@ export const room_test = {
     {
       type: "objectgroup",
       name: "entities",
-      objects: []
+      objects: [
+        { name: "powerUp", type: "resource", resourceType: "power", amount: 10, x: 100, y: 200, width: 16, height: 16 },
+        { name: "powerDown", type: "resource", resourceType: "power", amount: -10, x: 300, y: 200, width: 16, height: 16 }
+      ]
     },
     {
       type: "objectgroup",
