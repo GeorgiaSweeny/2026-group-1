@@ -45,8 +45,9 @@ clean scaling for modern resolutions like 640x360 or 1920x1080
 Base Resolution: Use 640x360 as a base resolution for 16:9
 then scale up, rather than designing in native 1080p*/
 export const CANVAS = {
-  WIDTH: 640,
-  HEIGHT: 360,
+  WIDTH: 800,
+  HEIGHT: 800,
+
   TILE_SIZE: 16
 };
 
@@ -58,7 +59,12 @@ export const PLAYER = {
   HEIGHT: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  MOVE_SPEED: 0.2,
+  MOVE_SPEED: 1,
+  ACCELERATION: 0.8,
+  DRAG: 0.9  ,         // Higher = less friction (0.9-0.95 feels good)
+  BOUNCE_DAMPING: 0.5,  // Velocity kept after bounce (0.5 = half speed)
+  MIN_VELOCITY: 0.1,    // Stop if slower than this
+  SIZE: 20,
 };
 
 //======================
@@ -81,12 +87,21 @@ export const TORCH = {
 };
 
 //======================
-// TILE TYPE CONFIG
+// LIGHTING CONFIG
 //======================
-export const TILE_TYPE = {
-  0: 'empty', // water
-  1: 'rock'
+export const LIGHTING = {
+  PLAYER_AMBIENT: {
+    radius: 70,
+    brightness: 0.2
+  }
 };
+
+//======================
+// GAME CONFIG
+//======================
+export const GAME = {
+};
+
 
 //======================
 // HITBOX DEBUG

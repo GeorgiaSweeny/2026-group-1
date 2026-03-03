@@ -61,9 +61,15 @@ export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE 
       torch.update(deltaTime);
 
       // Handle player intent to toggle torch
-      if (player.toggleTorchIntent) {
+      const shouldToggle = typeof player.consumeAction === 'function'
+        ? player.consumeAction('toggleTorch')
+        : player?.actionIntent?.toggleTorch === true;
+
+      if (shouldToggle) {
         torch.tryToggle(!player.power.isEmpty());
-        player.toggleTorchIntent = false;
+        if (player?.actionIntent?.toggleTorch === true) {
+          player.actionIntent.toggleTorch = false;
+        }
       }
 
       // Drain player power if torch is active
