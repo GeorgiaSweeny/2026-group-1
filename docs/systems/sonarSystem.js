@@ -57,7 +57,7 @@ NOTES:
   decays using deltaTime to remain frame-rate independent
 ========================================
 TODO / LIMITATIONS:
-- No built-in cooldown, audio, or enemy alerting
+- No built-in audio, or enemy alerting
 ========================================
 **/
 
@@ -78,7 +78,9 @@ export function createSonarSystem(player, getWalls) {
 
       if (player.intent.emitSonar) {
         if (cooldownTimer <= 0) {
-          pulses.push(new Pulse(player.x, player.y));
+          const px = player.getX ? player.getX() : player.x;
+          const py = player.getY ? player.getY() : player.y;
+          pulses.push(new Pulse(px, py));
           cooldownTimer = SONAR.COOLDOWN_MS;
         }
         player.intent.emitSonar = false;
@@ -105,7 +107,6 @@ export function createSonarSystem(player, getWalls) {
   };
 }
 
-// Pulse.js
 class Pulse {
   constructor(x, y) {
     this.particles = [];
@@ -133,12 +134,16 @@ class Pulse {
 
       if (walls && walls.length) {
         for (let wall of walls) {
+          const w_x = wall.getX ? wall.getCornerX() : wall.x;
+          const w_y = wall.getY ? wall.getCornerY() : wall.y;
+          const w_w = wall.getWidth ? wall.getWidth() : wall.w;
+          const w_h = wall.getHeight ? wall.getHeight() : wall.h;
           
           if (
-            nextPos.x >= wall.x &&
-            nextPos.x <= wall.x + wall.w &&
-            nextPos.y >= wall.y &&
-            nextPos.y <= wall.y + wall.h
+            nextPos.x >= w_x &&
+            nextPos.x <= w_x + w_w &&
+            nextPos.y >= w_y &&
+            nextPos.y <= w_y + w_h
           ) {
             if (typeof wall.illuminate === "function") {
               wall.illuminate();

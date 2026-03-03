@@ -40,7 +40,7 @@ engine.register(playerSystem); // playerSystem consumes this class
 //======================
 import { PowerSystem } from '../systems/powerSystem.js';
 import { Torch } from './components/torch.js';  // torch class in same folder
-import { TORCH } from '../config.js';
+import { TORCH, PLAYER } from '../config.js';
 import { Hitbox } from '../systems/hitboxSystem.js';
 
 export class Player extends Hitbox{
@@ -51,7 +51,6 @@ export class Player extends Hitbox{
 
       // Runtime state
       this.vy = 0;
-      this.jumpPower = config.JUMP_POWER;
       this.onGround = false;
 
       this.intent = {
@@ -63,7 +62,7 @@ export class Player extends Hitbox{
       };
 
       // component
-      this.torch = new Torch(config.TORCH ?? TORCH);
+      this.torch = new Torch(TORCH);
 
       // Runtime resources
       this.power = new PowerSystem();
@@ -82,6 +81,10 @@ export class Player extends Hitbox{
    setCurrentPosition(x, y){
       this.position.x = x;
       this.position.y = y;
+      if (this.nextPos) {
+         this.nextPos.x = x;
+         this.nextPos.y = y;
+      }
    }
    setNextPosition(){
       if(this.moveIntent.right){this.nextPos.x += this.velocity.x}

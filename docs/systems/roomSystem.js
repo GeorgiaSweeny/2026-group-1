@@ -38,12 +38,9 @@ function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
       const gid = data[index];
       if (!gid) continue;
 
-      result.push({
-        x: x,
-        y: y,
-        w: tileWidth,
-        h: tileHeight
-      });
+      result.push(
+        new Wall(x, y, tileWidth, tileHeight)
+      );
     }
   }
 
@@ -135,9 +132,9 @@ function normalizeLegacyRoom(roomKey, roomConfig) {
   };
 
   if (roomConfig.platformsTiles) {
-    normalized.platforms = roomConfig.platformsTiles.map((platform) => rectToPixels(platform));
+    normalized.platforms = roomConfig.platformsTiles.map((platform) => new Wall(platform.x, platform.y, platform.w, platform.h));
   } else if (roomConfig.platforms) {
-    normalized.platforms = [...roomConfig.platforms];
+    normalized.platforms = roomConfig.platforms.map((platform) => new Wall(platform.x, platform.y, platform.w, platform.h));
   } else if (Array.isArray(roomConfig.tiles)) {
     // Basic grid fallback: any non-zero tile is treated as solid.
     normalized.platforms = [];
@@ -187,13 +184,7 @@ export function createRoomSystem({ initialRoom = null, roomData = {} } = {}) {
 
     currentRoom = roomKey;
     currentConfig = normalized;
-    platforms = [...(normalized.platforms ?? [])].map(p => ({
-      ...p,
-      illumination: 0,
-      illuminate() {
-        this.illumination = 255;
-      }
-    }));
+    platforms = [...(normalized.platforms ?? [])];
     entities = [...(normalized.entities ?? [])];
     playerStart = normalized.playerStart ?? null;
   }
@@ -202,10 +193,10 @@ export function createRoomSystem({ initialRoom = null, roomData = {} } = {}) {
     for (const entity of entities) {
       entity.update?.(deltaTime);
     }
-    
+    //gradually fade the brightness of the platforms
     for (let platform of platforms) {
       if (platform.illumination && platform.illumination > 0) {
-        platform.illumination = Math.max(0, platform.illumination - 0.2 * deltaTime);
+        platform.illumination = Math.max(0, platform.illumination - 2 * deltaTime);
       }
     }
   }

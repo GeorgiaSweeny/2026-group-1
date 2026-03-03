@@ -111,7 +111,11 @@ export function createRenderSystem({
          noStroke();
          fill(platformColor);
          for (const p of platforms) {
-            rect(p.x, p.y, p.w, p.h);
+            const px = typeof p.getCornerX === 'function' ? p.getCornerX() : p.x;
+            const py = typeof p.getCornerY === 'function' ? p.getCornerY() : p.y;
+            const pw = typeof p.getWidth === 'function' ? p.getWidth() : p.w;
+            const ph = typeof p.getHeight === 'function' ? p.getHeight() : p.h;
+            rect(px, py, pw, ph);
          }
 
          drawPlayer();
@@ -121,12 +125,16 @@ export function createRenderSystem({
          noStroke();
          for (const p of platforms) {
             if (p.illumination > 0) {
+               const px = typeof p.getCornerX === 'function' ? p.getCornerX() : p.x;
+               const py = typeof p.getCornerY === 'function' ? p.getCornerY() : p.y;
+               const pw = typeof p.getWidth === 'function' ? p.getWidth() : p.w;
+               const ph = typeof p.getHeight === 'function' ? p.getHeight() : p.h;
                const c = color(platformColor);
                const illuminateColor = color('#5a6e82');
                const mixedColor = lerpColor(c, illuminateColor, p.illumination / 255);
                mixedColor.setAlpha(p.illumination); 
                fill(mixedColor);
-               rect(p.x, p.y, p.w, p.h);
+               rect(px, py, pw, ph);
             }
          }
 
