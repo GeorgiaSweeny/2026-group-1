@@ -38,9 +38,10 @@ engine.register(playerSystem); // playerSystem consumes this class
 //======================
 // PLAYER CLASS
 //======================
-import { PowerSystem } from '../systems/powerSystem.js';
-import { Torch } from './components/torch.js';  // torch class in same folder
 import { TORCH } from '../config.js';
+import { LIGHTING } from '../config.js';
+import { Torch } from './components/torch.js';  // torch class in same folder
+import { PowerSystem } from '../systems/powerSystem.js';
 
 export class Player {
    constructor(config) {
@@ -49,28 +50,63 @@ export class Player {
       this.y = config.START_Y;
       this.w = config.WIDTH;
       this.h = config.HEIGHT;
+      this.size = config.SIZE;
+      this.facing = 1; // 1 for right, -1 for left
 
-      // Runtime state
-      this.vy = 0;
-      this.jumpPower = config.JUMP_POWER;
-      this.onGround = false;
+
+      // Physics state: Velocity 
+      this.vx = 0; // Velocity for physics system
+      this.vy = 0; // Vertical velocity, not used in submarine mode but kept for potential future use
+
 
       this.intent = {
          left: false,
          right: false,
-         jump: false,
+         up: false,
+         down: false,
          toggleTorch: false,
       };
 
-      // component
+      // components
       this.torch = new Torch(config.TORCH ?? TORCH);
 
       // Runtime resources
       this.power = new PowerSystem();
       this.health = null;
-      this.oxygen = null;
+
+      // Ambient light values (owned by player)
+      this.ambientRadius = LIGHTING.PLAYER_AMBIENT.radius;
+      this.ambientBrightness = LIGHTING.PLAYER_AMBIENT.brightness;
    }
-};
+
+      getLightSources() {
+         const lights = [];
+
+         // Ambient (constant)
+         lights.push({
+            x: this.x,
+            y: this.y,
+            radius: this.ambientRadius,
+            intensity: this.ambientBrightness
+         });
+
+         // Torch
+         if (this.torch.isOn) {
+            const intensity = this.torch.getIntensity(this.power.getPercent());
+
+            if (intensity > 0) {
+               lights.push({
+                  x: this.x,
+                  y: this.y,
+                  radius: this.torch.radius,
+                  intensity
+               });
+            }
+         }
+
+         return lights;
+      }
+   }
 //======================================
 // END
 //======================================
