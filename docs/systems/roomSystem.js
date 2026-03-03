@@ -196,7 +196,7 @@ export function createRoomSystem({ initialRoom = null, roomData = {} } = {}) {
     //gradually fade the brightness of the platforms
     for (let platform of platforms) {
       if (platform.illumination && platform.illumination > 0) {
-        platform.illumination = Math.max(0, platform.illumination - 2 * deltaTime);
+        platform.illumination = Math.max(0, platform.illumination - 0.08 * deltaTime);
       }
     }
   }
