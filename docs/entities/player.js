@@ -38,32 +38,16 @@ engine.register(playerSystem); // playerSystem consumes this class
 //======================
 // PLAYER CLASS
 //======================
-import { TORCH } from '../config.js';
-import { LIGHTING } from '../config.js';
-import { PLAYER } from '../config.js';
-import { Torch } from './components/torch.js';  // torch class in same folder
 import { PowerSystem } from '../systems/powerSystem.js';
+import { Torch } from './components/torch.js';  // torch class in same folder
+import { TORCH } from '../config.js';
 import { Hitbox } from '../systems/hitboxSystem.js';
 
 export class Player extends Hitbox{
-   constructor(xOrConfig, y, w, h){
-      const usingConfigObject = typeof xOrConfig === 'object' && xOrConfig !== null;
-      const startX = usingConfigObject ? (xOrConfig.START_X ?? 0) : xOrConfig;
-      const startY = usingConfigObject ? (xOrConfig.START_Y ?? 0) : y;
-      const width = usingConfigObject ? (xOrConfig.WIDTH ?? PLAYER.WIDTH) : w;
-      const height = usingConfigObject ? (xOrConfig.HEIGHT ?? PLAYER.HEIGHT) : h;
-
-      // Hitbox expects corner coordinates; player start points are center-like in current room flow.
-      const cornerX = (startX ?? 0) - (width ?? 0) / 2;
-      const cornerY = (startY ?? 0) - (height ?? 0) / 2;
-
-      super(cornerX, cornerY, width ?? PLAYER.WIDTH, height ?? PLAYER.HEIGHT);
-
+   constructor(x, y, w, h){
+      super(x, y, w, h);
       this.nextPos = createVector(this.position.x, this.position.y);
       this.velocity = createVector(0, 0);
-
-      this.size = PLAYER.SIZE;
-      this.facing = 1; // 1 for right, -1 for left
 
       this.torch = new Torch(TORCH);
       this.power = new PowerSystem();
@@ -76,30 +60,12 @@ export class Player extends Hitbox{
          up: false,
          down: false,
       };
-      this.actionIntent = {
-         toggleTorch: false,
-         //sonar
-         //missile
-      };
-   
-   }
-   get x(){
-      return this.position.x;
-   }
-   set x(value){
-      this.position.x = value;
-   }
-   get y(){
-      return this.position.y;
-   }
-   set y(value){
-      this.position.y = value;
+
+      this.toggleTorchIntent = false;
    }
    setCurrentPosition(x, y){
-      this.x = x;
-      this.y = y;
-      this.nextPos.x = x;
-      this.nextPos.y = y;
+      this.position.x = x;
+      this.position.y = y;
    }
    setNextPosition(){
       if(this.moveIntent.right){this.nextPos.x += this.velocity.x}
@@ -122,48 +88,14 @@ export class Player extends Hitbox{
       return this.moveIntent;
    }
    switchTorch(){
-      this.actionIntent.toggleTorch = true;
-   }
-   requestAction(actionKey){
-      if (!this.actionIntent || !(actionKey in this.actionIntent)) return;
-      this.actionIntent[actionKey] = true;
-   }
-   consumeAction(actionKey){
-      if (!this.actionIntent || !(actionKey in this.actionIntent)) return false;
-      const requested = this.actionIntent[actionKey] === true;
-      this.actionIntent[actionKey] = false;
-      return requested;
-   }
-   getLightSources(){
-      const powerPercent = this.power?.getPercent?.() ?? 0;
-      const torchIntensity = this.torch?.getIntensity?.(powerPercent) ?? 0;
-      const sources = [];
-
-      if (torchIntensity > 0) {
-         sources.push({
-            x: this.x,
-            y: this.y,
-            radius: this.torch.radius,
-            intensity: torchIntensity
-         });
-      }
-
-      if (LIGHTING?.PLAYER_AMBIENT?.radius && LIGHTING?.PLAYER_AMBIENT?.brightness) {
-         sources.push({
-            x: this.x,
-            y: this.y,
-            radius: LIGHTING.PLAYER_AMBIENT.radius,
-            intensity: LIGHTING.PLAYER_AMBIENT.brightness
-         });
-      }
-
-      return sources;
+      this.toggleTorchIntent = true;
    }
    resetMoveIntent(){
       for(let i in this.moveIntent){
          this.moveIntent[i] = false;
       }
    }
+   // add getter functions for player specific variables
 };
 
 //======================================

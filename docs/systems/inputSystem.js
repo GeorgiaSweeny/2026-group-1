@@ -1,8 +1,8 @@
 /*
 ========================================
-VERSION: 2.5
+VERSION: 2.4
 SYSTEM: INPUT SYSTEM
-AUTHOR/s: Georgia, Archie
+AUTHOR: Georgia Sweeny
 DESCRIPTION:
 - Captures player input and converts it into intent flags
 - Input system separates user actions from game logic
@@ -20,11 +20,12 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Listen for keyboard events (keyPressed, keyIsDown)
-- Update player intent object with left/right/up/down movement
-- Update player intent for discrete actions (toggle torch)
+- Update player intent object with left/right movement
+- Update player intent for discrete actions (jump, toggle torch)
 
 DEPENDENCIES:
 - Browser keyboard events (p5.js keyIsDown / keyPressed)
+- Player object with `intent` and `onGround` properties
 
 USAGE:
 import { createInputSystem } from './inputSystem.js';
@@ -69,11 +70,7 @@ export function createInputSystem(player) {
 
     onKeyPressed(key) {
       if (INPUT.TOGGLE_TORCH_KEY.includes(key)) {
-        if (typeof player.requestAction === 'function') {
-          player.requestAction('toggleTorch');
-        } else {
-          player.actionIntent.toggleTorch = true;
-        }
+        player.toggleTorchIntent = true;
       }
     }
   };
