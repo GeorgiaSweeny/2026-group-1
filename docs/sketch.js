@@ -23,6 +23,7 @@ import { createRoomSystem } from './systems/roomSystem.js';
 import { CANVAS, PLAYER, TORCH } from './config.js';
 import { Player } from './entities/player.js';
 import { room_test } from './data/rooms/room_test.js';
+import { createResourceManagementSystem } from './systems/resourceManagementSystem.js';
 
 let engine;
 let darknessLayer;
@@ -35,6 +36,7 @@ let torchSystem;
 let renderSystem;
 let lightingSystem;
 let roomSystem;
+let resourceManagementSystem;
 
 let assets = {};
 const roomData = {
@@ -102,6 +104,16 @@ function setup() {
 
   lightingSystem = createLightingSystem(player, []);
 
+  resourceManagementSystem = createResourceManagementSystem(player, roomSystem);
+
+  //handlers for different item types
+  resourceManagementSystem.registerHandler('power', (player, item) => {
+    player.power.current = Math.max(
+      0,
+      Math.min(player.power.current + item.amount, player.power.maxPower)
+    );
+  });
+
   renderSystem = createRenderSystem({
     player,
     getPlatforms: () => roomSystem.getPlatforms(),
@@ -109,7 +121,8 @@ function setup() {
     getPlatformColor: () => roomSystem.getPlatformColor(),
     assets,
     darknessLayer,
-    getLightSources: () => lightingSystem.getLightSources()
+    getLightSources: () => lightingSystem.getLightSources(),
+    getResources: () => resourceManagementSystem.getUncollectedEntities()
   });
 
   engine = new Engine();
@@ -119,6 +132,7 @@ function setup() {
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(renderSystem);
+  engine.register(resourceManagementSystem);
 }
 
 function draw() {

@@ -6,6 +6,8 @@ AUTHOR: Georgia Sweeny
 DESCRIPTION:
 - Draws room background, platforms, player, UI.
   and ligthing
+
+- Power modifiers added by Monal
 ========================================
 */
 
@@ -21,8 +23,14 @@ export function createRenderSystem({
    getPlatformColor,
    assets,
    darknessLayer,
-   getLightSources
+   getLightSources,
+   getResources
+
 }) {
+   let elapsedTime = 0;
+   const oscillationSpeed = 2; // Hz
+   const oscillationAmount = 10; // pixels
+
    function drawBackground() {
       const bg = getBackground?.();
 
@@ -110,8 +118,23 @@ export function createRenderSystem({
          drawUI();
          debugHitbox(DEBUG_COLOR.DRAW);
       }
-   };
-}
+   }
+
+      return {
+         draw(deltaTime) {
+            elapsedTime += deltaTime;
+            const lightSources = getLightSources?.() ?? [];
+
+            drawBackground();
+            drawPlatforms();
+            drawResources(); 
+            drawPlayer();
+            drawLighting(lightSources);
+            drawUI();
+            
+         }
+      };
+   }
 //======================================
 // END
 //======================================
