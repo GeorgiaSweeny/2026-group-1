@@ -11,6 +11,7 @@ AUTHOR: Georgia Sweeny
 //======================================
 // MAIN
 //======================================
+
 import { Engine } from './gameEngine/engine.js';
 import { createInputSystem } from './systems/inputSystem.js';
 import { createPlayerSystem } from './systems/playerSystem.js';
@@ -19,7 +20,7 @@ import { createTorchSystem } from './systems/torchSystem.js';
 import { createRenderSystem } from './systems/renderSystem.js';
 import { createLightingSystem } from './systems/lightingSystem.js';
 import { createRoomSystem } from './systems/roomSystem.js';
-import { CANVAS, PLAYER, GAME, TORCH } from './config.js';
+import { CANVAS, PLAYER, TORCH } from './config.js';
 import { Player } from './entities/player.js';
 import { room_test } from './data/rooms/room_test.js';
 import { createResourceManagementSystem } from './systems/resourceManagementSystem.js';
@@ -76,32 +77,27 @@ function preload() {
 
 function setup() {
   createCanvas(CANVAS.WIDTH, CANVAS.HEIGHT);
-  rectMode(CENTER);
+ // rectMode(CENTER);
   textSize(20);
   textAlign(LEFT);
 
   darknessLayer = createGraphics(CANVAS.WIDTH, CANVAS.HEIGHT);
 
-  player = new Player(PLAYER);
+  player = new Player(PLAYER.START_X, PLAYER.START_Y, PLAYER.WIDTH, PLAYER.HEIGHT);
 
   const initialRoom = room_test.id;
   roomSystem = createRoomSystem({
     initialRoom,
     roomData
   });
-
   const playerStart = roomSystem.getPlayerStart();
   if (playerStart) {
-    player.x = playerStart.x;
-    player.y = playerStart.y;
+    player.setCurrentPosition(playerStart.x, playerStart.y);
   }
 
   inputSystem = createInputSystem(player);
   playerSystem = createPlayerSystem(player);
-  physicsSystem = createPhysicsSystem(player, () => roomSystem.getPlatforms(), {
-    fallSpeed: PLAYER.FALL_SPEED,
-    groundY: GAME.GROUND_Y
-  });
+  physicsSystem = createPhysicsSystem(player, () => roomSystem.getPlatforms());
   torchSystem = createTorchSystem(player.torch, player, {
     drainRate: TORCH.DRAIN_RATE
   });
@@ -151,6 +147,7 @@ function keyReleased() {
   if (key === 'A' || key === 'a') player.intent.left = false;
   if (key === 'D' || key === 'd') player.intent.right = false;
 }
+
 
 window.preload = preload;
 window.setup = setup;

@@ -44,12 +44,13 @@ NOTES:
 ========================================
 */
 
+import { isColliding, resolveWallCollision } from "./hitboxSystem.js";
+
 //======================================
 // PHYSICS SYSTEM - 
 //======================================
-import { PLAYER, GAME } from '../config.js';
 
-export function createPhysicsSystem(player, platformsOrGetter, { fallSpeed = PLAYER.FALL_SPEED, groundY = GAME.GROUND_Y } = {}) {
+export function createPhysicsSystem(player, platformsOrGetter) {
   const getPlatforms = typeof platformsOrGetter === 'function'
     ? platformsOrGetter
     : () => platformsOrGetter;
@@ -57,7 +58,7 @@ export function createPhysicsSystem(player, platformsOrGetter, { fallSpeed = PLA
   //---INTERNAL FUNCTIONS---//
 
 //======================================
-// COLLISON SYSTEM - Author:
+// COLLISON SYSTEM - Author: Nick
 //======================================
 /* Note from Georgia: (to be removed)
 
@@ -84,40 +85,19 @@ Write your behavior tests first, it should help when writing the functions
 Add error messages if you think it would be helpful
 */
 
-  // Landing collision detection
-  function isLandingOnPlatform(player, platform) {
-    return (
-      player.x + player.w / 2 > platform.x - platform.w / 2 &&
-      player.x - player.w / 2 < platform.x + platform.w / 2 &&
-      player.y + player.h / 2 >= platform.y - platform.h / 2 &&
-      player.y + player.h / 2 <= platform.y - platform.h / 2 + player.vy &&
-      player.vy > 0
-    );
-  }
 
-  // Apply gravity and collisions
-  function applyGravity() {
-    player.onGround = false;
-    player.vy += fallSpeed;
-    player.y += player.vy;
-
-    // Ground collision
-    if (player.y >= groundY) {
-      player.y = groundY;
-      player.vy = 0;
-      player.onGround = true;
-    }
-
-    // Platform collisions
-    for (const p of getPlatforms()) {
-      if (isLandingOnPlatform(player, p)) {
-        player.y = p.y - p.h / 2 - player.h / 2;
-        player.vy = 0;
-        player.onGround = true;
-        break;
+  function applyCollisions(){
+    player.setNextPosition();
+    let walls = getPlatforms();
+    for(let i in walls){
+      walls[i].updateZones(player);
+      if(isColliding(walls[i], player)){
+        resolveWallCollision(player, walls[i]);
       }
     }
+    player.movePlayer();
   }
+  
 //======================================
 // COLLISON SYSTEM - END
 //======================================
@@ -138,8 +118,7 @@ Add error messages if you think it would be helpful
   return {
     update() {
       // applyUnderWaterPhysics(); <-- georgia will add this
-      // applyCollisions(); <-- suggested wrapper name for collsions to live in
-      applyGravity();// can safely remove current wrapper and code above
+      applyCollisions(); // <-- suggested wrapper name for collsions to live in
     }
   };
 }
