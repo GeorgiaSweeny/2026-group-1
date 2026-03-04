@@ -66,6 +66,11 @@ TODO / LIMITATIONS:
 //======================================
 import { SONAR } from '../config.js';
 
+const RAY_COUNT = 360;
+const RAY_SPEED = 0.2;
+const RAY_DECAY = 0.18;
+const RAY_LIFETIME = 255;
+
 export function createSonarSystem(player, getWalls) {
   let pulses = [];
   let cooldownTimer = 0;
@@ -78,14 +83,15 @@ export function createSonarSystem(player, getWalls) {
 
       if (player.intent.emitSonar) {
         if (cooldownTimer <= 0) {
-          const px = player.getX ? player.getX() : player.x;
-          const py = player.getY ? player.getY() : player.y;
+          const px = player.getX();
+          const py = player.getY();
           pulses.push(new Pulse(px, py));
           cooldownTimer = SONAR.COOLDOWN_MS;
         }
         player.intent.emitSonar = false;
       }
 
+      // Update active pulses
       for (let i = pulses.length - 1; i >= 0; i--) {
         pulses[i].update(dt, getWalls());
         if (pulses[i].isFinished()) {
@@ -110,52 +116,60 @@ export function createSonarSystem(player, getWalls) {
 class Pulse {
   constructor(x, y) {
     this.particles = [];
-    const numRays = 360;
-    this.speed = 0.2;
-
-    for (let i = 0; i < numRays; i++) {
-      const angle = radians(i);
+  
+    for (let i = 0; i < RAY_COUNT; i++) {
+      const angle = radians(i * (360 / RAY_COUNT));
       this.particles.push({
         pos: createVector(x, y),
-        vel: p5.Vector.fromAngle(angle).mult(this.speed),
-        life: 255,
+        vel: p5.Vector.fromAngle(angle).mult(RAY_SPEED),
+        life: RAY_LIFETIME,
       });
     }
   }
 
   update(dt, walls) {
+    const wallsList = walls || [];
+
     for (let p of this.particles) {
-      if (p.life <= 0) continue;
-
-      p.life -= 0.2 * dt;
-
-      const moveStep = p5.Vector.mult(p.vel, dt);
-      const nextPos = p5.Vector.add(p.pos, moveStep);
-
-      if (walls && walls.length) {
-        for (let wall of walls) {
-          const w_x = wall.getX ? wall.getCornerX() : wall.x;
-          const w_y = wall.getY ? wall.getCornerY() : wall.y;
-          const w_w = wall.getWidth ? wall.getWidth() : wall.w;
-          const w_h = wall.getHeight ? wall.getHeight() : wall.h;
-          
-          if (
-            nextPos.x >= w_x &&
-            nextPos.x <= w_x + w_w &&
-            nextPos.y >= w_y &&
-            nextPos.y <= w_y + w_h
-          ) {
-            if (typeof wall.illuminate === "function") {
-              wall.illuminate();
-            }
-            p.life = 0;
-            break;
-          }
-        }
+      if (p.life <= 0) {
+        continue;
       }
 
-      if (p.life > 0) {
-        p.pos = nextPos;
+      p.life -= RAY_DECAY * dt;
+
+      // find next position
+      const nextX = p.pos.x + p.vel.x * dt;
+      const nextY = p.pos.y + p.vel.y * dt;
+
+      let hasCollided = false;
+      // only check collisions if walls exist
+      for (let wall of wallsList) {
+         const wx = wall.getCornerX();
+         const wy = wall.getCornerY();
+         const ww = wall.getWidth();
+         const wh = wall.getHeight();
+         
+         if (
+            nextX >= wx &&
+            nextX <= wx + ww &&
+            nextY >= wy &&
+            nextY <= wy + wh
+         ) {
+            // has collided
+            if (wall.illuminate) {
+               wall.illuminate();
+            }
+            hasCollided = true;
+            break;
+         }
+      }
+
+      // kills particle on impact
+      if (hasCollided) {
+        p.life = 0; 
+      } else if (p.life > 0) {
+        p.pos.x = nextX;
+        p.pos.y = nextY;
       }
     }
   }
@@ -164,7 +178,7 @@ class Pulse {
     strokeWeight(2);
     for (let p of this.particles) {
       if (p.life > 0) {
-        stroke(109, 147, 197, p.life);
+        stroke(100, 200, 255, p.life);
         point(p.pos.x, p.pos.y);
       }
     }
@@ -174,7 +188,6 @@ class Pulse {
     return this.particles.every((p) => p.life <= 0);
   }
 }
-
 //======================================
 // END
 //======================================
