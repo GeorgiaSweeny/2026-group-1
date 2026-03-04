@@ -46,7 +46,7 @@ TODO / LIMITATIONS:
 //======================================
 // LIGHTING SYSTEM
 //======================================
-export function createLightingSystem(player, enemies = []) {
+export function createLightingSystem(player = []) {
    return {
 
       //--- GET LIGHT SOURCES ---//
