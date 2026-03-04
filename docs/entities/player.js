@@ -65,9 +65,22 @@ export class Player extends Hitbox{
          left: false,
          right: false,
          toggleTorch: false,
-         emitSonar: false
+         //sonar
+         //missile
       };
-      
+   
+   }
+   get x(){
+      return this.position.x;
+   }
+   set x(value){
+      this.position.x = value;
+   }
+   get y(){
+      return this.position.y;
+   }
+   set y(value){
+      this.position.y = value;
    }
    setCurrentPosition(x, y){
       this.position.x = x;
@@ -100,16 +113,46 @@ export class Player extends Hitbox{
    switchTorch(){
       this.intent.toggleTorch = true;
    }
-   resetIntent(){
-      this.intent.up = false;
-      this.intent.down = false;
-      this.intent.left = false;
-      this.intent.right = false;
+   requestAction(actionKey){
+      if (!this.actionIntent || !(actionKey in this.actionIntent)) return;
+      this.actionIntent[actionKey] = true;
    }
-   emitSonar(){
-      this.intent.emitSonar = true;
+   consumeAction(actionKey){
+      if (!this.actionIntent || !(actionKey in this.actionIntent)) return false;
+      const requested = this.actionIntent[actionKey] === true;
+      this.actionIntent[actionKey] = false;
+      return requested;
    }
-   // add getter functions for player specific variables
+   getLightSources(){
+      const powerPercent = this.power?.getPercent?.() ?? 0;
+      const torchIntensity = this.torch?.getIntensity?.(powerPercent) ?? 0;
+      const sources = [];
+
+      if (torchIntensity > 0) {
+         sources.push({
+            x: this.x,
+            y: this.y,
+            radius: this.torch.radius,
+            intensity: torchIntensity
+         });
+      }
+
+      if (LIGHTING?.PLAYER_AMBIENT?.radius && LIGHTING?.PLAYER_AMBIENT?.brightness) {
+         sources.push({
+            x: this.x,
+            y: this.y,
+            radius: LIGHTING.PLAYER_AMBIENT.radius,
+            intensity: LIGHTING.PLAYER_AMBIENT.brightness
+         });
+      }
+
+      return sources;
+   }
+   resetMoveIntent(){
+      for(let i in this.moveIntent){
+         this.moveIntent[i] = false;
+      }
+   }
 };
 
 //======================================

@@ -1,114 +1,160 @@
-/**
+/*
 ========================================
 VERSION: 4.0
 SYSTEM: SONAR SYSTEM
 AUTHOR: Ben Mounce
 DESCRIPTION:
-- Emits a sonar pulse from the player that travels outward 
-  in rays and momentarily reveals walls and other environmental
-  objects touched by the pulse. Intended as a gameplay aid 
-  to reveal hidden routes and optionally alert enemies
+- Emits expanding sonar rings from the player to temporarily reveal walls.
+- Integrates with roomSystem platforms (Tiled JSON) and hitbox walls.
 
 RULES:
-- Rendering code must not modify game state; rendering should
-  only read from entities and systems
-- All timing or state-updates must happen in update functions,
-  do not perform logic inside draw/render functions
-- Timing must be frame-rate independent and always pass 
-deltaTime to update functions so fades and lifetimes behave 
-  consistently
+- No direct mutation of shared game state outside this system.
+- Uses player intent (emitSonar) set by inputSystem.
+- Draws additive glow without altering the main render layers.
 ========================================
 DESIGN GOALS:
-- Provide a simple, testable Pulse implementation that emits
-  multiple rays from a given origin and notifies the intersected
-  walls through wall.illuminate()
-- Keep pulse logic separate from rendering and input handling.
-  The pulse exposes update(dt) and show(). Input should 
-  trigger, creating a pulse instance when the player requests
-  a ping
+- Keep the original pulse/alpha visual while plugging into ECS.
+- Work with both Hitbox walls and plain room objects
 ========================================
 RESPONSIBILITIES:
-- Produce rays/particles that move outward from an origin
-- Detect intersections with axis-aligned rectangular walls 
-  and call wall.illuminate() when a collision occurs
-- Manage individual particle lifetimes and provide isFinished()
-  to allow higher-level code to dispose of completed pulses
+- Spawn pulses when the player requests sonar.
+- Fade pulses over time and stop when finished.
+- Reveal walls near the pulse radius and fade them back out.
 ========================================
 DEPENDENCIES:
-- Walls array in scope as each wall should have x,y,w,h, and 
-an optional illuminate() method
-- p5.js vector helpers and drawing helpers if using the 
-  existing show() implementation
-- deltaTime passed to update(dt) should be in milliseconds
+- player: exposes intent.emitSonar and getX/getY (or x/y fallback).
+- roomSystem: exposes getPlatforms() returning walls.
+- config: SONAR.COOLDOWN_MS
 ========================================
 USAGE:
-- Create a pulse at the player's position when the player pings:
-const pulse = new Pulse(player.x, player.y);
-- In the engine loop:
-pulse.update(deltaTime);
-pulse.show();
-if (pulse.isFinished()) { // remove pulse // }
+import { createSonarSystem } from './sonarSystem.js';
+const sonarSystem = createSonarSystem(player, () => roomSystem.getPlatforms());
+engine.register(sonarSystem);
 ========================================
-NOTES:
-- The implementation uses a configurable number of rays and 
-  a speed multiplier; adjust these for performance/visual 
-  tradeoffs
-- Particle life is represented as an alpha from 0 -> 255 and
-  decays using deltaTime to remain frame-rate independent
-========================================
-TODO / LIMITATIONS:
-- No built-in audio, or enemy alerting
-========================================
-**/
+*/
 
-//======================================
-// SONAR SYSTEM
-//======================================
 import { SONAR } from '../config.js';
 
 const RAY_COUNT = 360;
-const RAY_SPEED = 0.2;
-const RAY_DECAY = 0.18;
+const RAY_SPEED = 0.22;
+const RAY_DECAY = 0.22;
 const RAY_LIFETIME = 255;
+
+const REVEAL_BONUS = 70;
+const REVEAL_FADE_PER_MS = 0.2;
+
+function readWallRect(wall) {
+  if (!wall || typeof wall !== 'object') {
+    return null;
+  }
+  const hasMethods = typeof wall?.getCornerX === 'function';
+  const w = hasMethods ? wall.getWidth() : wall?.w ?? 0;
+  const h = hasMethods ? wall.getHeight() : wall?.h ?? 0;
+  if (!w || !h) {
+    return null;
+  }
+  const x = hasMethods ? wall.getCornerX() : (wall.x ?? 0) - w / 2;
+  const y = hasMethods ? wall.getCornerY() : (wall.y ?? 0) - h / 2;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    return null;
+  }
+  return { x, y, w, h };
+}
 
 export function createSonarSystem(player, getWalls) {
   let pulses = [];
+  const wallAlpha = new WeakMap();
   let cooldownTimer = 0;
 
   return {
-    update(dt) {
+    update(dt = 16) {
       if (cooldownTimer > 0) {
-        cooldownTimer -= dt;
+        cooldownTimer = Math.max(0, cooldownTimer - dt);
       }
 
-      if (player.intent.emitSonar) {
+      // spawn pulse when requested and off cooldown
+      if (player?.actionIntent?.emitSonar) {
         if (cooldownTimer <= 0) {
-          const px = player.getX();
-          const py = player.getY();
-          pulses.push(new Pulse(px, py));
-          cooldownTimer = SONAR.COOLDOWN_MS;
+          const px = typeof player.getX === 'function' ? player.getX() : player.x;
+          const py = typeof player.getY === 'function' ? player.getY() : player.y;
+          if (Number.isFinite(px) && Number.isFinite(py)) {
+            pulses.push(new Pulse(px, py));
+            cooldownTimer = SONAR.COOLDOWN_MS ?? 0;
+          }
         }
-        player.intent.emitSonar = false;
+        player.actionIntent.emitSonar = false;
       }
 
-      // Update active pulses
+      const wallsRaw = getWalls?.() || [];
+      const walls = Array.isArray(wallsRaw) ? wallsRaw : (wallsRaw?.platforms ?? []);
+
       for (let i = pulses.length - 1; i >= 0; i--) {
-        pulses[i].update(dt, getWalls());
-        if (pulses[i].isFinished()) {
+        const p = pulses[i];
+        p.update(dt, walls, wallAlpha);
+
+        if (p.isFinished()) {
           pulses.splice(i, 1);
         }
       }
-    },
-    draw() {
-      push();
-      for (let pulse of pulses) {
-        pulse.show();
+
+      // fade reveals
+      if (walls.length) {
+        const fadeAmount = REVEAL_FADE_PER_MS * dt;
+        for (const wall of walls) {
+          const current = wallAlpha.get(wall);
+          if (current == null) {
+            continue;
+          }
+          const next = Math.max(0, current - fadeAmount);
+          if (next <= 0) {
+            wallAlpha.delete(wall);
+          } else {
+            wallAlpha.set(wall, next);
+          }
+        }
       }
+    },
+
+    draw() {
+      if (!pulses.length) {
+        return;
+      }
+
+      push();
+
+      if (typeof blendMode === 'function' && typeof ADD !== 'undefined') {
+        blendMode(ADD);
+      }
+      for (const p of pulses) {
+        p.show();
+      }
+
       pop();
     },
+
     getCooldownPercent() {
-      if (cooldownTimer <= 0) return 0;
-      return cooldownTimer / SONAR.COOLDOWN_MS;
+      if (cooldownTimer <= 0) {
+        return 0;
+      }
+      return cooldownTimer / (SONAR.COOLDOWN_MS || 1);
+    },
+
+    getRevealedWalls() {
+      const wallsRaw = getWalls?.() || [];
+      const walls = Array.isArray(wallsRaw) ? wallsRaw : (wallsRaw?.platforms ?? []);
+      const reveals = [];
+      for (const wall of walls) {
+        const alpha = wallAlpha.get(wall);
+        if (!alpha) {
+          continue;
+        }
+        const rectInfo = readWallRect(wall);
+        if (!rectInfo) {
+          continue;
+        } 
+        reveals.push({ ...rectInfo, alpha: Math.max(0, Math.min(255, alpha)) });
+      }
+      return reveals;
     }
   };
 }
@@ -116,58 +162,53 @@ export function createSonarSystem(player, getWalls) {
 class Pulse {
   constructor(x, y) {
     this.particles = [];
-  
     for (let i = 0; i < RAY_COUNT; i++) {
-      const angle = radians(i * (360 / RAY_COUNT));
+      const angle = (i / RAY_COUNT) * TWO_PI;
+      const vel = createVector(Math.cos(angle), Math.sin(angle)).mult(RAY_SPEED);
       this.particles.push({
         pos: createVector(x, y),
-        vel: p5.Vector.fromAngle(angle).mult(RAY_SPEED),
+        vel,
         life: RAY_LIFETIME,
       });
     }
   }
 
-  update(dt, walls) {
-    const wallsList = walls || [];
+  update(dt, walls, wallAlpha) {
+    const wallList = Array.isArray(walls) ? walls : [];
 
-    for (let p of this.particles) {
-      if (p.life <= 0) {
+    for (const p of this.particles) {
+      if (p.life <= 0) { 
         continue;
       }
 
       p.life -= RAY_DECAY * dt;
-
-      // find next position
-      const nextX = p.pos.x + p.vel.x * dt;
-      const nextY = p.pos.y + p.vel.y * dt;
-
-      let hasCollided = false;
-      // only check collisions if walls exist
-      for (let wall of wallsList) {
-         const wx = wall.getCornerX();
-         const wy = wall.getCornerY();
-         const ww = wall.getWidth();
-         const wh = wall.getHeight();
-         
-         if (
-            nextX >= wx &&
-            nextX <= wx + ww &&
-            nextY >= wy &&
-            nextY <= wy + wh
-         ) {
-            // has collided
-            if (wall.illuminate) {
-               wall.illuminate();
-            }
-            hasCollided = true;
-            break;
-         }
+      if (p.life <= 0) {
+        continue;
       }
 
-      // kills particle on impact
-      if (hasCollided) {
+      const nextX = p.pos.x + p.vel.x * dt;
+      const nextY = p.pos.y + p.vel.y * dt;
+      let collided = false;
+
+      for (const wall of wallList) {
+        const rect = readWallRect(wall);
+        if (!rect) {
+         continue;
+        }
+        if (
+          nextX >= rect.x && nextX <= rect.x + rect.w &&
+          nextY >= rect.y && nextY <= rect.y + rect.h
+        ) {
+          const current = wallAlpha.get(wall) ?? 0;
+          wallAlpha.set(wall, Math.min(255, current + REVEAL_BONUS));
+          collided = true;
+          break;
+        }
+      }
+
+      if (collided) {
         p.life = 0; 
-      } else if (p.life > 0) {
+      } else {
         p.pos.x = nextX;
         p.pos.y = nextY;
       }
@@ -176,7 +217,8 @@ class Pulse {
 
   show() {
     strokeWeight(2);
-    for (let p of this.particles) {
+    for (let i = 0; i < this.particles.length; i++) {
+      const p = this.particles[i];
       if (p.life > 0) {
         stroke(100, 200, 255, p.life);
         point(p.pos.x, p.pos.y);
