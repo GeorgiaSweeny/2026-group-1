@@ -95,6 +95,37 @@ export function createRenderSystem({
       ctx.globalCompositeOperation = 'source-over';
       image(darknessLayer, 0, 0);
    }
+   
+   function drawPlatforms(isIlluminated = false) {
+      const platforms = getPlatforms?.() ?? [];
+      const platformColor = getPlatformColor?.() ?? '#5a6e82';
+      noStroke();
+
+      if (!isIlluminated) {
+         fill(platformColor);
+      }
+
+      for (const p of platforms) {
+         if (isIlluminated && (!p.illumination || p.illumination <= 0)) {
+            continue;
+         }
+
+         const px = typeof p.getCornerX === 'function' ? p.getCornerX() : p.x;
+         const py = typeof p.getCornerY === 'function' ? p.getCornerY() : p.y;
+         const pw = typeof p.getWidth === 'function' ? p.getWidth() : p.w;
+         const ph = typeof p.getHeight === 'function' ? p.getHeight() : p.h;
+
+         if (isIlluminated) {
+            const c = color(platformColor);
+            const illuminateColor = color('#5a6e82');
+            const mixedColor = lerpColor(c, illuminateColor, p.illumination / 255);
+            mixedColor.setAlpha(p.illumination); 
+            fill(mixedColor);
+         }
+
+         rect(px, py, pw, ph);
+      }
+   }
 
    // draw by changing DRAW to true in config, shows hitbox boundaries
    function debugHitbox(drawThis){
@@ -112,60 +143,15 @@ export function createRenderSystem({
          const lightSources = getLightSources?.() ?? [];
 
          drawBackground();
-         
-         // Draw base platforms in darkness
-         const platforms = getPlatforms?.() ?? [];
-         const platformColor = getPlatformColor?.() ?? '#5a6e82';
-         noStroke();
-         fill(platformColor);
-         for (const p of platforms) {
-            const px = typeof p.getCornerX === 'function' ? p.getCornerX() : p.x;
-            const py = typeof p.getCornerY === 'function' ? p.getCornerY() : p.y;
-            const pw = typeof p.getWidth === 'function' ? p.getWidth() : p.w;
-            const ph = typeof p.getHeight === 'function' ? p.getHeight() : p.h;
-            rect(px, py, pw, ph);
-         }
-
+         drawPlatforms(false); // Draw base platforms in darkness
          drawPlayer();
          drawLighting(lightSources);
-         
-         // Draw platforms over darkness
-         noStroke();
-         for (const p of platforms) {
-            if (p.illumination > 0) {
-               const px = typeof p.getCornerX === 'function' ? p.getCornerX() : p.x;
-               const py = typeof p.getCornerY === 'function' ? p.getCornerY() : p.y;
-               const pw = typeof p.getWidth === 'function' ? p.getWidth() : p.w;
-               const ph = typeof p.getHeight === 'function' ? p.getHeight() : p.h;
-               const c = color(platformColor);
-               const illuminateColor = color('#5a6e82');
-               const mixedColor = lerpColor(c, illuminateColor, p.illumination / 255);
-               mixedColor.setAlpha(p.illumination); 
-               fill(mixedColor);
-               rect(px, py, pw, ph);
-            }
-         }
-
+         drawPlatforms(true);  // Draw platforms over darkness
          drawUI();
          debugHitbox(DEBUG_COLOR.DRAW);
       }
    }
-
-      return {
-         draw(deltaTime) {
-            elapsedTime += deltaTime;
-            const lightSources = getLightSources?.() ?? [];
-
-            drawBackground();
-            drawPlatforms();
-            drawResources(); 
-            drawPlayer();
-            drawLighting(lightSources);
-            drawUI();
-            
-         }
-      };
-   }
+}
 //======================================
 // END
 //======================================

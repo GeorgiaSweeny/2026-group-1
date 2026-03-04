@@ -20,23 +20,18 @@ RULES:
 // KEY CODES CONFIG
 //======================
 export const INPUT = {
-  // MOVEMENT KEYS - function takes ascii
-  // WASD ASCII
   W_KEY: 87,
   A_KEY: 65,
   S_KEY: 83,
   D_KEY: 68,
-  // ARROW ASCII - can also use special keyCodes
   UP_ARROW_KEY: 38,
   DOWN_ARROW_KEY: 40,
-  LEFT_ARROW_KEY:  37,
+  LEFT_ARROW_KEY: 37,
   RIGHT_ARROW_KEY: 39,
-  
-  // ACTION KEYS - functions take strings
+
   JUMP_KEY: [87, 38],
   TOGGLE_TORCH_KEY: ['L', 'l'],
-  EMIT_SONAR_KEY: ['K', 'k'],
-  TOGGLE_TORCH_KEY: ['L', 'l']
+  EMIT_SONAR_KEY: ['K', 'k']
 };
 
 //======================
@@ -88,13 +83,6 @@ export const TORCH = {
 //======================
 export const SONAR = {
   COOLDOWN_MS: 3000
-};
-
-//======================
-// GAME CONFIG
-//======================
-export const GAME = {
-  GROUND_Y: CANVAS.HEIGHT - CANVAS.TILE_SIZE * 1.25
 };
 
 //======================
