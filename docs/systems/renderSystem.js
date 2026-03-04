@@ -1,6 +1,6 @@
 /*
 ========================================
-VERSION: 2.6
+VERSION: 3.0
 SYSTEM: RENDER SYSTEM
 AUTHOR: Georgia Sweeny
 DESCRIPTION:
@@ -8,6 +8,7 @@ DESCRIPTION:
   and ligthing
 
 - Power modifiers added by Monal
+- Hitbox debug by Nick
 ========================================
 */
 
@@ -31,6 +32,11 @@ export function createRenderSystem({
    const oscillationSpeed = 2; // Hz
    const oscillationAmount = 10; // pixels
 
+//======================================
+// ROOM - HELPERS
+//======================================
+
+//===BACKGROUND===//
    function drawBackground() {
       const bg = getBackground?.();
 
@@ -45,6 +51,7 @@ export function createRenderSystem({
       }
    }
 
+   //===TERRAIN===//
    function drawPlatforms() {
       const platforms = getPlatforms?.() ?? [];
       const platformColor = getPlatformColor?.() ?? '#5a6e82';
@@ -57,18 +64,21 @@ export function createRenderSystem({
       }
    }
 
+   //===PLAYER===//
    function drawPlayer() {
       stroke(150, 0, 25);
       fill(225, 0, 50);
       rect(player.getCornerX(), player.getCornerY(), player.getWidth(), player.getHeight());
    }
 
+   //===UI===//
    function drawUI() {
       fill(255);
       noStroke();
       text(`Power: ${Math.round(player.power.current)}`, 20, 30);
    }
 
+   //===LIGHTING===//
    function drawLighting(lightSources = []) {
       darknessLayer.clear();
       darknessLayer.background(0);
@@ -95,7 +105,10 @@ export function createRenderSystem({
       ctx.globalCompositeOperation = 'source-over';
       image(darknessLayer, 0, 0);
    }
-
+//======================================
+// VISUAL DEBUG HELPERS
+//======================================
+//===HITBOX-DEBUG===//
    // draw by changing DRAW to true in config, shows hitbox boundaries
    function debugHitbox(drawThis){
       if(drawThis){
@@ -107,19 +120,9 @@ export function createRenderSystem({
       }
    }
 
-   return {
-      draw() {
-         const lightSources = getLightSources?.() ?? [];
-
-         drawBackground();
-         drawPlatforms();
-         drawPlayer();
-         drawLighting(lightSources);
-         drawUI();
-         debugHitbox(DEBUG_COLOR.DRAW);
-      }
-   }
-
+//======================================
+// DRAW EVERYTHING
+//======================================
       return {
          draw(deltaTime) {
             elapsedTime += deltaTime;
@@ -131,7 +134,7 @@ export function createRenderSystem({
             drawPlayer();
             drawLighting(lightSources);
             drawUI();
-            
+            debugHitbox(DEBUG_COLOR.DRAW);
          }
       };
    }

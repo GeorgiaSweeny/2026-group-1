@@ -1,6 +1,6 @@
 /*
 ========================================
-VERSION: 1.0
+VERSION: 3.0
 SYSTEM: LIGHTING SYSTEM
 AUTHOR: Georgia Sweeny
 DESCRIPTION:

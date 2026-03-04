@@ -1,3 +1,22 @@
+/*
+========================================
+VERSION: 3.0
+SYSTEM: HITBOX SYSTEM
+AUTHORs: Nick 
+DESCRIPTION:
+
+RULES:
+- No rendering or drawing in update functions
+- Does not modify other systems directly
+- Purely updates entity state based on physics
+========================================
+USAGE:
+- Drives collision
+========================================
+NOTES:
+
+========================================
+*/
 import { DEBUG_COLOR } from "../config.js";
 
 export class Hitbox{
