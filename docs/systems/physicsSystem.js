@@ -4,8 +4,8 @@ VERSION: 2.4
 SYSTEM: PHYSICS SYSTEM
 AUTHORs: Georgia Sweeny, 
 DESCRIPTION:
-- Physics System: Handles vertical motion, gravity, and collision resolution
-- Updates player state such as position, velocity, and onGround status
+- Physics System: Handles collision resolution
+- Updates player state such as position
 
 RULES:
 - No rendering or drawing in update functions
@@ -18,27 +18,20 @@ DESIGN GOALS:
 - Maintain clean boundaries between systems
 ========================================
 RESPONSIBILITIES:
-- Apply gravity to the player
-- Resolve collisions with ground and platforms
-- Update player.onGround flag
-- Maintain consistent vertical motion behavior
+- Resolve collisions with walls and obstacles
 
 DEPENDENCIES:
-- player object: {x, y, w, h, vy, onGround}
+- player object: {x, y, w, h}
 - platforms array: [{x, y, w, h}]
-- Configuration: fallSpeed, groundY
 
 CONFIG:
-- fallSpeed (number): gravity applied each frame (default from PLAYER.FALL_SPEED)
-- groundY (number): y-coordinate of the floor (default from GAME.GROUND_Y)
 
 USAGE:
-const physicsSystem = createPhysicsSystem(player, platforms, { fallSpeed: 3 });
+const physicsSystem = createPhysicsSystem(player, platforms);
 engine.register(physicsSystem);
 ========================================
 NOTES:
-- Currently only vertical collisions handled (ground, top of platform)
-- Horizontal movement / collisions handled elsewhere
+- Underwater physics replaced jump/gravity logic
 - No friction, acceleration, or drag applied yet
 - Can be extended to use deltaTime for true frame-rate independence
 ========================================

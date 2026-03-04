@@ -14,7 +14,7 @@ RULES:
 ========================================
 DESIGN GOALS:
 - Keep player logic separate from physics and rendering
-- Treat input as moveIntent (left/right/jump/toggleTorch), not direct movement
+- Treat input as moveIntent (left/right/toggleTorch), not direct movement
 - Encapsulate components like Torch and PowerSystem cleanly
 ========================================
 RESPONSIBILITIES:
@@ -23,7 +23,7 @@ RESPONSIBILITIES:
 - Store and expose player moveIntent for systems to consume
 
 DEPENDENCIES:
-- config object: defines START_X, START_Y, WIDTH, HEIGHT, JUMP_POWER, TORCH settings
+- config object: defines START_X, START_Y, WIDTH, HEIGHT, TORCH settings
 - PowerSystem for tracking energy usage (e.g., torch drain)
 - Torch class for player-held light source
 
@@ -64,7 +64,6 @@ export class Player extends Hitbox{
          down: false,
          left: false,
          right: false,
-         jump: false,
          toggleTorch: false,
          emitSonar: false
       };

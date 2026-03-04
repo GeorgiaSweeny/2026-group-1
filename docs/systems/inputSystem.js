@@ -21,7 +21,7 @@ DESIGN GOALS:
 RESPONSIBILITIES:
 - Listen for keyboard events (keyPressed, keyIsDown)
 - Update player intent object with left/right movement
-- Update player intent for discrete actions (jump, toggle torch)
+- Update player intent for discrete actions (toggle torch)
 
 DEPENDENCIES:
 - Browser keyboard events (p5.js keyIsDown / keyPressed)
@@ -68,14 +68,9 @@ export function createInputSystem(player) {
       player.intent.down = keyIsDown(downKey) || keyIsDown(INPUT.DOWN_ARROW_KEY);
     },
 
-    onKeyPressed(key, keyCodeValue) {
+    onKeyPressed(key) {
       const keyLower = typeof key === 'string' ? key.toLowerCase() : '';
-      const jumpPressed = INPUT.JUMP_KEY.includes(keyCodeValue) || keyLower === 'w';
-
-      if (jumpPressed && player.onGround) {
-        player.intent.jump = true;
-      }
-
+      
       if (INPUT.TOGGLE_TORCH_KEY.includes(key) || keyLower === 'l') {
         player.intent.toggleTorch = true;
       }
