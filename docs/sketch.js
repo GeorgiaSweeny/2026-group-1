@@ -291,7 +291,7 @@ function draw() {
 }
 
 function keyPressed() {
-  inputSystem.onKeyPressed?.(key, keyCode);
+  inputSystem?.onKeyPressed?.(key, keyCode);
 }
 
 function keyReleased() {

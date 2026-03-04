@@ -14,7 +14,7 @@ RULES:
 ========================================
 DESIGN GOALS:
 - Keep player logic separate from physics and rendering
-- Treat input as moveIntent (left/right/toggleTorch), not direct movement
+- Treat input as moveIntent (left/right/jump/toggleTorch), not direct movement
 - Encapsulate components like Torch and PowerSystem cleanly
 ========================================
 RESPONSIBILITIES:
@@ -23,7 +23,7 @@ RESPONSIBILITIES:
 - Store and expose player moveIntent for systems to consume
 
 DEPENDENCIES:
-- config object: defines START_X, START_Y, WIDTH, HEIGHT, TORCH settings
+- config object: defines START_X, START_Y, WIDTH, HEIGHT, JUMP_POWER, TORCH settings
 - PowerSystem for tracking energy usage (e.g., torch drain)
 - Torch class for player-held light source
 
@@ -38,32 +38,45 @@ engine.register(playerSystem); // playerSystem consumes this class
 //======================
 // PLAYER CLASS
 //======================
-import { PowerSystem } from '../systems/powerSystem.js';
-import { Torch } from './components/torch.js';  // torch class in same folder
 import { TORCH } from '../config.js';
+import { LIGHTING } from '../config.js';
+import { PLAYER } from '../config.js';
+import { Torch } from './components/torch.js';  // torch class in same folder
+import { PowerSystem } from '../systems/powerSystem.js';
 import { Hitbox } from '../systems/hitboxSystem.js';
 
 export class Player extends Hitbox{
-   constructor(x, y, w, h){
-      super(x, y, w, h);
+   constructor(xOrConfig, y, w, h){
+      const usingConfigObject = typeof xOrConfig === 'object' && xOrConfig !== null;
+      const startX = usingConfigObject ? (xOrConfig.START_X ?? 0) : xOrConfig;
+      const startY = usingConfigObject ? (xOrConfig.START_Y ?? 0) : y;
+      const width = usingConfigObject ? (xOrConfig.WIDTH ?? PLAYER.WIDTH) : w;
+      const height = usingConfigObject ? (xOrConfig.HEIGHT ?? PLAYER.HEIGHT) : h;
+
+      // Hitbox expects corner coordinates; player start points are center-like in current room flow.
+      const cornerX = (startX ?? 0) - (width ?? 0) / 2;
+      const cornerY = (startY ?? 0) - (height ?? 0) / 2;
+
+      super(cornerX, cornerY, width ?? PLAYER.WIDTH, height ?? PLAYER.HEIGHT);
+
       this.nextPos = createVector(this.position.x, this.position.y);
       this.velocity = createVector(0, 0);
 
-      // Runtime state
-      this.onGround = false;
+      this.size = PLAYER.SIZE;
+      this.facing = 1; // 1 for right, -1 for left
 
-      // Components
       this.torch = new Torch(TORCH);
       this.power = new PowerSystem();
       this.health = null;
       this.oxygen = null;
 
-      // Unified Intent State
-      this.intent = {
-         up: false,
-         down: false,
+      this.moveIntent = {
          left: false,
          right: false,
+         up: false,
+         down: false,
+      };
+      this.actionIntent = {
          toggleTorch: false,
          //sonar
          //missile
@@ -83,19 +96,17 @@ export class Player extends Hitbox{
       this.position.y = value;
    }
    setCurrentPosition(x, y){
-      this.position.x = x;
-      this.position.y = y;
-      if (this.nextPos) {
-         this.nextPos.x = x;
-         this.nextPos.y = y;
-      }
+      this.x = x;
+      this.y = y;
+      this.nextPos.x = x;
+      this.nextPos.y = y;
    }
    setNextPosition(){
-      if(this.intent.right){this.nextPos.x += this.velocity.x}
-      if(this.intent.left){this.nextPos.x -= this.velocity.x}
-      if(this.intent.up){this.nextPos.y -= this.velocity.y}
-      if(this.intent.down){this.nextPos.y += this.velocity.y}
-      this.resetIntent();
+      if(this.moveIntent.right){this.nextPos.x += this.velocity.x}
+      if(this.moveIntent.left){this.nextPos.x -= this.velocity.x}
+      if(this.moveIntent.up){this.nextPos.y -= this.velocity.y}
+      if(this.moveIntent.down){this.nextPos.y += this.velocity.y}
+      this.resetMoveIntent();
   }
    movePlayer(){
       this.position.x = this.nextPos.x;
@@ -107,11 +118,11 @@ export class Player extends Hitbox{
    setVelocityY(y=0){
       this.velocity.y = y;
    }
-   getIntent(){
-      return this.intent;
+   getMoveIntent(){
+      return this.moveIntent;
    }
    switchTorch(){
-      this.intent.toggleTorch = true;
+      this.actionIntent.toggleTorch = true;
    }
    requestAction(actionKey){
       if (!this.actionIntent || !(actionKey in this.actionIntent)) return;
