@@ -5,10 +5,6 @@ export class Hitbox{
     this.position = createVector((x + (w / 2)), (y + (h / 2)));
     this.w = w;
     this.h = h;
-    this.illumination = 0;
-  }
-  illuminate(){
-    this.illumination = 255;
   }
   debugDrawHitbox(thisColor){
     switch(thisColor){
