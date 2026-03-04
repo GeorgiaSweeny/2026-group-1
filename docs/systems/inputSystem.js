@@ -62,10 +62,10 @@ export function createInputSystem(player) {
       const downKey = INPUT.S_KEY;
       
       // set player move intent in player class
-      player.moveIntent.left = keyIsDown(leftKey) || keyIsDown(INPUT.LEFT_ARROW_KEY);
-      player.moveIntent.right = keyIsDown(rightKey) || keyIsDown(INPUT.RIGHT_ARROW_KEY);
-      player.moveIntent.up = keyIsDown(upKey) || keyIsDown(INPUT.UP_ARROW_KEY);
-      player.moveIntent.down = keyIsDown(downKey) || keyIsDown(INPUT.DOWN_ARROW_KEY);
+      player.intent.left = keyIsDown(leftKey) || keyIsDown(INPUT.LEFT_ARROW_KEY);
+      player.intent.right = keyIsDown(rightKey) || keyIsDown(INPUT.RIGHT_ARROW_KEY);
+      player.intent.up = keyIsDown(upKey) || keyIsDown(INPUT.UP_ARROW_KEY);
+      player.intent.down = keyIsDown(downKey) || keyIsDown(INPUT.DOWN_ARROW_KEY);
     },
 
     onKeyPressed(key, keyCodeValue) {

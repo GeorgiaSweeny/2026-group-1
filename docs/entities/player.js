@@ -40,7 +40,7 @@ engine.register(playerSystem); // playerSystem consumes this class
 //======================
 import { PowerSystem } from '../systems/powerSystem.js';
 import { Torch } from './components/torch.js';  // torch class in same folder
-import { TORCH, PLAYER } from '../config.js';
+import { TORCH } from '../config.js';
 import { Hitbox } from '../systems/hitboxSystem.js';
 
 export class Player extends Hitbox{
@@ -50,33 +50,25 @@ export class Player extends Hitbox{
       this.velocity = createVector(0, 0);
 
       // Runtime state
-      this.vy = 0;
       this.onGround = false;
 
-      this.intent = {
-         left: false,
-         right: false,
-         jump: false,
-         toggleTorch: false,
-         emitSonar: false,
-      };
-
-      // component
+      // Components
       this.torch = new Torch(TORCH);
-
-      // Runtime resources
       this.power = new PowerSystem();
       this.health = null;
       this.oxygen = null;
 
-      this.moveIntent = {
-         left: false,
-         right: false,
+      // Unified Intent State
+      this.intent = {
          up: false,
          down: false,
+         left: false,
+         right: false,
+         jump: false,
+         toggleTorch: false,
+         emitSonar: false
       };
-
-      this.toggleTorchIntent = false;
+      
    }
    setCurrentPosition(x, y){
       this.position.x = x;
@@ -87,11 +79,11 @@ export class Player extends Hitbox{
       }
    }
    setNextPosition(){
-      if(this.moveIntent.right){this.nextPos.x += this.velocity.x}
-      if(this.moveIntent.left){this.nextPos.x -= this.velocity.x}
-      if(this.moveIntent.up){this.nextPos.y -= this.velocity.y}
-      if(this.moveIntent.down){this.nextPos.y += this.velocity.y}
-      this.resetMoveIntent();
+      if(this.intent.right){this.nextPos.x += this.velocity.x}
+      if(this.intent.left){this.nextPos.x -= this.velocity.x}
+      if(this.intent.up){this.nextPos.y -= this.velocity.y}
+      if(this.intent.down){this.nextPos.y += this.velocity.y}
+      this.resetIntent();
   }
    movePlayer(){
       this.position.x = this.nextPos.x;
@@ -103,16 +95,20 @@ export class Player extends Hitbox{
    setVelocityY(y=0){
       this.velocity.y = y;
    }
-   getMoveIntent(){
-      return this.moveIntent;
+   getIntent(){
+      return this.intent;
    }
    switchTorch(){
-      this.toggleTorchIntent = true;
+      this.intent.toggleTorch = true;
    }
-   resetMoveIntent(){
-      for(let i in this.moveIntent){
-         this.moveIntent[i] = false;
-      }
+   resetIntent(){
+      this.intent.up = false;
+      this.intent.down = false;
+      this.intent.left = false;
+      this.intent.right = false;
+   }
+   emitSonar(){
+      this.intent.emitSonar = true;
    }
    // add getter functions for player specific variables
 };

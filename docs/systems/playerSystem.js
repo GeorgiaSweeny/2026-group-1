@@ -55,10 +55,10 @@ export function createPlayerSystem(player) {
       player.setVelocityX();
       player.setVelocityY();
       
-      if(player.moveIntent.right ){player.setVelocityX(speed)}
-      if(player.moveIntent.left){player.setVelocityX(speed)}
-      if(player.moveIntent.up){player.setVelocityY(speed)}
-      if(player.moveIntent.down){player.setVelocityY(speed)}
+      if(player.intent.right ){player.setVelocityX(speed)}
+      if(player.intent.left){player.setVelocityX(speed)}
+      if(player.intent.up){player.setVelocityY(speed)}
+      if(player.intent.down){player.setVelocityY(speed)}
     },
   };
 }
