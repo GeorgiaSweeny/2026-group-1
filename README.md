@@ -16,10 +16,13 @@
 </html>
 
 
-### Video DEMO v2.3
+### Video DEMO v3
 *(updated 11/02/26)*
 
-https://github.com/user-attachments/assets/7f6a8c2a-c20e-4220-b267-f1d39c76ae9f.mp4
+
+https://github.com/user-attachments/assets/1f888baa-3c94-45f3-bc57-3986734ccc7e
+
+
 
 <br/>
 <br/>
@@ -34,11 +37,11 @@ https://github.com/user-attachments/assets/7f6a8c2a-c20e-4220-b267-f1d39c76ae9f.
 |Name|Email|Role|
 |:-|:-|:-|
 |Archie Brown|cq25988@bristol.ac.uk||
-|Monal Gupta|ta25702@bristol.ac.uk|
-|Ben Mounce|wv25183@bristol.ac.uk|
-|Georgia Sweeny|dp25498@bristol.ac.uk|
-|Nick Jankov|ve21144@bristol.ac.uk|
-|Jude Hsu|ca20853@bristol.ac.uk|
+|Monal Gupta|ta25702@bristol.ac.uk||
+|Ben Mounce|wv25183@bristol.ac.uk||
+|Georgia Sweeny|dp25498@bristol.ac.uk| Code Reviewer</br>Game Engine / Systems Architecture</br>Game Data & Configuration Design: Input configuration, Tileset property definitions, Map metadata</br>Gameplay Systems Developer: torch, power, lighting systems|
+|Nick Jankov|ve21144@bristol.ac.uk||
+|Jude Hsu|ca20853@bristol.ac.uk||
 
 </br>
 
