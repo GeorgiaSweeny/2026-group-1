@@ -5,7 +5,7 @@ SYSTEM: SONAR SYSTEM
 AUTHOR: Ben Mounce
 DESCRIPTION:
 - Emits expanding sonar rings from the player to temporarily reveal walls.
-- Integrates with roomSystem platforms (Tiled JSON) and hitbox walls.
+- Integrates with roomSystem platforms and hitbox walls.
 
 RULES:
 - No direct mutation of shared game state outside this system.
@@ -13,7 +13,7 @@ RULES:
 - Draws additive glow without altering the main render layers.
 ========================================
 DESIGN GOALS:
-- Keep the original pulse/alpha visual while plugging into ECS.
+- Keep the original pulse visible while in darkness but not when torch is on.
 - Work with both Hitbox walls and plain room objects
 ========================================
 RESPONSIBILITIES:
@@ -22,7 +22,7 @@ RESPONSIBILITIES:
 - Reveal walls near the pulse radius and fade them back out.
 ========================================
 DEPENDENCIES:
-- player: exposes intent.emitSonar and getX/getY (or x/y fallback).
+- player: exposes intent.emitSonar and getX/getY.
 - roomSystem: exposes getPlatforms() returning walls.
 - config: SONAR.COOLDOWN_MS
 ========================================
@@ -43,21 +43,25 @@ const RAY_LIFETIME = 255;
 const REVEAL_BONUS = 70;
 const REVEAL_FADE_PER_MS = 0.2;
 
+function getNormalisedWalls(getWallsFinal) {
+  const input = getWallsFinal?.() || [];
+  return Array.isArray(input) ? input : (input?.platforms ?? []);
+}
+
 function readWallRect(wall) {
-  if (!wall || typeof wall !== 'object') {
-    return null;
-  }
-  const hasMethods = typeof wall?.getCornerX === 'function';
-  const w = hasMethods ? wall.getWidth() : wall?.w ?? 0;
-  const h = hasMethods ? wall.getHeight() : wall?.h ?? 0;
-  if (!w || !h) {
-    return null;
-  }
-  const x = hasMethods ? wall.getCornerX() : (wall.x ?? 0) - w / 2;
-  const y = hasMethods ? wall.getCornerY() : (wall.y ?? 0) - h / 2;
-  if (!Number.isFinite(x) || !Number.isFinite(y)) {
-    return null;
-  }
+  if (!wall || typeof wall !== 'object') return null;
+  
+  const usesHitbox = typeof wall?.getCornerX === 'function';
+  const w = usesHitbox ? wall.getWidth() : wall?.w ?? 0;
+  const h = usesHitbox ? wall.getHeight() : wall?.h ?? 0;
+  
+  if (!w || !h) return null;
+  
+  const x = usesHitbox ? wall.getCornerX() : (wall.x ?? 0) - w / 2;
+  const y = usesHitbox ? wall.getCornerY() : (wall.y ?? 0) - h / 2;
+  
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  
   return { x, y, w, h };
 }
 
@@ -72,11 +76,11 @@ export function createSonarSystem(player, getWalls) {
         cooldownTimer = Math.max(0, cooldownTimer - dt);
       }
 
-      // spawn pulse when requested and off cooldown
       if (player?.actionIntent?.emitSonar) {
         if (cooldownTimer <= 0) {
           const px = typeof player.getX === 'function' ? player.getX() : player.x;
           const py = typeof player.getY === 'function' ? player.getY() : player.y;
+          
           if (Number.isFinite(px) && Number.isFinite(py)) {
             pulses.push(new Pulse(px, py));
             cooldownTimer = SONAR.COOLDOWN_MS ?? 0;
@@ -85,32 +89,32 @@ export function createSonarSystem(player, getWalls) {
         player.actionIntent.emitSonar = false;
       }
 
-      const wallsRaw = getWalls?.() || [];
-      const walls = Array.isArray(wallsRaw) ? wallsRaw : (wallsRaw?.platforms ?? []);
-
-      for (let i = pulses.length - 1; i >= 0; i--) {
-        const p = pulses[i];
-        p.update(dt, walls, wallAlpha);
-
-        if (p.isFinished()) {
-          pulses.splice(i, 1);
+      const inputWalls = getNormalisedWalls(getWalls);
+      const wallData = [];
+      
+      for (const wall of inputWalls) {
+        const rect = readWallRect(wall);
+        if (rect) {
+          wallData.push({ wall, rect });  
+        }
+        
+        const currentAlpha = wallAlpha.get(wall);
+        if (currentAlpha != null) {
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * dt));
+          if (nextAlpha <= 0) {
+            wallAlpha.delete(wall);
+          } else {
+            wallAlpha.set(wall, nextAlpha);
+          }
         }
       }
 
-      // fade reveals
-      if (walls.length) {
-        const fadeAmount = REVEAL_FADE_PER_MS * dt;
-        for (const wall of walls) {
-          const current = wallAlpha.get(wall);
-          if (current == null) {
-            continue;
-          }
-          const next = Math.max(0, current - fadeAmount);
-          if (next <= 0) {
-            wallAlpha.delete(wall);
-          } else {
-            wallAlpha.set(wall, next);
-          }
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i];
+        p.update(dt, wallData, wallAlpha);
+
+        if (p.isFinished()) {
+          pulses.splice(i, 1);
         }
       }
     },
@@ -121,14 +125,12 @@ export function createSonarSystem(player, getWalls) {
       }
 
       push();
-
       if (typeof blendMode === 'function' && typeof ADD !== 'undefined') {
         blendMode(ADD);
       }
       for (const p of pulses) {
         p.show();
       }
-
       pop();
     },
 
@@ -140,19 +142,18 @@ export function createSonarSystem(player, getWalls) {
     },
 
     getRevealedWalls() {
-      const wallsRaw = getWalls?.() || [];
-      const walls = Array.isArray(wallsRaw) ? wallsRaw : (wallsRaw?.platforms ?? []);
+      const inputWalls = getNormalisedWalls(getWalls);
       const reveals = [];
-      for (const wall of walls) {
+      
+      for (const wall of inputWalls) {
         const alpha = wallAlpha.get(wall);
         if (!alpha) {
           continue;
         }
         const rectInfo = readWallRect(wall);
-        if (!rectInfo) {
-          continue;
-        } 
-        reveals.push({ ...rectInfo, alpha: Math.max(0, Math.min(255, alpha)) });
+        if (rectInfo) {
+          reveals.push({ ...rectInfo, alpha: Math.max(0, Math.min(255, alpha)) });
+        }
       }
       return reveals;
     }
@@ -164,7 +165,7 @@ class Pulse {
     this.particles = [];
     for (let i = 0; i < RAY_COUNT; i++) {
       const angle = (i / RAY_COUNT) * TWO_PI;
-      const vel = createVector(Math.cos(angle), Math.sin(angle)).mult(RAY_SPEED);
+      const vel = p5.Vector.fromAngle(angle).mult(RAY_SPEED);
       this.particles.push({
         pos: createVector(x, y),
         vel,
@@ -173,11 +174,9 @@ class Pulse {
     }
   }
 
-  update(dt, walls, wallAlpha) {
-    const wallList = Array.isArray(walls) ? walls : [];
-
+  update(dt, wallData, wallAlpha) {
     for (const p of this.particles) {
-      if (p.life <= 0) { 
+      if (p.life <= 0) {
         continue;
       }
 
@@ -190,11 +189,7 @@ class Pulse {
       const nextY = p.pos.y + p.vel.y * dt;
       let collided = false;
 
-      for (const wall of wallList) {
-        const rect = readWallRect(wall);
-        if (!rect) {
-         continue;
-        }
+      for (const { wall, rect } of wallData) {
         if (
           nextX >= rect.x && nextX <= rect.x + rect.w &&
           nextY >= rect.y && nextY <= rect.y + rect.h
@@ -217,8 +212,7 @@ class Pulse {
 
   show() {
     strokeWeight(2);
-    for (let i = 0; i < this.particles.length; i++) {
-      const p = this.particles[i];
+    for (const p of this.particles) {
       if (p.life > 0) {
         stroke(100, 200, 255, p.life);
         point(p.pos.x, p.pos.y);
