@@ -258,8 +258,6 @@ function setup() {
       }
     }
   });
-  ensureRoomAssetsLoaded(initialRoom);
-  lastEnsuredRoom = initialRoom;
   roomSystem.goToRoom(initialRoom, { spawnId: 'default' });
   syncCanvasToCurrentRoom();
   const playerStart = roomSystem.getPlayerStart();
@@ -331,4 +329,3 @@ window.preload = preload;
 window.setup = setup;
 window.draw = draw;
 window.keyPressed = keyPressed;
-window.keyReleased = keyReleased;
