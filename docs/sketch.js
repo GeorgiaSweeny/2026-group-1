@@ -242,7 +242,21 @@ function setup() {
   const initialRoom = INITIAL_ROOM_ID;
   roomSystem = createRoomSystem({
     initialRoom,
-    roomData
+    roomData,
+    player,
+    onRoomLoaded: ({ room, width: roomWidth, height: roomHeight }) => {
+      if (room) {
+        ensureRoomAssetsLoaded(room);
+        lastEnsuredRoom = room;
+      }
+
+      if (!FIT_CANVAS_TO_ROOM) return;
+      if (!roomWidth || !roomHeight) return;
+      resizeCanvas(roomWidth, roomHeight);
+      if (darknessLayer) {
+        darknessLayer.resizeCanvas(roomWidth, roomHeight);
+      }
+    }
   });
   ensureRoomAssetsLoaded(initialRoom);
   lastEnsuredRoom = initialRoom;

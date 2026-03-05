@@ -288,7 +288,12 @@ function normalizeRoom(roomKey, roomSource) {
   return normalizeLegacyRoom(roomKey, roomSource);
 }
 
-export function createRoomSystem({ initialRoom = null, roomData = {} } = {}) {
+export function createRoomSystem({
+  initialRoom = null,
+  roomData = {},
+  player = null,
+  onRoomLoaded = null
+} = {}) {
   let currentRoom = null;
   let currentConfig = null;
   let playerStart = null;
@@ -303,6 +308,7 @@ export function createRoomSystem({ initialRoom = null, roomData = {} } = {}) {
   let tilesets = [];
   let tileWidth = CANVAS.TILE_SIZE;
   let tileHeight = CANVAS.TILE_SIZE;
+  let exitCooldownMs = 0;
 
   function loadRoom(roomKey, { spawnId = null } = {}) {
     const roomSource = roomData[roomKey];
@@ -331,11 +337,70 @@ export function createRoomSystem({ initialRoom = null, roomData = {} } = {}) {
       ? spawnPoints.find((spawn) => String(spawn.spawnId).toLowerCase() === String(spawnId).toLowerCase())
       : null;
     playerStart = explicitSpawn ? { x: explicitSpawn.x, y: explicitSpawn.y } : (normalized.playerStart ?? null);
+
+    if (player && playerStart) {
+      if (typeof player.setCurrentPosition === 'function') {
+        player.setCurrentPosition(playerStart.x, playerStart.y);
+      } else if (player.position) {
+        player.position.x = playerStart.x;
+        player.position.y = playerStart.y;
+      }
+    }
+
+    onRoomLoaded?.({
+      room: currentRoom,
+      width: normalized.width,
+      height: normalized.height
+    });
   }
 
   function updateRoomLogic(deltaTime) {
     for (const entity of entities) {
       entity.update?.(deltaTime);
+    }
+  }
+
+  function isOverlappingPlayer(obj) {
+    if (!player || !obj || !player.position) return false;
+
+    const playerW = player.w ?? CANVAS.TILE_SIZE;
+    const playerH = player.h ?? CANVAS.TILE_SIZE;
+    const objW = obj.w ?? 0;
+    const objH = obj.h ?? 0;
+    if (!objW || !objH) return false;
+
+    const playerLeft = player.position.x - playerW / 2;
+    const playerRight = player.position.x + playerW / 2;
+    const playerTop = player.position.y - playerH / 2;
+    const playerBottom = player.position.y + playerH / 2;
+
+    const objLeft = obj.x - objW / 2;
+    const objRight = obj.x + objW / 2;
+    const objTop = obj.y - objH / 2;
+    const objBottom = obj.y + objH / 2;
+
+    return (
+      playerRight > objLeft &&
+      playerLeft < objRight &&
+      playerBottom > objTop &&
+      playerTop < objBottom
+    );
+  }
+
+  function applyExitTransitions() {
+    if (!exits.length || !player || exitCooldownMs > 0) return;
+
+    for (const exit of exits) {
+      if (exit.visible === false) continue;
+      if (!isOverlappingPlayer(exit)) continue;
+
+      const targetRoom = exit?.properties?.targetRoom;
+      if (!targetRoom || !roomData[targetRoom]) continue;
+
+      const targetSpawn = exit?.properties?.targetSpawn ?? null;
+      loadRoom(targetRoom, { spawnId: targetSpawn });
+      exitCooldownMs = 250;
+      break;
     }
   }
 
@@ -346,7 +411,9 @@ export function createRoomSystem({ initialRoom = null, roomData = {} } = {}) {
   return {
     update(deltaTime) {
       if (!currentRoom) return;
+      exitCooldownMs = Math.max(0, exitCooldownMs - (deltaTime ?? 0));
       updateRoomLogic(deltaTime);
+      applyExitTransitions();
     },
 
     goToRoom(roomKey, options = {}) {
