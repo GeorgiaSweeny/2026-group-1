@@ -1,8 +1,8 @@
 /*
 ========================================
-VERSION: 2.4
+VERSION: 3.0
 SYSTEM: PHYSICS SYSTEM
-AUTHORs: Georgia Sweeny, 
+AUTHORs: Nick 
 DESCRIPTION:
 - Physics System: Handles vertical motion, gravity, and collision resolution
 - Updates player state such as position, velocity, and onGround status
@@ -19,26 +19,15 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Apply gravity to the player
-- Resolve collisions with ground and platforms
-- Update player.onGround flag
-- Maintain consistent vertical motion behavior
+- Resolve collisions
 
 DEPENDENCIES:
-- player object: {x, y, w, h, vy, onGround}
-- platforms array: [{x, y, w, h}]
-- Configuration: fallSpeed, groundY
-
-CONFIG:
-- fallSpeed (number): gravity applied each frame (default from PLAYER.FALL_SPEED)
-- groundY (number): y-coordinate of the floor (default from GAME.GROUND_Y)
 
 USAGE:
-const physicsSystem = createPhysicsSystem(player, platforms, { fallSpeed: 3 });
+const physicsSystem = createPhysicsSystem(...)
 engine.register(physicsSystem);
 ========================================
 NOTES:
-- Currently only vertical collisions handled (ground, top of platform)
-- Horizontal movement / collisions handled elsewhere
 - No friction, acceleration, or drag applied yet
 - Can be extended to use deltaTime for true frame-rate independence
 ========================================
@@ -60,31 +49,6 @@ export function createPhysicsSystem(player, platformsOrGetter) {
 //======================================
 // COLLISON SYSTEM - Author: Nick
 //======================================
-/* Note from Georgia: (to be removed)
-
- Add your name to Author/s in header file and this section.
- Update header details with new collsion logic.
- I will add underwater physics here but it wont effect collision
- logic.
-
- This currently the platformer physics and collsion logic.
- It is not AABB collsion and currently uses gravity.
-You should be able to remove gravity and the game should behave 
-as "top-down" style as youve been working with.
-I will implement the underwater physics as soon as possible though.
-
-A good name for the collision wrapper would be --> applyCollisions();
-Call all your functions in there so update(); is kept clean.
-
-Map will be a JSON grid made of "tiles" - proably going to make
-the maps with TILED https://www.mapeditor.org/. There should be documention
-and online info for how people have used it in other projects which might be useful.
-
-Write your behavior tests first, it should help when writing the functions 
-- maybe we will start loving tests? xD
-Add error messages if you think it would be helpful
-*/
-
 
   function applyCollisions(){
     player.setNextPosition();
@@ -103,10 +67,11 @@ Add error messages if you think it would be helpful
 //======================================
 
 //======================================
-// UNDERWATER PHYSICS - Author: Georgia
+// UNDERWATER PHYSICS 
 //======================================
 // ........
 // underwater movement logic
+// drag, bounce, acceleration
 //======================================
 // UNDERWATER SYSTEM - END
 //======================================
@@ -117,8 +82,7 @@ Add error messages if you think it would be helpful
 
   return {
     update() {
-      // applyUnderWaterPhysics(); <-- georgia will add this
-      applyCollisions(); // <-- suggested wrapper name for collsions to live in
+      applyCollisions();
     }
   };
 }

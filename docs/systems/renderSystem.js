@@ -1,6 +1,6 @@
 /*
 ========================================
-VERSION: 2.6
+VERSION: 3.0
 SYSTEM: RENDER SYSTEM
 AUTHOR: Georgia Sweeny
 DESCRIPTION:
@@ -8,6 +8,7 @@ DESCRIPTION:
   and ligthing
 
 - Power modifiers added by Monal
+- Hitbox debug by Nick
 ========================================
 */
 
@@ -19,18 +20,111 @@ import { DEBUG_COLOR } from "../config.js";
 export function createRenderSystem({
    player,
    getPlatforms,
+   getHazards,
+   getCollectables,
+   getTriggers,
+   getEntities,
+   getSpawnPoints,
+   getTilesets,
+   getTileSize,
    getBackground,
    getPlatformColor,
    assets,
    darknessLayer,
-   getLightSources,
-   getResources
+   getLightSources
 
 }) {
    let elapsedTime = 0;
    const oscillationSpeed = 2; // Hz
    const oscillationAmount = 10; // pixels
 
+//======================================
+// DRAW GAME
+//======================================
+   function normalizeRelativePath(basePath, relativePath) {
+      const baseParts = String(basePath).split('/').filter(Boolean);
+      const relParts = String(relativePath ?? '').split('/').filter(Boolean);
+      for (const part of relParts) {
+         if (part === '.') continue;
+         if (part === '..') {
+            baseParts.pop();
+            continue;
+         }
+         baseParts.push(part);
+      }
+      return baseParts.join('/');
+   }
+
+   function tilesetSourceToImagePath(source) {
+      if (!source) return null;
+      return normalizeRelativePath('data/rooms', source).replace(/\.tsx$/i, '.png');
+   }
+
+   function getTilesetForGid(gid, tilesets = []) {
+      if (!Number.isFinite(gid) || gid <= 0 || !Array.isArray(tilesets) || !tilesets.length) return null;
+      let best = null;
+      for (const tileset of tilesets) {
+         const firstgid = Number(tileset?.firstgid ?? 0);
+         if (!firstgid || gid < firstgid) continue;
+         if (!best || firstgid > best.firstgid) {
+            best = { ...tileset, firstgid };
+         }
+      }
+      return best;
+   }
+
+   function getObjectRect(obj) {
+      if (!obj) return null;
+      if (typeof obj.getCornerX === 'function' && typeof obj.getCornerY === 'function') {
+         return {
+            x: obj.getCornerX(),
+            y: obj.getCornerY(),
+            w: obj.getWidth(),
+            h: obj.getHeight()
+         };
+      }
+      const tileSize = getTileSize?.() ?? {};
+      const fallbackW = tileSize.tileWidth ?? 16;
+      const fallbackH = tileSize.tileHeight ?? 16;
+      const w = obj.w ?? obj.width ?? fallbackW;
+      const h = obj.h ?? obj.height ?? fallbackH;
+      const cx = obj.x ?? 0;
+      const cy = obj.y ?? 0;
+      return { x: cx - (w / 2), y: cy - (h / 2), w, h };
+   }
+
+   function drawSpriteFromTileset(obj) {
+      const gid = Number(obj?.gid);
+      if (!Number.isFinite(gid)) return false;
+
+      const tilesets = getTilesets?.() ?? [];
+      const tileset = getTilesetForGid(gid, tilesets);
+      if (!tileset) return false;
+
+      if (String(tileset.source ?? '').toLowerCase().endsWith('backgrounds.tsx')) {
+         return false;
+      }
+
+      const imagePath = tilesetSourceToImagePath(tileset.source);
+      const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
+      if (!tilesetImage) return false;
+
+      const rect = getObjectRect(obj);
+      if (!rect) return false;
+
+      const tileSize = getTileSize?.() ?? {};
+      const tileWidth = tileSize.tileWidth ?? tileset.tilewidth ?? 16;
+      const tileHeight = tileSize.tileHeight ?? tileset.tileheight ?? 16;
+      const localTileId = gid - Number(tileset.firstgid);
+      const columns = Number(tileset.columns) || Math.max(1, Math.floor(tilesetImage.width / tileWidth));
+      const srcX = (localTileId % columns) * tileWidth;
+      const srcY = Math.floor(localTileId / columns) * tileHeight;
+
+      image(tilesetImage, rect.x, rect.y, rect.w, rect.h, srcX, srcY, tileWidth, tileHeight);
+      return true;
+   }
+
+//===BACKGROUND===//
    function drawBackground() {
       const bg = getBackground?.();
 
@@ -45,6 +139,7 @@ export function createRenderSystem({
       }
    }
 
+   //===TERRAIN===//
    function drawPlatforms() {
       const platforms = getPlatforms?.() ?? [];
       const platformColor = getPlatformColor?.() ?? '#5a6e82';
@@ -53,22 +148,100 @@ export function createRenderSystem({
       fill(platformColor);
       
       for (const p of platforms) {
+         if (drawSpriteFromTileset(p)) continue;
          rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
       }
    }
 
+   //=== HAZARDS ===//
+   function drawHazards() {
+      const hazards = getHazards?.() ?? [];
+      if (!hazards.length) return;
+
+      noStroke();
+      fill(220, 70, 70, 180);
+      rectMode(CENTER);
+      for (const hazard of hazards) {
+         if (hazard.visible === false) continue;
+         if (drawSpriteFromTileset(hazard)) continue;
+         rect(hazard.x, hazard.y, hazard.w, hazard.h);
+      }
+      rectMode(CORNER);
+   }
+
+   //=== COLLECTABLES ===//
+   function drawCollectables() {
+      const collectables = getCollectables?.() ?? [];
+      if (!collectables.length) return;
+
+      noStroke();
+      fill(255, 225, 80, 220);
+      for (const item of collectables) {
+         if (item.visible === false) continue;
+         if (drawSpriteFromTileset(item)) continue;
+         ellipse(item.x, item.y, Math.max(8, item.w), Math.max(8, item.h));
+      }
+   }
+
+   //=== TRIGGERS ===//
+   function drawTriggers() {
+      const triggers = getTriggers?.() ?? [];
+      if (!triggers.length) return;
+
+      noFill();
+      stroke(140, 180, 255, 180);
+      strokeWeight(1);
+      rectMode(CENTER);
+      for (const trigger of triggers) {
+         if (trigger.visible === false) continue;
+         if (drawSpriteFromTileset(trigger)) continue;
+         rect(trigger.x, trigger.y, trigger.w, trigger.h);
+      }
+      rectMode(CORNER);
+      noStroke();
+   }
+
+   //=== ENTITIES ===//
+   function drawEntities() {
+      const entities = getEntities?.() ?? [];
+      if (!entities.length) return;
+
+      noStroke();
+      fill(180, 110, 230, 210);
+      for (const entity of entities) {
+         if (entity.visible === false) continue;
+         if (entity.properties?.spawnId != null) continue;
+         if (drawSpriteFromTileset(entity)) continue;
+         rect(entity.x - (entity.w / 2), entity.y - (entity.h / 2), entity.w, entity.h);
+      }
+   }
+
+   //=== SPAWNS ===//
+   function drawSpawnPoints() {
+      const spawnPoints = getSpawnPoints?.() ?? [];
+      if (!spawnPoints.length) return;
+
+      for (const spawn of spawnPoints) {
+         if (drawSpriteFromTileset(spawn)) continue;
+         const isPlayerSpawn = String(spawn.spawnId ?? '').toLowerCase() === 'default';
+         noStroke();
+         fill(isPlayerSpawn ? color(80, 255, 130, 220) : color(255, 130, 80, 220));
+         triangle(
+            spawn.x, spawn.y - 8,
+            spawn.x - 7, spawn.y + 6,
+            spawn.x + 7, spawn.y + 6
+         );
+      }
+   }
+
+   //===PLAYER===//
    function drawPlayer() {
       stroke(150, 0, 25);
       fill(225, 0, 50);
       rect(player.getCornerX(), player.getCornerY(), player.getWidth(), player.getHeight());
    }
 
-   function drawUI() {
-      fill(255);
-      noStroke();
-      text(`Power: ${Math.round(player.power.current)}`, 20, 30);
-   }
-
+   //===LIGHTING===//
    function drawLighting(lightSources = []) {
       darknessLayer.clear();
       darknessLayer.background(0);
@@ -96,6 +269,17 @@ export function createRenderSystem({
       image(darknessLayer, 0, 0);
    }
 
+   //===UI===//
+   function drawUI() {
+      fill(255);
+      noStroke();
+      text(`Power: ${Math.round(player.power.current)}`, 20, 30);
+   }
+
+//======================================
+// VISUAL DEBUG HELPERS
+//======================================
+//===HITBOX-DEBUG===//
    // draw by changing DRAW to true in config, shows hitbox boundaries
    function debugHitbox(drawThis){
       if(drawThis){
@@ -107,19 +291,9 @@ export function createRenderSystem({
       }
    }
 
-   return {
-      draw() {
-         const lightSources = getLightSources?.() ?? [];
-
-         drawBackground();
-         drawPlatforms();
-         drawPlayer();
-         drawLighting(lightSources);
-         drawUI();
-         debugHitbox(DEBUG_COLOR.DRAW);
-      }
-   }
-
+//======================================
+// DRAW EVERYTHING
+//======================================
       return {
          draw(deltaTime) {
             elapsedTime += deltaTime;
@@ -127,11 +301,15 @@ export function createRenderSystem({
 
             drawBackground();
             drawPlatforms();
-            drawResources(); 
+            drawHazards();
+            drawCollectables();
+            drawTriggers();
+            drawEntities();
+            drawSpawnPoints();
             drawPlayer();
             drawLighting(lightSources);
             drawUI();
-            
+            debugHitbox(DEBUG_COLOR.DRAW);
          }
       };
    }
