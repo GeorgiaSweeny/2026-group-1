@@ -327,12 +327,6 @@ function keyPressed() {
   inputSystem.onKeyPressed?.(key, keyCode);
 }
 
-function keyReleased() {
-  if (key === 'A' || key === 'a') player.intent.left = false;
-  if (key === 'D' || key === 'd') player.intent.right = false;
-}
-
-
 window.preload = preload;
 window.setup = setup;
 window.draw = draw;
