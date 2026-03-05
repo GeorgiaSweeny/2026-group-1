@@ -105,8 +105,32 @@ export function createRenderSystem({
          return false;
       }
 
+      const normalizedSource = normalizeRelativePath('data/rooms', tileset.source);
+      const bySource =
+         assets?.[`tilesetSource:${tileset.source}`] ??
+         assets?.[`tilesetSource:${normalizedSource}`] ??
+         null;
+      if (bySource) {
+         const rect = getObjectRect(obj);
+         if (!rect) return false;
+
+         const tileSize = getTileSize?.() ?? {};
+         const tileWidth = tileSize.tileWidth ?? tileset.tilewidth ?? 16;
+         const tileHeight = tileSize.tileHeight ?? tileset.tileheight ?? 16;
+         const localTileId = gid - Number(tileset.firstgid);
+         const columns = Number(tileset.columns) || Math.max(1, Math.floor(bySource.width / tileWidth));
+         const srcX = (localTileId % columns) * tileWidth;
+         const srcY = Math.floor(localTileId / columns) * tileHeight;
+         image(bySource, rect.x, rect.y, rect.w, rect.h, srcX, srcY, tileWidth, tileHeight);
+         return true;
+      }
+
       const imagePath = tilesetSourceToImagePath(tileset.source);
-      const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
+      const imageFile = imagePath?.split('/').pop();
+      const tilesetImage = imagePath
+         ? (assets?.[`tileset:${imagePath}`] ??
+            (imageFile ? assets?.[`tileset:data/tilesets/prototype-tileset/${imageFile}`] : null))
+         : null;
       if (!tilesetImage) return false;
 
       const rect = getObjectRect(obj);

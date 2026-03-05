@@ -93,6 +93,28 @@ function tilesetSourceToImagePath(source) {
   return normalizeRelativePath('data/rooms', source).replace(/\.tsx$/i, '.png');
 }
 
+function getDirname(path) {
+  const idx = String(path).lastIndexOf('/');
+  return idx === -1 ? '' : String(path).slice(0, idx);
+}
+
+function parseTsxImageSource(tsxText) {
+  const match = String(tsxText).match(/<image[^>]*source="([^"]+)"/i);
+  return match ? match[1] : null;
+}
+
+function resolveTilesetImagePath(tilesetSource) {
+  if (!tilesetSource) return null;
+  const sourcePath = normalizeRelativePath('data/rooms', tilesetSource);
+  if (!sourcePath.toLowerCase().endsWith('.tsx')) return sourcePath;
+
+  const tsxText = loadStrings(sourcePath).join('\n');
+  const imageSource = parseTsxImageSource(tsxText);
+  if (!imageSource) return sourcePath.replace(/\.tsx$/i, '.png');
+
+  return normalizeRelativePath(getDirname(sourcePath), imageSource);
+}
+
 function normalizeBackgroundName(name, backgroundLookup) {
   if (!name) return null;
   const fileName = String(name).split('/').pop().trim();
@@ -189,7 +211,7 @@ function preload() {
   }
 
   const imageNames = new Set();
-  const tilesetImagePaths = new Set();
+  const tilesetImagePaths = new Map();
   for (const room of Object.values(roomData)) {
     const imageName = resolveBackgroundImageName(room, backgroundLookup);
     setRoomBackgroundImageProperty(room, imageName);
@@ -197,8 +219,8 @@ function preload() {
 
     for (const tileset of room?.tilesets ?? []) {
       if (String(tileset?.source ?? '').toLowerCase().endsWith('backgrounds.tsx')) continue;
-      const tilesetImagePath = tilesetSourceToImagePath(tileset?.source);
-      if (tilesetImagePath) tilesetImagePaths.add(tilesetImagePath);
+      const tilesetImagePath = resolveTilesetImagePath(tileset?.source);
+      if (tilesetImagePath) tilesetImagePaths.set(String(tileset.source), tilesetImagePath);
     }
   }
 
@@ -207,8 +229,11 @@ function preload() {
     assets[imageName] = loadImage(imagePath);
   }
 
-  for (const imagePath of tilesetImagePaths) {
-    assets[`tileset:${imagePath}`] = loadImage(imagePath);
+  for (const [tilesetSource, imagePath] of tilesetImagePaths.entries()) {
+    const img = loadImage(imagePath);
+    assets[`tileset:${imagePath}`] = img;
+    assets[`tilesetSource:${tilesetSource}`] = img;
+    assets[`tilesetSource:${normalizeRelativePath('data/rooms', tilesetSource)}`] = img;
   }
 }
 
