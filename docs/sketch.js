@@ -36,32 +36,17 @@ let renderSystem;
 let lightingSystem;
 let roomSystem;
 let resourceManagementSystem;
+let lastEnsuredRoom = null;
 
 let assets = {};
-const ROOM_FILES = ['roomA', 'roomB'];
+const INITIAL_ROOM_ID = 'roomA';
+const ROOM_IDS = ['roomA', 'roomB'];
 const roomData = {};
 const FIT_CANVAS_TO_ROOM = true;
-const BACKGROUND_TILESET_PATH = 'assets/backgrounds/backgrounds.tsx';
-
-function parseBackgroundTileset(tsxText) {
-  const byLocalId = {};
-  const byStem = {};
-  const tileRegex = /<tile\s+id="(\d+)"[\s\S]*?<image\s+source="([^"]+)"/g;
-  let match = tileRegex.exec(tsxText);
-
-  while (match) {
-    const localId = Number(match[1]);
-    const source = match[2].split('/').pop();
-    if (source) {
-      byLocalId[localId] = source;
-      const stem = source.replace(/\.[^/.]+$/, '');
-      byStem[stem.toLowerCase()] = source;
-    }
-    match = tileRegex.exec(tsxText);
-  }
-
-  return { byLocalId, byStem };
-}
+const BACKGROUND_FILE_MAP = {
+  'bg-atmosphere': 'bg-atmosphere.jpg',
+  'bg-atmosphere.jpg': 'bg-atmosphere.jpg',
+};
 
 function getTilesetForGid(room, gid) {
   if (!Number.isFinite(gid)) return null;
@@ -90,37 +75,10 @@ function normalizeRelativePath(basePath, relativePath) {
 
 function tilesetSourceToImagePath(source) {
   if (!source) return null;
-  return normalizeRelativePath('data/rooms', source).replace(/\.tsx$/i, '.png');
-}
-
-function getDirname(path) {
-  const idx = String(path).lastIndexOf('/');
-  return idx === -1 ? '' : String(path).slice(0, idx);
-}
-
-function parseTsxImageSource(tsxText) {
-  const match = String(tsxText).match(/<image[^>]*source="([^"]+)"/i);
-  return match ? match[1] : null;
-}
-
-function resolveTilesetImagePath(tilesetSource) {
-  if (!tilesetSource) return null;
-  const sourcePath = normalizeRelativePath('data/rooms', tilesetSource);
-  if (!sourcePath.toLowerCase().endsWith('.tsx')) return sourcePath;
-
-  const tsxText = loadStrings(sourcePath).join('\n');
-  const imageSource = parseTsxImageSource(tsxText);
-  if (!imageSource) return sourcePath.replace(/\.tsx$/i, '.png');
-
-  return normalizeRelativePath(getDirname(sourcePath), imageSource);
-}
-
-function normalizeBackgroundName(name, backgroundLookup) {
-  if (!name) return null;
-  const fileName = String(name).split('/').pop().trim();
-  if (!fileName) return null;
-  if (fileName.includes('.')) return fileName;
-  return backgroundLookup.byStem[fileName.toLowerCase()] ?? fileName;
+  // backgrounds.tsx is an image collection (no single .png atlas file to load).
+  if (String(source).toLowerCase().endsWith('backgrounds.tsx')) return null;
+  const pngSource = source.replace(/\.tsx$/i, '.png');
+  return normalizeRelativePath('data/rooms', pngSource);
 }
 
 function getMapProperty(mapData, key, fallback = null) {
@@ -130,49 +88,83 @@ function getMapProperty(mapData, key, fallback = null) {
   return found ? found.value : fallback;
 }
 
-function resolveBackgroundImageName(room, backgroundLookup) {
-  if (room?.background?.image) {
-    return normalizeBackgroundName(room.background.image, backgroundLookup);
+function normalizeBackgroundImageName(name) {
+  if (!name) return null;
+  const raw = String(name).trim();
+  if (!raw) return null;
+  if (raw.includes('/')) return raw;
+  if (BACKGROUND_FILE_MAP[raw]) return BACKGROUND_FILE_MAP[raw];
+  if (/\.[a-z0-9]+$/i.test(raw)) return raw;
+  return raw;
+}
+
+function resolveBackgroundImageFromGid(room, gid) {
+  if (!Number.isFinite(gid) || gid <= 0) return null;
+  const tilesets = room?.tilesets ?? [];
+  let best = null;
+  for (const ts of tilesets) {
+    const firstgid = Number(ts?.firstgid ?? 0);
+    if (!firstgid || gid < firstgid) continue;
+    if (!best || firstgid > best.firstgid) best = { ...ts, firstgid };
   }
+  if (!best) return null;
+
+  if (String(best.source ?? '').toLowerCase().endsWith('backgrounds.tsx')) {
+    const localId = gid - best.firstgid;
+    const byId = {
+      0: 'bg-atmosphere.jpg',
+      1: 'bg-atmosphere.jpg'
+    };
+    return byId[localId] ?? null;
+  }
+  return null;
+}
+
+function getBackgroundImageName(room) {
+  const roomBg = normalizeBackgroundImageName(room?.background?.image);
+  if (roomBg) return roomBg;
 
   const propImage = getMapProperty(room, 'backgroundImage', null);
-  if (propImage) {
-    return normalizeBackgroundName(propImage, backgroundLookup);
-  }
+  if (propImage) return propImage;
 
-  const backgroundLayer = (room?.layers ?? []).find((l) => (l?.name ?? '').toLowerCase() === 'background');
-  const bgObject = (backgroundLayer?.objects ?? [])[0];
-  const bgName = bgObject?.name ? String(bgObject.name).trim() : '';
-  if (bgName) {
-    return normalizeBackgroundName(bgName, backgroundLookup);
-  }
-
-  const bgGid = Number(bgObject?.gid);
-  if (Number.isFinite(bgGid)) {
-    const tileset = getTilesetForGid(room, bgGid);
-    if (tileset && String(tileset.source ?? '').toLowerCase().endsWith('backgrounds.tsx')) {
-      const localId = bgGid - tileset.firstgid;
-      const fromTileset = backgroundLookup.byLocalId[localId];
-      if (fromTileset) return fromTileset;
-    }
-  }
+  const bgObjectLayer = (room?.layers ?? []).find(
+    (l) => l?.type === 'objectgroup' && String(l?.name ?? '').toLowerCase().includes('background')
+  );
+  const bgObject = (bgObjectLayer?.objects ?? [])[0];
+  const bgObjectProps = bgObject?.properties ?? [];
+  const bgPropImage = bgObjectProps.find((p) => p?.name === 'backgroundImage' || p?.name === 'image')?.value;
+  const propBg = normalizeBackgroundImageName(bgPropImage);
+  if (propBg) return propBg;
+  const bgGidImage = resolveBackgroundImageFromGid(room, bgObject?.gid ?? null);
+  if (bgGidImage) return bgGidImage;
+  const namedBg = normalizeBackgroundImageName(bgObject?.name);
+  if (namedBg) return namedBg;
 
   const imageLayer = (room?.layers ?? []).find((l) => l?.type === 'imagelayer' && l?.image);
-  if (imageLayer?.image) {
-    return normalizeBackgroundName(imageLayer.image, backgroundLookup);
-  }
+  if (imageLayer?.image) return imageLayer.image;
 
   return null;
 }
 
-function setRoomBackgroundImageProperty(room, imageName) {
-  if (!imageName) return;
-  if (!Array.isArray(room.properties)) room.properties = [];
-  const existing = room.properties.find((p) => p?.name === 'backgroundImage');
-  if (existing) {
-    existing.value = imageName;
-  } else {
-    room.properties.push({ name: 'backgroundImage', type: 'string', value: imageName });
+function ensureRoomAssetsLoaded(roomId) {
+  const room = roomData[roomId];
+  if (!room) return;
+
+  const backgroundImageName = getBackgroundImageName(room);
+  if (backgroundImageName && !assets[backgroundImageName]) {
+    const backgroundPath = backgroundImageName.includes('/')
+      ? backgroundImageName
+      : `assets/backgrounds/${backgroundImageName}`;
+    assets[backgroundImageName] = loadImage(backgroundPath);
+  }
+
+  for (const tileset of room?.tilesets ?? []) {
+    const imagePath = tilesetSourceToImagePath(tileset?.source);
+    if (!imagePath) continue;
+    const key = `tileset:${imagePath}`;
+    if (!assets[key]) {
+      assets[key] = loadImage(imagePath);
+    }
   }
 }
 
@@ -203,37 +195,37 @@ function syncCanvasToCurrentRoom() {
 }
 
 function preload() {
-  const backgroundTilesetText = loadStrings(BACKGROUND_TILESET_PATH).join('\n');
-  const backgroundLookup = parseBackgroundTileset(backgroundTilesetText);
-
-  for (const roomKey of ROOM_FILES) {
-    roomData[roomKey] = loadJSON(`data/rooms/${roomKey}.json`);
+  for (const roomId of ROOM_IDS) {
+    roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
   }
 
   const imageNames = new Set();
-  const tilesetImagePaths = new Map();
   for (const room of Object.values(roomData)) {
-    const imageName = resolveBackgroundImageName(room, backgroundLookup);
-    setRoomBackgroundImageProperty(room, imageName);
+    const imageName = getBackgroundImageName(room);
     if (imageName) imageNames.add(imageName);
-
-    for (const tileset of room?.tilesets ?? []) {
-      if (String(tileset?.source ?? '').toLowerCase().endsWith('backgrounds.tsx')) continue;
-      const tilesetImagePath = resolveTilesetImagePath(tileset?.source);
-      if (tilesetImagePath) tilesetImagePaths.set(String(tileset.source), tilesetImagePath);
-    }
   }
 
   for (const imageName of imageNames) {
-    const imagePath = `assets/backgrounds/${imageName}`;
+    const imagePath = imageName.includes('/') ? imageName : `assets/backgrounds/${imageName}`;
     assets[imageName] = loadImage(imagePath);
   }
 
-  for (const [tilesetSource, imagePath] of tilesetImagePaths.entries()) {
-    const img = loadImage(imagePath);
-    assets[`tileset:${imagePath}`] = img;
-    assets[`tilesetSource:${tilesetSource}`] = img;
-    assets[`tilesetSource:${normalizeRelativePath('data/rooms', tilesetSource)}`] = img;
+  for (const filename of Object.values(BACKGROUND_FILE_MAP)) {
+    if (!assets[filename]) {
+      assets[filename] = loadImage(`assets/backgrounds/${filename}`);
+    }
+  }
+
+  const tilesetImagePaths = new Set();
+  for (const room of Object.values(roomData)) {
+    for (const tileset of room?.tilesets ?? []) {
+      const imagePath = tilesetSourceToImagePath(tileset?.source);
+      if (imagePath) tilesetImagePaths.add(imagePath);
+    }
+  }
+
+  for (const imagePath of tilesetImagePaths) {
+    assets[`tileset:${imagePath}`] = loadImage(imagePath);
   }
 }
 
@@ -247,11 +239,13 @@ function setup() {
 
   player = new Player(PLAYER.START_X, PLAYER.START_Y, PLAYER.WIDTH, PLAYER.HEIGHT);
 
-  const initialRoom = ROOM_FILES[0];
+  const initialRoom = INITIAL_ROOM_ID;
   roomSystem = createRoomSystem({
     initialRoom,
     roomData
   });
+  ensureRoomAssetsLoaded(initialRoom);
+  lastEnsuredRoom = initialRoom;
   roomSystem.goToRoom(initialRoom, { spawnId: 'default' });
   syncCanvasToCurrentRoom();
   const playerStart = roomSystem.getPlayerStart();
@@ -306,6 +300,11 @@ function setup() {
 }
 
 function draw() {
+  const currentRoom = roomSystem?.getCurrentRoom?.();
+  if (currentRoom && currentRoom !== lastEnsuredRoom) {
+    ensureRoomAssetsLoaded(currentRoom);
+    lastEnsuredRoom = currentRoom;
+  }
   syncCanvasToCurrentRoom();
   engine.update(deltaTime);
 }

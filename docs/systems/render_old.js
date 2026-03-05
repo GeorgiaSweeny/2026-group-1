@@ -464,22 +464,6 @@ export function createRenderSystem({
          debugHitbox(DEBUG_COLOR.DRAW);
       }
    }
-
-      return {
-         draw(deltaTime) {
-            elapsedTime += deltaTime;
-            const lightSources = getLightSources?.() ?? [];
-
-            drawBackground();
-            drawPlatforms();
-            drawResources(); 
-            drawPlayer();
-            drawLighting(lightSources);
-            drawUI();
-            
-         }
-      };
-   }
 //======================================
 // END
 //======================================
