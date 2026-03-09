@@ -46,26 +46,23 @@ TODO / LIMITATIONS:
 //======================================
 // LIGHTING SYSTEM
 //======================================
-export function createLightingSystem(getEntities) {
+export function createLightingSystem(player = []) {
    return {
 
       //--- GET LIGHT SOURCES ---//
       getLightSources() {
          const lightSources = [];
 
-         const entities = typeof getEntities === 'function' ? getEntities() : [];
-
-         for(const entity of entities) {
-            if (typeof entity.getLightSources === 'function') {
-
-               const result = entity.getLightSources();
-               if (!result) continue;
-
-               if (Array.isArray(result)) {
-                  lightSources.push(...result);
-               } else {
-                  lightSources.push(result);
-               }
+         // Player torch
+         if (player.torch.isOn) {
+            const intensity = player.torch.getIntensity(player.power.getPercent());
+            if (intensity > 0) {
+               lightSources.push({
+                  x: player.position.x,
+                  y: player.position.y,
+                  radius: player.torch.radius,
+                  intensity
+               });
             }
          }
          return lightSources;
