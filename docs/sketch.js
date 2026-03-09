@@ -19,6 +19,7 @@ import { createPhysicsSystem } from './systems/physicsSystem.js';
 import { createTorchSystem } from './systems/torchSystem.js';
 import { createRenderSystem } from './systems/renderSystem.js';
 import { createLightingSystem } from './systems/lightingSystem.js';
+import { createSonarSystem } from './systems/sonarSystem.js';
 import { createRoomSystem } from './systems/roomSystem.js';
 import { CANVAS, PLAYER, TORCH } from './config.js';
 import { Player } from './entities/player.js';
@@ -34,6 +35,7 @@ let physicsSystem;
 let torchSystem;
 let renderSystem;
 let lightingSystem;
+let sonarSystem;
 let roomSystem;
 let resourceManagementSystem;
 let lastEnsuredRoom = null;
@@ -202,6 +204,7 @@ function preload() {
   const imageNames = new Set();
   for (const room of Object.values(roomData)) {
     const imageName = getBackgroundImageName(room);
+    
     if (imageName) imageNames.add(imageName);
   }
 
@@ -235,7 +238,7 @@ function setup() {
   textSize(20);
   textAlign(LEFT);
 
-  darknessLayer = createGraphics(CANVAS.WIDTH, CANVAS.HEIGHT);
+  player = new Player(PLAYER);
 
   player = new Player(PLAYER.START_X, PLAYER.START_Y, PLAYER.WIDTH, PLAYER.HEIGHT);
 
@@ -262,17 +265,24 @@ function setup() {
   syncCanvasToCurrentRoom();
   const playerStart = roomSystem.getPlayerStart();
   if (playerStart) {
-    player.setCurrentPosition(playerStart.x, playerStart.y);
+    player.setCurrentPosition(playerStart.x, playerStart.y); 
   }
+
+  darknessLayer = createGraphics(width, height);
 
   inputSystem = createInputSystem(player);
   playerSystem = createPlayerSystem(player);
-  physicsSystem = createPhysicsSystem(player, () => roomSystem.getPlatforms());
+  physicsSystem = createPhysicsSystem(player, () => roomSystem.getRoomState());
   torchSystem = createTorchSystem(player.torch, player, {
     drainRate: TORCH.DRAIN_RATE
   });
 
-  lightingSystem = createLightingSystem(player, []);
+  sonarSystem = createSonarSystem(player, () => roomSystem.getPlatforms());
+
+  lightingSystem = createLightingSystem(() => [
+    player,
+    ...(roomSystem.getEntities?.() ?? [])
+  ]);
 
   resourceManagementSystem = createResourceManagementSystem(player, roomSystem);
 
@@ -296,6 +306,8 @@ function setup() {
     getTileSize: () => roomSystem.getTileSize(),
     getBackground: () => roomSystem.getBackground(),
     getPlatformColor: () => roomSystem.getPlatformColor(),
+    getSonarCooldown: () => sonarSystem?.getCooldownPercent?.(),
+    getSonarReveals: () => sonarSystem?.getRevealedWalls?.(),
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources()
@@ -308,6 +320,7 @@ function setup() {
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(renderSystem);
+  engine.register(sonarSystem);
   engine.register(resourceManagementSystem);
 }
 
@@ -322,7 +335,7 @@ function draw() {
 }
 
 function keyPressed() {
-  inputSystem.onKeyPressed?.(key, keyCode);
+  inputSystem?.onKeyPressed?.(key, keyCode);
 }
 
 window.preload = preload;

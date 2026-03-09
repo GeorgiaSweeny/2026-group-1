@@ -33,14 +33,14 @@ NOTES:
 ========================================
 */
 
-import { isColliding, resolveWallCollision } from "./hitboxSystem.js";
-
 //======================================
 // PHYSICS SYSTEM - 
 //======================================
 
+import { isColliding, resolveWallCollision, Wall } from "./hitboxSystem.js";
+
 export function createPhysicsSystem(player, platformsOrGetter) {
-  const getPlatforms = typeof platformsOrGetter === 'function'
+  const getRoomCollisionSource = typeof platformsOrGetter === 'function'
     ? platformsOrGetter
     : () => platformsOrGetter;
 
@@ -52,14 +52,42 @@ export function createPhysicsSystem(player, platformsOrGetter) {
 
   function applyCollisions(){
     player.setNextPosition();
-    let walls = getPlatforms();
-    for(let i in walls){
-      walls[i].updateZones(player);
-      if(isColliding(walls[i], player)){
-        resolveWallCollision(player, walls[i]);
+    const walls = resolveWalls(getRoomCollisionSource());
+    for (const wall of walls) {
+      const physicsWall = toPhysicsWall(wall);
+      if (!physicsWall) continue;
+      physicsWall.updateZones(player);
+      if (isColliding(physicsWall, player)) {
+        resolveWallCollision(player, physicsWall);
       }
     }
     player.movePlayer();
+  }
+
+  function resolveWalls(source){
+    if (!source) return [];
+    const walls = Array.isArray(source) ? source : (source.walls ?? source.platforms ?? []);
+    return walls.filter(Boolean);
+  }
+
+  function toPhysicsWall(wall){
+    if (!wall) return null;
+    if (wall instanceof Wall) return wall;
+
+    // Handle objects with corner + size or center + size
+    if (typeof wall.getCornerX === 'function' && typeof wall.getCornerY === 'function') {
+      return new Wall(wall.getCornerX(), wall.getCornerY(), wall.getWidth?.() ?? wall.w ?? wall.width ?? 0, wall.getHeight?.() ?? wall.h ?? wall.height ?? 0);
+    }
+
+    if (wall.x != null && wall.y != null && (wall.w != null || wall.width != null) && (wall.h != null || wall.height != null)) {
+      const w = wall.w ?? wall.width;
+      const h = wall.h ?? wall.height;
+      const x = (wall.x ?? 0) - (w / 2);
+      const y = (wall.y ?? 0) - (h / 2);
+      return new Wall(x, y, w, h);
+    }
+
+    return null;
   }
   
 //======================================

@@ -29,6 +29,8 @@ export function createRenderSystem({
    getTileSize,
    getBackground,
    getPlatformColor,
+   getSonarReveals,
+   getSonarCooldown,
    assets,
    darknessLayer,
    getLightSources
@@ -142,7 +144,7 @@ export function createRenderSystem({
    //===TERRAIN===//
    function drawPlatforms() {
       const platforms = getPlatforms?.() ?? [];
-      const platformColor = getPlatformColor?.() ?? '#5a6e82';
+      const platformColor = getPlatformColor?.() ?? '#5a6e82ff';
 
       noStroke();
       fill(platformColor);
@@ -274,6 +276,36 @@ export function createRenderSystem({
       fill(255);
       noStroke();
       text(`Power: ${Math.round(player.power.current)}`, 20, 30);
+
+      const sonarCooldown = getSonarCooldown?.() ?? 0;
+      if (Number.isFinite(sonarCooldown) && sonarCooldown > 0) {
+         fill('#d61b1b');
+         text(`Sonar: cooling`, 20, 55);
+      } else {
+         fill('#64ff64');
+         text(`Sonar: ready (K)`, 20, 55);
+      }
+   }
+
+//======================================
+// DRAW SONAR
+//======================================
+   function drawSonarReveals() {
+      if (player?.torch?.isOn) return;
+      const reveals = getSonarReveals?.() ?? [];
+      if (!reveals.length) return;
+
+      rectMode(CORNER);
+      for (const r of reveals) {
+         const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
+         noStroke();
+         fill(90, 110, 130, alpha);
+         rect(r.x, r.y, r.w, r.h);
+
+         noFill();
+         rect(r.x, r.y, r.w, r.h);
+      }
+      rectMode(CORNER);
    }
 
 //======================================
@@ -308,6 +340,7 @@ export function createRenderSystem({
             drawSpawnPoints();
             drawPlayer();
             drawLighting(lightSources);
+            drawSonarReveals();
             drawUI();
             debugHitbox(DEBUG_COLOR.DRAW);
          }
