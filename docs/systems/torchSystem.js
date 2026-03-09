@@ -53,10 +53,17 @@ TODO / LIMITATIONS:
 //======================
 import { TORCH } from '../config.js';
 
-export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE } = {}) {
+export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE, getDifficulty = () => 'normal' } = {}) {
   return {
     //---UPDATE---//
     update(deltaTime) {
+      // Hard difficulty: force torch off
+      if (getDifficulty() === 'hard') {
+        if (torch.isOn) torch.isOn = false;
+        player.toggleTorchIntent = false;
+        return;
+      }
+
       // Update internal flicker timer
       torch.update(deltaTime);
 

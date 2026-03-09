@@ -36,6 +36,8 @@ export function createRenderSystem({
    getLightSources,
    getActivePulses,
    getRevealedWalls,
+   getCameraOffset,
+   getCameraScale,
 
 }) {
    let elapsedTime = 0;
@@ -317,7 +319,7 @@ export function createRenderSystem({
    }
 
    //===LIGHTING===//
-   function drawLighting(lightSources = []) {
+   function drawLighting(lightSources = [], cam = { x: 0, y: 0 }, camScale = 1) {
       darknessLayer.clear();
       darknessLayer.background(0);
 
@@ -326,17 +328,19 @@ export function createRenderSystem({
 
       for (const light of lightSources) {
          const { x, y, radius, intensity = 1 } = light;
-         const scaledRadius = radius * (0.8 + 0.2 * intensity);
+         const screenX = (x - cam.x) * camScale;
+         const screenY = (y - cam.y) * camScale;
+         const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
          const gradient = ctx.createRadialGradient(
-            x, y, scaledRadius * 0.1,
-            x, y, scaledRadius
+            screenX, screenY, scaledRadius * 0.1,
+            screenX, screenY, scaledRadius
          );
          gradient.addColorStop(0, 'rgba(255,255,255,1)');
          gradient.addColorStop(1, 'rgba(0,0,0,0)');
 
          ctx.fillStyle = gradient;
          ctx.beginPath();
-         ctx.arc(x, y, scaledRadius, 0, Math.PI * 2);
+         ctx.arc(screenX, screenY, scaledRadius, 0, Math.PI * 2);
          ctx.fill();
       }
 
@@ -348,16 +352,21 @@ export function createRenderSystem({
    function drawUI() {
       fill(255);
       noStroke();
-      text(`Power: ${Math.round(player.power.current)}`, 20, 30);
+      push();
+      blendMode(BLEND);
+      textSize(14);
+      textAlign(LEFT, TOP);
+      text(`Power: ${Math.round(player.power.current)}`, 10, 10);
 
       const sonarCooldown = getSonarCooldown?.() ?? 0;
       if (Number.isFinite(sonarCooldown) && sonarCooldown > 0) {
          fill('#d61b1b');
-         text(`Sonar: cooling`, 20, 55);
+         text(`Sonar: cooling`, 10, 30);
       } else {
          fill('#64ff64');
-         text(`Sonar: ready (K)`, 20, 55);
+         text(`Sonar: ready (K)`, 10, 30);
       }
+      pop();
    }
 
 //======================================
@@ -403,8 +412,17 @@ export function createRenderSystem({
          draw(deltaTime) {
             elapsedTime += deltaTime;
             const lightSources = getLightSources?.() ?? [];
+            const cam = getCameraOffset?.() ?? { x: 0, y: 0 };
+            const camScale = getCameraScale?.() ?? 1;
 
+            // --- Screen space: background fills viewport ---
             drawBackground();
+
+            // --- World space (scaled + translated by camera) ---
+            push();
+            scale(camScale);
+            translate(-cam.x, -cam.y);
+
             drawPlatforms();
             drawHazards();
             drawCollectables();
@@ -415,10 +433,14 @@ export function createRenderSystem({
             drawSonarPulses();
             drawBubbles();
             drawPlayer();
-            drawLighting(lightSources);
+            debugHitbox(DEBUG_COLOR.DRAW);
+
+            pop();
+
+            // --- Screen space (fixed to viewport) ---
+            drawLighting(lightSources, cam, camScale);
             drawSonarReveals();
             drawUI();
-            debugHitbox(DEBUG_COLOR.DRAW);
          }
       };
    }

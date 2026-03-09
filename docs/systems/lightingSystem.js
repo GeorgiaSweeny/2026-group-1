@@ -64,7 +64,22 @@ export function createLightingSystem(player = [], getSonarLights = () => []) {
                   intensity
                });
             }
+         } else {
+            // Ambient light when torch is off or power is empty
+            lightSources.push({
+               x: player.position.x,
+               y: player.position.y,
+               radius: player.torch.radius || 50,
+               intensity: 0.35
+            });
          }
+
+         // Sonar lights
+         const sonarLights = getSonarLights?.() ?? [];
+         for (const light of sonarLights) {
+            lightSources.push(light);
+         }
+
          return lightSources;
       }
    };

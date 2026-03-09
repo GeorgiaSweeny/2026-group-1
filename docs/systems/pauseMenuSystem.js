@@ -19,9 +19,9 @@ RULES:
 // PAUSE MENU SYSTEM
 //======================================
 
-export function createPauseMenuSystem({ onDifficultyChange } = {}) {
+export function createPauseMenuSystem({ onDifficultyChange, onResolutionChange } = {}) {
   let paused = false;
-  let currentPage = 'main'; // 'main' | 'settings'
+  let currentPage = 'main'; // 'main' | 'settings' | 'debug'
 
   // Difficulty: 'normal' | 'hard'
   let difficulty = 'normal';
@@ -30,6 +30,9 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
   let volume = 80;        // 0–100
   let showFPS = false;
   let screenShake = true;
+
+  // Debug settings
+  let devResolution = false; // false = 1920x1080, true = dev (640x360)
 
   // Button layout constants
   const BUTTON_W = 180;
@@ -158,8 +161,44 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
     drawToggle('Show FPS', showFPS, leftX, baseY + 110);
     drawToggle('Screen Shake', screenShake, leftX, baseY + 150);
 
+    // Debug button
+    const debugY = baseY + 200;
+    drawButton('Debug', cx - BUTTON_W / 2, debugY, BUTTON_W, BUTTON_H,
+      isOver(cx - BUTTON_W / 2, debugY, BUTTON_W, BUTTON_H));
+
     // Back button
-    const backY = baseY + 200;
+    const backY = debugY + 55;
+    drawButton('Back', cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H,
+      isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H));
+  }
+
+  //--------------------------------------
+  // DEBUG PAGE
+  //--------------------------------------
+  function drawDebugPage() {
+    const cx = width / 2;
+    const leftX = cx - 120;
+    const baseY = height / 2 - 100;
+
+    // Title
+    textAlign(CENTER, CENTER);
+    textSize(24);
+    fill(255);
+    noStroke();
+    text('DEBUG', cx, baseY);
+
+    // Dev Resolution toggle
+    drawToggle('Dev Resolution (640x360)', devResolution, leftX, baseY + 60);
+
+    // Info text
+    textAlign(LEFT, TOP);
+    textSize(11);
+    fill(150);
+    const modeLabel = devResolution ? '640x360 (dev)' : '1920x1080 (production)';
+    text(`Current: ${modeLabel}`, leftX, baseY + 90);
+
+    // Back button
+    const backY = baseY + 150;
     drawButton('Back', cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H,
       isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H));
   }
@@ -202,10 +241,32 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
         screenShake = !screenShake;
       }
 
+      // Debug button
+      const debugY = baseY + 200;
+      if (isOver(cx - BUTTON_W / 2, debugY, BUTTON_W, BUTTON_H)) {
+        currentPage = 'debug';
+      }
+
       // Back button
-      const backY = baseY + 200;
+      const backY = debugY + 55;
       if (isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H)) {
         currentPage = 'main';
+      }
+    } else if (currentPage === 'debug') {
+      const baseY = height / 2 - 100;
+      const leftX = cx - 120;
+
+      // Dev Resolution toggle hit area
+      const toggleX = leftX + 160;
+      if (isOver(toggleX, baseY + 60 - 12, 48, 24)) {
+        devResolution = !devResolution;
+        onResolutionChange?.(devResolution);
+      }
+
+      // Back button
+      const backY = baseY + 150;
+      if (isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H)) {
+        currentPage = 'settings';
       }
     }
   }
@@ -248,7 +309,7 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
     },
 
     getSettings() {
-      return { volume, showFPS, screenShake };
+      return { volume, showFPS, screenShake, devResolution };
     },
 
     togglePause() {
@@ -282,6 +343,8 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
         drawMainPage();
       } else if (currentPage === 'settings') {
         drawSettingsPage();
+      } else if (currentPage === 'debug') {
+        drawDebugPage();
       }
     },
   };

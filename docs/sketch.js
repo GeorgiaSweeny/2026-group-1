@@ -21,8 +21,9 @@ import { createRenderSystem } from './systems/renderSystem.js';
 import { createLightingSystem } from './systems/lightingSystem.js';
 import { createSonarSystem } from './systems/sonarSystem.js';
 import { createRoomSystem } from './systems/roomSystem.js';
-import { createSonarSystem } from './systems/sonarSystem.js';
-import { CANVAS, PLAYER, TORCH } from './config.js';
+import { createPauseMenuSystem } from './systems/pauseMenuSystem.js';
+import { createCameraSystem } from './systems/cameraSystem.js';
+import { CANVAS, DISPLAY, PLAYER, TORCH } from './config.js';
 import { Player } from './entities/player.js';
 import { createResourceManagementSystem } from './systems/resourceManagementSystem.js';
 
@@ -37,16 +38,18 @@ let torchSystem;
 let sonarSystem;
 let renderSystem;
 let lightingSystem;
-let sonarSystem;
 let roomSystem;
 let resourceManagementSystem;
+let pauseMenuSystem;
+let cameraSystem;
 let lastEnsuredRoom = null;
 
 let assets = {};
 const INITIAL_ROOM_ID = 'roomA';
 const ROOM_IDS = ['roomA', 'roomB'];
 const roomData = {};
-const FIT_CANVAS_TO_ROOM = true;
+const FIT_CANVAS_TO_ROOM = false;
+let useDevResolution = false;
 const BACKGROUND_FILE_MAP = {
   'bg-atmosphere': 'bg-atmosphere.jpg',
   'bg-atmosphere.jpg': 'bg-atmosphere.jpg',
@@ -196,6 +199,7 @@ function syncCanvasToCurrentRoom() {
 
   resizeCanvas(roomSize.width, roomSize.height);
   darknessLayer.resizeCanvas(roomSize.width, roomSize.height);
+  applyDisplayScale();
 }
 
 function preload() {
@@ -239,10 +243,9 @@ function setup() {
  // rectMode(CENTER);
   textSize(20);
   textAlign(LEFT);
+  applyDisplayScale();
 
   player = new Player(PLAYER);
-
-  player = new Player(PLAYER.START_X, PLAYER.START_Y, PLAYER.WIDTH, PLAYER.HEIGHT);
 
   const initialRoom = INITIAL_ROOM_ID;
   roomSystem = createRoomSystem({
@@ -275,16 +278,17 @@ function setup() {
   inputSystem = createInputSystem(player);
   playerSystem = createPlayerSystem(player);
   physicsSystem = createPhysicsSystem(player, () => roomSystem.getRoomState());
+  cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
+  // Snap camera to player's initial position
+  cameraSystem.snapTo(player.position.x, player.position.y);
   torchSystem = createTorchSystem(player.torch, player, {
-    drainRate: TORCH.DRAIN_RATE
+    drainRate: TORCH.DRAIN_RATE,
+    getDifficulty: () => pauseMenuSystem ? pauseMenuSystem.getDifficulty() : 'normal',
   });
 
   sonarSystem = createSonarSystem(player, () => roomSystem.getPlatforms());
 
-  lightingSystem = createLightingSystem(() => [
-    player,
-    ...(roomSystem.getEntities?.() ?? [])
-  ]);
+  lightingSystem = createLightingSystem(player, () => sonarSystem?.getSonarLights?.() ?? []);
 
   resourceManagementSystem = createResourceManagementSystem(player, roomSystem);
 
@@ -313,8 +317,18 @@ function setup() {
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),
-    getActivePulses: () => sonarSystem.getActivePulses(),
-    getRevealedWalls: () => sonarSystem.getRevealedWalls(),
+    getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
+    getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
+    getCameraOffset: () => cameraSystem.getOffset(),
+    getCameraScale: () => cameraSystem.getScale(),
+  });
+
+  pauseMenuSystem = createPauseMenuSystem({
+    onDifficultyChange: (diff) => {},
+    onResolutionChange: (isDev) => {
+      useDevResolution = isDev;
+      applyDisplayScale();
+    },
   });
 
   engine = new Engine();
@@ -322,11 +336,12 @@ function setup() {
   engine.register(playerSystem);
   engine.register(physicsSystem);
   engine.register(sonarSystem);
+  engine.register(cameraSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(renderSystem);
-  engine.register(sonarSystem);
   engine.register(resourceManagementSystem);
+  engine.register(pauseMenuSystem);
 }
 
 function draw() {
@@ -335,15 +350,61 @@ function draw() {
     ensureRoomAssetsLoaded(currentRoom);
     lastEnsuredRoom = currentRoom;
   }
-  syncCanvasToCurrentRoom();
-  engine.update(deltaTime);
+
+  if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
+    // Render last frame + pause overlay only
+    pauseMenuSystem.draw();
+  } else {
+    engine.update(deltaTime);
+  }
 }
 
 function keyPressed() {
+  if (keyCode === 27) { // ESC
+    pauseMenuSystem?.togglePause();
+    return;
+  }
+  if (pauseMenuSystem?.isPaused()) return;
   inputSystem?.onKeyPressed?.(key, keyCode);
+}
+
+function mousePressed() {
+  pauseMenuSystem?.onMousePressed();
+}
+
+function mouseDragged() {
+  pauseMenuSystem?.onMouseDragged();
+}
+
+function mouseReleased() {
+  pauseMenuSystem?.onMouseReleased();
+}
+
+//--------------------------------------
+// DISPLAY SCALING
+//--------------------------------------
+function applyDisplayScale() {
+  const canvasEl = document.querySelector('canvas');
+  if (!canvasEl) return;
+
+  if (useDevResolution) {
+    // Dev mode: native resolution, no CSS scaling
+    canvasEl.style.width = '';
+    canvasEl.style.height = '';
+  } else {
+    // Production mode: scale canvas to fit 1920x1080
+    const scaleX = DISPLAY.WIDTH / width;
+    const scaleY = DISPLAY.HEIGHT / height;
+    const s = Math.min(scaleX, scaleY);
+    canvasEl.style.width = (width * s) + 'px';
+    canvasEl.style.height = (height * s) + 'px';
+  }
 }
 
 window.preload = preload;
 window.setup = setup;
 window.draw = draw;
 window.keyPressed = keyPressed;
+window.mousePressed = mousePressed;
+window.mouseDragged = mouseDragged;
+window.mouseReleased = mouseReleased;

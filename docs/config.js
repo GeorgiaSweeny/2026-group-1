@@ -53,6 +53,18 @@ export const CANVAS = {
 };
 
 //======================
+// DISPLAY CONFIG
+//======================
+/* The game canvas is displayed at DISPLAY resolution by default (1920x1080).
+   Dev resolution matches the internal game resolution for side-by-side use. */
+export const DISPLAY = {
+  WIDTH: 1920,
+  HEIGHT: 1080,
+  DEV_WIDTH: 640,
+  DEV_HEIGHT: 360,
+};
+
+//======================
 // PLAYER CONFIG
 //======================
 export const PLAYER = {
