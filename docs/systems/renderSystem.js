@@ -1,6 +1,6 @@
 /*
 ========================================
-VERSION: 2.6
+VERSION: 3.0
 SYSTEM: RENDER SYSTEM
 AUTHOR: Georgia Sweeny
 DESCRIPTION:
@@ -8,6 +8,7 @@ DESCRIPTION:
   and ligthing
 
 - Power modifiers added by Monal
+- Hitbox debug by Nick
 ========================================
 */
 
@@ -29,112 +30,31 @@ export function createRenderSystem({
    getSpawnPoints,
    getTilesets,
    getTileSize,
+   getHazards,
+   getCollectables,
+   getTriggers,
+   getEntities,
+   getSpawnPoints,
+   getTilesets,
+   getTileSize,
    getBackground,
    getPlatformColor,
    getSonarCooldown,
    getSonarReveals,
    assets,
    darknessLayer,
-   getLightSources,
-   enableLighting = true,
+   getLightSources
+
 }) {
-   const BACKGROUND_FILE_MAP = {
-      'bg-atmosphere': 'bg-atmosphere.jpg',
-      'bg-atmosphere.jpg': 'bg-atmosphere.jpg',
-   };
+   let elapsedTime = 0;
+   const oscillationSpeed = 2; // Hz
+   const oscillationAmount = 10; // pixels
 
-   function normalizeBackgroundImageName(name) {
-      if (!name) return null;
-      const raw = String(name).trim();
-      if (!raw) return null;
-      if (BACKGROUND_FILE_MAP[raw]) return BACKGROUND_FILE_MAP[raw];
-      return raw;
-   }
-
-   function toRgba(hex, alpha = 1) {
-      if (typeof hex !== 'string' || !hex.startsWith('#')) return `rgba(255,255,255,${alpha})`;
-      let value = hex.slice(1);
-      if (value.length === 3) {
-         value = value.split('').map((c) => c + c).join('');
-      }
-      if (value.length !== 6) return `rgba(255,255,255,${alpha})`;
-      const r = parseInt(value.slice(0, 2), 16);
-      const g = parseInt(value.slice(2, 4), 16);
-      const b = parseInt(value.slice(4, 6), 16);
-      return `rgba(${r},${g},${b},${alpha})`;
-   }
-
-   function drawRotatedAt(x, y, w, h, rotationDeg, drawFn) {
-      push();
-      translate(x, y);
-      rotate(radians(rotationDeg || 0));
-      drawFn(w, h);
-      pop();
-   }
-
-   function getHazardStyle(hazard) {
-      const props = hazard.properties ?? {};
-      const shape = props.shape ?? (hazard.gid === 28 ? 'triangle' : 'rect');
-      const color = props.color ?? '#d1342f';
-      const alpha = Number.isFinite(props.alpha) ? props.alpha : hazard.opacity;
-      return { shape, color, alpha: alpha ?? 1 };
-   }
-
-   function getCollectableStyle(collectable) {
-      const props = collectable.properties ?? {};
-      const gid = collectable.gid;
-      const defaultShape = gid === 57 ? 'diamond' : 'circle';
-      const shape = props.shape ?? defaultShape;
-      const color = props.color ?? (gid === 57 ? '#7cf4ff' : '#ffd34d');
-      const alpha = Number.isFinite(props.alpha) ? props.alpha : collectable.opacity;
-      return { shape, color, alpha: alpha ?? 1 };
-   }
-
-   function getCollectableType(collectable, tileset) {
-      const fromProps = collectable?.properties?.collectableType;
-      if (typeof fromProps === 'string' && fromProps.length) return fromProps.toLowerCase();
-      if (!tileset || !Number.isFinite(collectable?.gid)) return null;
-
-      const localTileId = collectable.gid - tileset.firstgid;
-      if (localTileId === 20) return 'power';
-      if (localTileId === 41 || localTileId === 53) return 'health';
-      return null;
-   }
-
-   function getCollectableTint(type) {
-      if (type === 'power') return [255, 225, 80, 255]; // yellow
-      if (type === 'health') return [110, 255, 120, 255]; // green
-      return null;
-   }
-
-   function getExitStyle(exitObj) {
-      const props = exitObj.properties ?? {};
-      const color = exitObj.color ?? props.color ?? '#ff00ff';
-      const alpha = Number.isFinite(props.alpha) ? props.alpha : exitObj.opacity;
-      return { color, alpha: alpha ?? 1 };
-   }
-
-   function getSpawnKind(spawn, tilesets) {
-      const typeText = String(spawn?.spawnType ?? '').toLowerCase();
-      if (typeText.includes('enemy')) return 'enemy';
-      if (typeText.includes('player')) return 'player';
-
-      if (Number.isFinite(spawn?.gid)) {
-         const tileset = getTilesetForGid(spawn.gid, tilesets);
-         if (tileset) {
-            const localTileId = spawn.gid - tileset.firstgid;
-            if (localTileId === 68) return 'player'; // prototype tileset playerSpawn
-            if (localTileId === 78) return 'enemy';  // prototype tileset enemySpawn
-         }
-      }
-
-      const spawnId = String(spawn?.spawnId ?? '').toLowerCase();
-      if (spawnId) return 'player';
-      return 'unknown';
-   }
-
+//======================================
+// DRAW GAME
+//======================================
    function normalizeRelativePath(basePath, relativePath) {
-      const baseParts = basePath.split('/').filter(Boolean);
+      const baseParts = String(basePath).split('/').filter(Boolean);
       const relParts = String(relativePath ?? '').split('/').filter(Boolean);
       for (const part of relParts) {
          if (part === '.') continue;
@@ -149,13 +69,10 @@ export function createRenderSystem({
 
    function tilesetSourceToImagePath(source) {
       if (!source) return null;
-      // backgrounds.tsx is an image collection (no single .png atlas file to load).
-      if (String(source).toLowerCase().endsWith('backgrounds.tsx')) return null;
-      const pngSource = source.replace(/\.tsx$/i, '.png');
-      return normalizeRelativePath('data/rooms', pngSource);
+      return normalizeRelativePath('data/rooms', source).replace(/\.tsx$/i, '.png');
    }
 
-   function getTilesetForGid(gid, tilesets) {
+   function getTilesetForGid(gid, tilesets = []) {
       if (!Number.isFinite(gid) || gid <= 0 || !Array.isArray(tilesets) || !tilesets.length) return null;
       let best = null;
       for (const tileset of tilesets) {
@@ -168,24 +85,58 @@ export function createRenderSystem({
       return best;
    }
 
-   function resolveBackgroundImageFromGid(tilesets, gid) {
-      const tileset = getTilesetForGid(gid, tilesets);
-      if (!tileset) return null;
-      if (String(tileset.source ?? '').toLowerCase().endsWith('backgrounds.tsx')) {
-         const localTileId = gid - tileset.firstgid;
-         const byId = {
-            0: 'bg-atmosphere.jpg',
-            1: 'bg-atmosphere.jpg'
+   function getObjectRect(obj) {
+      if (!obj) return null;
+      if (typeof obj.getCornerX === 'function' && typeof obj.getCornerY === 'function') {
+         return {
+            x: obj.getCornerX(),
+            y: obj.getCornerY(),
+            w: obj.getWidth(),
+            h: obj.getHeight()
          };
-         return byId[localTileId] ?? null;
       }
-      return null;
+      const tileSize = getTileSize?.() ?? {};
+      const fallbackW = tileSize.tileWidth ?? 16;
+      const fallbackH = tileSize.tileHeight ?? 16;
+      const w = obj.w ?? obj.width ?? fallbackW;
+      const h = obj.h ?? obj.height ?? fallbackH;
+      const cx = obj.x ?? 0;
+      const cy = obj.y ?? 0;
+      return { x: cx - (w / 2), y: cy - (h / 2), w, h };
    }
-   
-//======================================
-// DRAW BACKGROUND
-//======================================
 
+   function drawSpriteFromTileset(obj) {
+      const gid = Number(obj?.gid);
+      if (!Number.isFinite(gid)) return false;
+
+      const tilesets = getTilesets?.() ?? [];
+      const tileset = getTilesetForGid(gid, tilesets);
+      if (!tileset) return false;
+
+      if (String(tileset.source ?? '').toLowerCase().endsWith('backgrounds.tsx')) {
+         return false;
+      }
+
+      const imagePath = tilesetSourceToImagePath(tileset.source);
+      const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
+      if (!tilesetImage) return false;
+
+      const rect = getObjectRect(obj);
+      if (!rect) return false;
+
+      const tileSize = getTileSize?.() ?? {};
+      const tileWidth = tileSize.tileWidth ?? tileset.tilewidth ?? 16;
+      const tileHeight = tileSize.tileHeight ?? tileset.tileheight ?? 16;
+      const localTileId = gid - Number(tileset.firstgid);
+      const columns = Number(tileset.columns) || Math.max(1, Math.floor(tilesetImage.width / tileWidth));
+      const srcX = (localTileId % columns) * tileWidth;
+      const srcY = Math.floor(localTileId / columns) * tileHeight;
+
+      image(tilesetImage, rect.x, rect.y, rect.w, rect.h, srcX, srcY, tileWidth, tileHeight);
+      return true;
+   }
+
+//===BACKGROUND===//
    function drawBackground() {
       const bg = getBackground?.();
       const tilesets = getTilesets?.() ?? [];
@@ -211,6 +162,7 @@ export function createRenderSystem({
    const oscillationSpeed = 2; // Hz
    const oscillationAmount = 10; // pixels
 
+   //===TERRAIN===//
    function drawPlatforms() {
       const platforms = getPlatforms?.() ?? [];
       const platformColor = getPlatformColor?.() ?? '#5a6e82';
@@ -221,6 +173,8 @@ export function createRenderSystem({
 
       noStroke();
       for (const p of platforms) {
+         if (drawSpriteFromTileset(p)) continue;
+         rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
          const tileset = getTilesetForGid(p.gid, tilesets);
          const tilesetImagePath = tilesetSourceToImagePath(tileset?.source);
          const tilesetImage = tilesetImagePath ? assets?.[`tileset:${tilesetImagePath}`] : null;
@@ -386,6 +340,88 @@ export function createRenderSystem({
 //======================================
 // DRAW PLAYER
 //======================================
+   //=== HAZARDS ===//
+   function drawHazards() {
+      const hazards = getHazards?.() ?? [];
+      if (!hazards.length) return;
+
+      noStroke();
+      fill(220, 70, 70, 180);
+      rectMode(CENTER);
+      for (const hazard of hazards) {
+         if (hazard.visible === false) continue;
+         if (drawSpriteFromTileset(hazard)) continue;
+         rect(hazard.x, hazard.y, hazard.w, hazard.h);
+      }
+      rectMode(CORNER);
+   }
+
+   //=== COLLECTABLES ===//
+   function drawCollectables() {
+      const collectables = getCollectables?.() ?? [];
+      if (!collectables.length) return;
+
+      noStroke();
+      fill(255, 225, 80, 220);
+      for (const item of collectables) {
+         if (item.visible === false) continue;
+         if (drawSpriteFromTileset(item)) continue;
+         ellipse(item.x, item.y, Math.max(8, item.w), Math.max(8, item.h));
+      }
+   }
+
+   //=== TRIGGERS ===//
+   function drawTriggers() {
+      const triggers = getTriggers?.() ?? [];
+      if (!triggers.length) return;
+
+      noFill();
+      stroke(140, 180, 255, 180);
+      strokeWeight(1);
+      rectMode(CENTER);
+      for (const trigger of triggers) {
+         if (trigger.visible === false) continue;
+         if (drawSpriteFromTileset(trigger)) continue;
+         rect(trigger.x, trigger.y, trigger.w, trigger.h);
+      }
+      rectMode(CORNER);
+      noStroke();
+   }
+
+   //=== ENTITIES ===//
+   function drawEntities() {
+      const entities = getEntities?.() ?? [];
+      if (!entities.length) return;
+
+      noStroke();
+      fill(180, 110, 230, 210);
+      for (const entity of entities) {
+         if (entity.visible === false) continue;
+         if (entity.properties?.spawnId != null) continue;
+         if (drawSpriteFromTileset(entity)) continue;
+         rect(entity.x - (entity.w / 2), entity.y - (entity.h / 2), entity.w, entity.h);
+      }
+   }
+
+   //=== SPAWNS ===//
+   function drawSpawnPoints() {
+      const spawnPoints = getSpawnPoints?.() ?? [];
+      if (!spawnPoints.length) return;
+
+      for (const spawn of spawnPoints) {
+         if (drawSpriteFromTileset(spawn)) continue;
+         const isPlayerSpawn = String(spawn.spawnId ?? '').toLowerCase() === 'default';
+         noStroke();
+         fill(isPlayerSpawn ? color(80, 255, 130, 220) : color(255, 130, 80, 220));
+         triangle(
+            spawn.x, spawn.y - 8,
+            spawn.x - 7, spawn.y + 6,
+            spawn.x + 7, spawn.y + 6
+         );
+      }
+   }
+
+   //===PLAYER===//
    function drawPlayer() {
 
       push();
@@ -464,6 +500,17 @@ export function createRenderSystem({
       image(darknessLayer, 0, 0);
    }
 
+   //===UI===//
+   function drawUI() {
+      fill(255);
+      noStroke();
+      text(`Power: ${Math.round(player.power.current)}`, 20, 30);
+   }
+
+//======================================
+// VISUAL DEBUG HELPERS
+//======================================
+//===HITBOX-DEBUG===//
    // draw by changing DRAW to true in config, shows hitbox boundaries
    function debugHitbox(drawThis){
       if(drawThis){
@@ -499,6 +546,28 @@ export function createRenderSystem({
       }
    };
 }
+//======================================
+// DRAW EVERYTHING
+//======================================
+      return {
+         draw(deltaTime) {
+            elapsedTime += deltaTime;
+            const lightSources = getLightSources?.() ?? [];
+
+            drawBackground();
+            drawPlatforms();
+            drawHazards();
+            drawCollectables();
+            drawTriggers();
+            drawEntities();
+            drawSpawnPoints();
+            drawPlayer();
+            drawLighting(lightSources);
+            drawUI();
+            debugHitbox(DEBUG_COLOR.DRAW);
+         }
+      };
+   }
 //======================================
 // END
 //======================================

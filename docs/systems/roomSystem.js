@@ -1,6 +1,6 @@
 /*
 ========================================
-VERSION: 1.1
+VERSION: 2.0
 SYSTEM: ROOM SYSTEM
 AUTHOR: Georgia Sweeny
 DESCRIPTION:
@@ -24,49 +24,41 @@ function getTiledProperty(mapData, key, fallback = null) {
   return found ? found.value : fallback;
 }
 
-function getLayerProperty(layer, key, fallback = null) {
-  const props = layer?.properties;
-  if (!Array.isArray(props)) return fallback;
-  const found = props.find((p) => p?.name === key);
-  return found ? found.value : fallback;
-}
-
-function normalizeLayerName(name = '') {
-  return String(name).toLowerCase().replace(/[\s_-]+/g, '');
-}
-
-function getTilesetForGid(gid, tilesets = []) {
-  if (!Number.isFinite(gid) || gid <= 0 || !Array.isArray(tilesets) || !tilesets.length) return null;
-  let best = null;
-  for (const tileset of tilesets) {
-    const firstgid = Number(tileset?.firstgid ?? 0);
-    if (!firstgid || gid < firstgid) continue;
-    if (!best || firstgid > best.firstgid) {
-      best = { ...tileset, firstgid };
-    }
+function parsePropertiesMap(properties = []) {
+  const result = {};
+  for (const prop of properties) {
+    if (!prop?.name) continue;
+    result[prop.name] = prop.value;
   }
-  return best;
+  return result;
 }
 
-function inferSpawnTypeFromObject(obj, tilesets = []) {
-  const propType = (obj?.properties ?? []).find((p) => p?.name === 'spawnType')?.value;
-  if (typeof propType === 'string' && propType.trim()) return propType;
-
-  const gid = obj?.gid;
-  if (!Number.isFinite(gid)) return '';
-  const tileset = getTilesetForGid(gid, tilesets);
-  if (!tileset) return '';
-
-  const localTileId = gid - tileset.firstgid;
-  if (localTileId === 68) return 'player';
-  if (localTileId === 78) return 'enemy';
-  return '';
+function getObjectBox(obj, defaultW, defaultH) {
+  const w = obj?.width ?? defaultW;
+  const h = obj?.height ?? defaultH;
+  const x = obj?.x ?? 0;
+  // Tiled tile-objects use bottom-left Y origin.
+  const y = obj?.gid != null ? (obj?.y ?? 0) - h : (obj?.y ?? 0);
+  return { x, y, w, h };
 }
 
-function isSpawnMarkerObject(obj, tilesets = []) {
-  const hasSpawnId = (obj?.properties ?? []).some((p) => p?.name === 'spawnId');
-  if (hasSpawnId) return true;
-  return inferSpawnTypeFromObject(obj, tilesets).length > 0;
+function normalizeLayerObject(obj, tileWidth, tileHeight, layerOpacity = 1) {
+  const { x, y, w, h } = getObjectBox(obj, tileWidth, tileHeight);
+  const visible = obj?.visible !== false;
+  const opacity = Math.max(0, Math.min(1, (obj?.opacity ?? 1) * layerOpacity));
+  return {
+    x: x + w / 2,
+    y: y + h / 2,
+    w,
+    h,
+    gid: obj?.gid ?? null,
+    name: obj?.name ?? '',
+    type: obj?.type ?? '',
+    rotation: obj?.rotation ?? 0,
+    visible,
+    opacity,
+    properties: parsePropertiesMap(obj?.properties ?? [])
+  };
 }
 
 function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
@@ -74,6 +66,7 @@ function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
   const data = layer?.data;
   const width = layer?.width;
   const height = layer?.height;
+  const FLIP_MASK = 0x1FFFFFFF;
   const FLIP_MASK = 0x1FFFFFFF;
 
   if (!width || !height) return result;
@@ -86,18 +79,12 @@ function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const index = y * width + x;
-      const rawGid = data[index] >>> 0;
-      const gid = rawGid & FLIP_MASK;
+      const gid = (data[index] >>> 0) & FLIP_MASK;
       if (!gid) continue;
 
-      result.push({
-        // Normalize to world-space center coordinates so render + physics align.
-        x: x * tileWidth + tileWidth / 2,
-        y: y * tileHeight + tileHeight / 2,
-        w: tileWidth,
-        h: tileHeight,
-        gid
-      });
+      const wall = new Wall(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
+      wall.gid = gid;
+      result.push(wall);
     }
   }
 
@@ -172,7 +159,8 @@ function normalizeTiledRoom(roomKey, mapData) {
     collectables: [],
     triggers: [],
     entities: [],
-    exits: []
+    exits: [],
+    foreground: []
   };
 
   for (const layer of mapData?.layers ?? []) {
@@ -185,156 +173,88 @@ function normalizeTiledRoom(roomKey, mapData) {
       continue;
     }
 
-    if (layer?.type === 'objectgroup' && layerName.includes('platform')) {
+    if (layer?.type === 'objectgroup' && layerName === 'terrain') {
       for (const obj of layer.objects ?? []) {
-        const center = getObjectCenter(obj, tileWidth, tileHeight);
-        normalized.platforms.push({
-          x: center.x,
-          y: center.y,
-          w: center.w,
-          h: center.h
-        });
+        const { x, y, w, h } = getObjectBox(obj, tileWidth, tileHeight);
+        const wall = new Wall(x, y, w, h);
+        wall.gid = obj?.gid ?? null;
+        normalized.platforms.push(wall);
       }
       continue;
     }
 
-    if (layer?.type === 'objectgroup' && layerName.includes('hazard')) {
-      normalized.hazards = normalizeObjectGroupObjects(
-        layer.objects ?? [],
-        tileWidth,
-        tileHeight,
-        layer.opacity ?? 1
-      );
-      continue;
-    }
-
-    if (layer?.type === 'objectgroup' && (layerName.includes('collectable') || layerName.includes('collectible'))) {
-      normalized.collectables = normalizeObjectGroupObjects(
-        layer.objects ?? [],
-        tileWidth,
-        tileHeight,
-        layer.opacity ?? 1
-      );
-      continue;
-    }
-
-    if (layer?.type === 'objectgroup' && layerName.includes('background')) {
-      const backgroundObj = (layer.objects ?? [])[0];
-      const objectProps = parsePropertiesMap(backgroundObj?.properties ?? []);
-      const objectName = backgroundObj?.name ?? '';
-      normalized.background.image =
-        objectProps.backgroundImage
-        ?? objectProps.image
-        ?? (objectName || normalized.background.image);
-      normalized.background.gid = backgroundObj?.gid ?? normalized.background.gid;
-      normalized.background.w = backgroundObj?.width ?? normalized.background.w;
-      normalized.background.h = backgroundObj?.height ?? normalized.background.h;
-      continue;
-    }
-
-    if (layer?.type === 'objectgroup' && layerName.includes('spawn')) {
-      const spawnCandidates = (layer.objects ?? []).map((obj) => {
-        const center = getObjectCenter(obj, 0, 0);
-        const spawnId = (obj.properties ?? []).find((p) => p?.name === 'spawnId')?.value
-          ?? obj.name
-          ?? obj.type
-          ?? 'spawn';
-        const spawnType = (obj.properties ?? []).find((p) => p?.name === 'spawnType')?.value
-          ?? obj.type
-          ?? obj.name
-          ?? '';
-        return {
-          x: center.x,
-          y: center.y,
-          spawnId: String(spawnId),
-          spawnType: String(spawnType),
-          gid: obj.gid ?? null
-        };
-      });
-      normalized.spawnPoints.push(...spawnCandidates);
-
-      const spawn = (layer.objects ?? []).find(
-        (obj) => (obj.type ?? '').toLowerCase() === 'player' || (obj.name ?? '').toLowerCase() === 'player'
-      ) ?? (layer.objects ?? [])[0];
-
-      if (spawn) {
-        const center = getObjectCenter(spawn, 0, 0);
-        normalized.playerStart = {
-          x: center.x,
-          y: center.y
-        };
+    if (layer?.type === 'objectgroup' && layerName === 'background') {
+      const bgObj = (layer.objects ?? [])[0];
+      if (bgObj) {
+        const bg = normalizeLayerObject(bgObj, tileWidth, tileHeight, layer.opacity ?? 1);
+        normalized.background.gid = bg.gid;
+        normalized.background.w = bg.w;
+        normalized.background.h = bg.h;
+        if (!normalized.background.image) {
+          const fromProps = bg.properties.backgroundImage ?? bg.properties.image ?? null;
+          normalized.background.image = fromProps || (bg.name || null);
+        }
       }
       continue;
     }
 
-    if (layer?.type === 'objectgroup' && (layerName.includes('entity') || layerName.includes('entities'))) {
-      normalized.entities = [...(layer.objects ?? [])];
-
-      const entitySpawns = (layer.objects ?? []).filter((obj) =>
-        isSpawnMarkerObject(obj, normalized.tilesets)
-      ).map((obj) => {
-        const center = getObjectCenter(obj, 0, 0);
-        const spawnId = (obj.properties ?? []).find((p) => p?.name === 'spawnId')?.value ?? 'spawn';
-        const spawnType = (obj.properties ?? []).find((p) => p?.name === 'spawnType')?.value
-          ?? inferSpawnTypeFromObject(obj, normalized.tilesets)
-          ?? obj.type
-          ?? obj.name
-          ?? '';
-        return {
-          x: center.x,
-          y: center.y,
-          spawnId: String(spawnId),
-          spawnType: String(spawnType),
-          gid: obj.gid ?? null
-        };
-      });
-      normalized.spawnPoints.push(...entitySpawns);
-
-      // Prefer explicit spawn marker with spawnId=default.
-      const spawnObject = (layer.objects ?? []).find((obj) => {
-        const spawnId = (obj.properties ?? []).find((p) => p?.name === 'spawnId')?.value;
-        return typeof spawnId === 'string' && spawnId.toLowerCase() === 'default';
-      }) ?? (layer.objects ?? []).find((obj) =>
-        (obj.properties ?? []).some((p) => p?.name === 'spawnId')
+    if (layer?.type === 'objectgroup' && layerName === 'hazards') {
+      normalized.hazards = (layer.objects ?? []).map((obj) =>
+        normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
       );
-
-      if (spawnObject) {
-        const center = getObjectCenter(spawnObject, 0, 0);
-        normalized.playerStart = {
-          x: center.x,
-          y: center.y
-        };
-      }
       continue;
     }
 
-    if (layer?.type === 'objectgroup' && (layerName.includes('trigger') || layerName.includes('exit'))) {
-      const triggerObjects = normalizeObjectGroupObjects(
-        layer.objects ?? [],
-        tileWidth,
-        tileHeight,
-        layer.opacity ?? 1
+    if (layer?.type === 'objectgroup' && layerName === 'collectables') {
+      normalized.collectables = (layer.objects ?? []).map((obj) =>
+        normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
       );
-      normalized.triggers.push(...triggerObjects);
+      continue;
+    }
 
-      const typedExits = triggerObjects.filter((obj) => {
-        const typeIsExit = String(obj?.type ?? '').toLowerCase() === 'exit';
-        const hasExitProps = obj?.properties?.targetRoom != null
-          || obj?.properties?.targetSpawn != null
-          || obj?.properties?.isWin === true;
-        return typeIsExit || hasExitProps;
-      });
-      if (typedExits.length) {
-        normalized.exits.push(...typedExits);
-      } else if (layerName.includes('exit')) {
-        // Backward compatibility for dedicated "exit" layers with untyped objects.
-        normalized.exits.push(...triggerObjects);
-      }
+    if (layer?.type === 'objectgroup' && layerName === 'triggers') {
+      normalized.triggers = (layer.objects ?? []).map((obj) =>
+        normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
+      );
+      normalized.exits = normalized.triggers.filter((obj) =>
+        obj.properties.targetRoom != null ||
+        obj.properties.targetSpawn != null ||
+        obj.properties.isWin === true
+      );
+      continue;
+    }
+
+    if (layer?.type === 'objectgroup' && layerName === 'entities') {
+      normalized.entities = (layer.objects ?? []).map((obj) =>
+        normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
+      );
+      normalized.spawnPoints = normalized.entities.filter((obj) => obj.properties.spawnId != null)
+        .map((obj) => ({
+          x: obj.x,
+          y: obj.y,
+          spawnId: String(obj.properties.spawnId),
+          gid: obj.gid
+        }));
+      continue;
+    }
+
+    if (layer?.type === 'objectgroup' && layerName === 'foreground') {
+      normalized.foreground = (layer.objects ?? []).map((obj) =>
+        normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
+      );
       continue;
     }
 
     if (layer?.type === 'imagelayer' && !normalized.background.image && layer?.image) {
       normalized.background.image = layer.image;
+    }
+  }
+
+  if (!normalized.playerStart) {
+    const defaultSpawn = normalized.spawnPoints.find((spawn) => spawn.spawnId.toLowerCase() === 'default')
+      ?? normalized.spawnPoints[0];
+    if (defaultSpawn) {
+      normalized.playerStart = { x: defaultSpawn.x, y: defaultSpawn.y };
     }
   }
 
@@ -361,13 +281,25 @@ function normalizeLegacyRoom(roomKey, roomConfig) {
     platforms: [],
     hazards: [],
     collectables: [],
-    triggers: [...(roomConfig.triggers ?? [])]
+    triggers: [],
+    foreground: []
   };
 
   if (roomConfig.platformsTiles) {
-    normalized.platforms = roomConfig.platformsTiles.map((platform) => rectToPixels(platform));
+    normalized.platforms = roomConfig.platformsTiles.map((platform) => {
+      const px = rectToPixels(platform);
+      return new Wall(px.x, px.y, px.w, px.h);
+    });
   } else if (roomConfig.platforms) {
-    normalized.platforms = [...roomConfig.platforms];
+    normalized.platforms = roomConfig.platforms.map((platform) => {
+      if (platform instanceof Wall) return platform;
+      return new Wall(
+        platform.x ?? 0,
+        platform.y ?? 0,
+        platform.w ?? platform.width ?? CANVAS.TILE_SIZE,
+        platform.h ?? platform.height ?? CANVAS.TILE_SIZE
+      );
+    });
   } else if (Array.isArray(roomConfig.tiles)) {
     // Basic grid fallback: any non-zero tile is treated as solid.
     normalized.platforms = [];
@@ -393,6 +325,8 @@ function normalizeLegacyRoom(roomKey, roomConfig) {
   normalized.platformColor = roomConfig.platformColor ?? null;
   normalized.hazards = [...(roomConfig.hazards ?? [])];
   normalized.collectables = [...(roomConfig.collectables ?? [])];
+  normalized.triggers = [...(roomConfig.triggers ?? [])];
+  normalized.foreground = [...(roomConfig.foreground ?? [])];
 
   return normalized;
 }
@@ -418,41 +352,20 @@ export function createRoomSystem({
   let hazards = [];
   let collectables = [];
   let triggers = [];
-  let spawnPoints = [];
   let exits = [];
+  let spawnPoints = [];
+  let foreground = [];
   let tilesets = [];
   let tileWidth = CANVAS.TILE_SIZE;
   let tileHeight = CANVAS.TILE_SIZE;
   let exitCooldownMs = 0;
 
-  function findSpawnPointById(spawnId) {
-    if (!spawnId) return null;
-    const needle = String(spawnId).toLowerCase();
-    return spawnPoints.find((spawn) => String(spawn?.spawnId ?? '').toLowerCase() === needle) ?? null;
-  }
-
-  function setPlayerPosition(position) {
-    if (!player || !position) return;
-    if (typeof player.setCurrentPosition === 'function') {
-      player.setCurrentPosition(position.x, position.y);
-    } else {
-      player.x = position.x;
-      player.y = position.y;
-      if (player.nextPos) {
-        player.nextPos.x = position.x;
-        player.nextPos.y = position.y;
-      }
-    }
-
-    if (typeof player.setVelocityX === 'function') player.setVelocityX(0);
-    if (typeof player.setVelocityY === 'function') player.setVelocityY(0);
-    if (Number.isFinite(player.vx)) player.vx = 0;
-    if (Number.isFinite(player.vy)) player.vy = 0;
-  }
-
   function loadRoom(roomKey, { spawnId = null } = {}) {
     const roomSource = roomData[roomKey];
-    if (!roomSource) return;
+    if (!roomSource) {
+      console.warn(`Room "${roomKey}" not found in roomData.`);
+      return;
+    }
 
     const normalized = normalizeRoom(roomKey, roomSource);
 
@@ -462,16 +375,27 @@ export function createRoomSystem({
     hazards = [...(normalized.hazards ?? [])];
     collectables = [...(normalized.collectables ?? [])];
     triggers = [...(normalized.triggers ?? [])];
-    spawnPoints = [...(normalized.spawnPoints ?? [])];
     exits = [...(normalized.exits ?? [])];
+    spawnPoints = [...(normalized.spawnPoints ?? [])];
+    foreground = [...(normalized.foreground ?? [])];
     entities = [...(normalized.entities ?? [])];
     tilesets = [...(normalized.tilesets ?? [])];
     tileWidth = normalized.tileWidth ?? CANVAS.TILE_SIZE;
     tileHeight = normalized.tileHeight ?? CANVAS.TILE_SIZE;
 
-    const explicitSpawn = findSpawnPointById(spawnId);
-    playerStart = explicitSpawn ?? normalized.playerStart ?? null;
-    setPlayerPosition(playerStart);
+    const explicitSpawn = spawnId
+      ? spawnPoints.find((spawn) => String(spawn.spawnId).toLowerCase() === String(spawnId).toLowerCase())
+      : null;
+    playerStart = explicitSpawn ? { x: explicitSpawn.x, y: explicitSpawn.y } : (normalized.playerStart ?? null);
+
+    if (player && playerStart) {
+      if (typeof player.setCurrentPosition === 'function') {
+        player.setCurrentPosition(playerStart.x, playerStart.y);
+      } else if (player.position) {
+        player.position.x = playerStart.x;
+        player.position.y = playerStart.y;
+      }
+    }
 
     onRoomLoaded?.({
       room: currentRoom,
@@ -487,17 +411,18 @@ export function createRoomSystem({
   }
 
   function isOverlappingPlayer(obj) {
-    if (!player || !obj) return false;
-    const playerW = player.w ?? player.size ?? CANVAS.TILE_SIZE;
-    const playerH = player.h ?? player.size ?? CANVAS.TILE_SIZE;
+    if (!player || !obj || !player.position) return false;
+
+    const playerW = player.w ?? CANVAS.TILE_SIZE;
+    const playerH = player.h ?? CANVAS.TILE_SIZE;
     const objW = obj.w ?? 0;
     const objH = obj.h ?? 0;
     if (!objW || !objH) return false;
 
-    const playerLeft = player.x - playerW / 2;
-    const playerRight = player.x + playerW / 2;
-    const playerTop = player.y - playerH / 2;
-    const playerBottom = player.y + playerH / 2;
+    const playerLeft = player.position.x - playerW / 2;
+    const playerRight = player.position.x + playerW / 2;
+    const playerTop = player.position.y - playerH / 2;
+    const playerBottom = player.position.y + playerH / 2;
 
     const objLeft = obj.x - objW / 2;
     const objRight = obj.x + objW / 2;
@@ -565,16 +490,20 @@ export function createRoomSystem({
       return collectables;
     },
 
-    getSpawnPoints() {
-      return spawnPoints;
-    },
-
     getTriggers() {
       return triggers;
     },
 
     getExits() {
       return exits;
+    },
+
+    getSpawnPoints() {
+      return spawnPoints;
+    },
+
+    getForeground() {
+      return foreground;
     },
 
     getTilesets() {

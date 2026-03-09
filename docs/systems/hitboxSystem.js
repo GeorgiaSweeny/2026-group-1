@@ -1,3 +1,22 @@
+/*
+========================================
+VERSION: 3.0
+SYSTEM: HITBOX SYSTEM
+AUTHORs: Nick 
+DESCRIPTION:
+
+RULES:
+- No rendering or drawing in update functions
+- Does not modify other systems directly
+- Purely updates entity state based on physics
+========================================
+USAGE:
+- Drives collision
+========================================
+NOTES:
+
+========================================
+*/
 import { DEBUG_COLOR } from "../config.js";
 
 export class Hitbox{
@@ -55,6 +74,7 @@ export class Wall extends Hitbox{
                      ((vec.x - (entity.getWidth() / 2)) <= this.position.x + (this.w / 2)) &&
                      ((vec.y - (entity.getHeight() / 2)) >= this.position.y - (this.h / 2)));
     this.zones[3] = ((vec.x + (entity.getWidth() / 2)) <= this.position.x - (this.w / 2));
+    // COMMENT: should zone 1 & 3 also check not also check overlap on other axis like zone 0 &2 ?
   }
 }
 

@@ -1,6 +1,6 @@
 /*
 ========================================
-VERSION: 2.0
+VERSION: 3.0
 SYSTEM: LIGHTING SYSTEM
 AUTHOR: Georgia Sweeny
 DESCRIPTION:
@@ -46,7 +46,7 @@ TODO / LIMITATIONS:
 //======================================
 // LIGHTING SYSTEM
 //======================================
-export function createLightingSystem(getEntities) {
+export function createLightingSystem(player = []) {
    return {
 
       //--- GET LIGHT SOURCES ---//

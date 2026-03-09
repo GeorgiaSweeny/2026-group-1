@@ -2,7 +2,7 @@
 ========================================
 VERSION: 1.0
 SYSTEM: CAMERA SYSTEM
-AUTHOR: 
+AUTHOR: Jude
 DESCRIPTION:
 - Camera System: Manages viewport and visual focus
 - Tracks entities (player or other targets) and adjusts view

@@ -96,8 +96,9 @@ export class Player extends Hitbox{
       this.position.y = value;
    }
    setCurrentPosition(x, y){
-      this.x = x;
-      this.y = y;
+      this.position.x = x;
+      this.position.y = y;
+      // Keep physics target in sync with teleports/spawn placement.
       this.nextPos.x = x;
       this.nextPos.y = y;
    }
