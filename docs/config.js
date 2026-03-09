@@ -34,7 +34,7 @@ export const INPUT = {
   
   // ACTION KEYS - functions take strings
   TOGGLE_TORCH_KEY: ['L', 'l'],
-  EMIT_SONAR_KEY: ['K', 'k']
+  SONAR_KEY: ['E', 'e']
 };
 
 //======================

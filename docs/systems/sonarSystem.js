@@ -137,18 +137,7 @@ export function createSonarSystem(player, getWalls) {
     },
 
     draw() {
-      if (!pulses.length) {
-        return;
-      }
-
-      push();
-      if (typeof blendMode === 'function' && typeof ADD !== 'undefined') {
-        blendMode(ADD);
-      }
-      for (const p of pulses) {
-        p.show();
-      }
-      pop();
+      // Pulses are drawn by renderSystem inside camera transform
     },
 
     getCooldownPercent() {
@@ -173,6 +162,27 @@ export function createSonarSystem(player, getWalls) {
         }
       }
       return reveals;
+    },
+
+    getActivePulses() {
+      return pulses;
+    },
+
+    getSonarLights() {
+      const lights = [];
+      for (const pulse of pulses) {
+        for (const p of pulse.particles) {
+          if (p.life > 0) {
+            lights.push({
+              x: p.pos.x,
+              y: p.pos.y,
+              radius: 40,
+              intensity: p.life / RAY_LIFETIME
+            });
+          }
+        }
+      }
+      return lights;
     }
   };
 }

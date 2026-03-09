@@ -74,11 +74,8 @@ export function createInputSystem(player) {
         player.actionIntent.toggleTorch = true;
       }
 
-      if (INPUT.EMIT_SONAR_KEY.includes(key) || keyLower === 'k') {
+      if (INPUT.SONAR_KEY.includes(key) || keyLower === 'e') {
         player.actionIntent.emitSonar = true;
-      }
-      if (INPUT.SONAR_KEY.includes(key)) {
-        player.sonarIntent = true;
       }
     }
   };

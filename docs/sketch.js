@@ -312,8 +312,6 @@ function setup() {
     getTileSize: () => roomSystem.getTileSize(),
     getBackground: () => roomSystem.getBackground(),
     getPlatformColor: () => roomSystem.getPlatformColor(),
-    getSonarCooldown: () => sonarSystem?.getCooldownPercent?.(),
-    getSonarReveals: () => sonarSystem?.getRevealedWalls?.(),
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),

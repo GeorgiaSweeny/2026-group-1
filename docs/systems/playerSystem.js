@@ -72,6 +72,32 @@ export function createPlayerSystem(player) {
       const maxSpeed = PLAYER.MOVE_SPEED / 60;
       player.velocity.x = constrain(player.velocity.x, -maxSpeed, maxSpeed);
       player.velocity.y = constrain(player.velocity.y, -maxSpeed, maxSpeed);
+
+      // Bubble trail — spawn behind submarine when moving
+      const dt = Math.max(0, deltaTime ?? 16);
+      const isMoving = Math.abs(player.velocity.x) > 0.1 || Math.abs(player.velocity.y) > 0.1;
+      if (isMoving && Math.random() < 0.4) {
+        const backX = player.position.x - player.facing * player.w * 0.8;
+        player.bubbles.push({
+          x: backX,
+          y: player.position.y + (Math.random() * 8 - 4),
+          size: 2 + Math.random() * 4,
+          life: 200,
+          vx: (Math.random() * 0.04 - 0.02),
+          vy: -(0.03 + Math.random() * 0.05),
+        });
+      }
+
+      // Update existing bubbles (drift upward + fade)
+      for (let i = player.bubbles.length - 1; i >= 0; i--) {
+        const b = player.bubbles[i];
+        b.x += b.vx * dt;
+        b.y += b.vy * dt;
+        b.life -= 0.15 * dt;
+        if (b.life <= 0) {
+          player.bubbles.splice(i, 1);
+        }
+      }
     },
   };
 }
