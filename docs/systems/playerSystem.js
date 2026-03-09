@@ -46,7 +46,6 @@ TODO / LIMITATIONS:
 import { PLAYER } from '../config.js';
 
 export function createPlayerSystem(player) {
-  // returning object literals → commas between entries
   return {
     update(deltaTime) {
       const dt = Math.max(0, deltaTime ?? 16);

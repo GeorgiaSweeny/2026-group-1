@@ -46,7 +46,7 @@ TODO / LIMITATIONS:
 //======================================
 // LIGHTING SYSTEM
 //======================================
-export function createLightingSystem(player = []) {
+export function createLightingSystem(player = [], getSonarLights = () => []) {
    return {
 
       //--- GET LIGHT SOURCES ---//

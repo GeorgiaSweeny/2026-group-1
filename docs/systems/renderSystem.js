@@ -33,7 +33,9 @@ export function createRenderSystem({
    getSonarCooldown,
    assets,
    darknessLayer,
-   getLightSources
+   getLightSources,
+   getActivePulses,
+   getRevealedWalls,
 
 }) {
    let elapsedTime = 0;
@@ -238,9 +240,80 @@ export function createRenderSystem({
 
    //===PLAYER===//
    function drawPlayer() {
-      stroke(150, 0, 25);
-      fill(225, 0, 50);
-      rect(player.getCornerX(), player.getCornerY(), player.getWidth(), player.getHeight());
+      push();
+      translate(player.position.x, player.position.y);
+      scale(player.facing, 1);
+
+      // Periscope
+      fill(120);
+      noStroke();
+      rect(-2, -player.w * 0.9, 4, player.w * 0.6);
+      rect(-2, -player.w * 0.9, 8, 4);
+
+      // Tail fin
+      fill(150);
+      triangle(
+         -player.w / 2, 0,
+         -player.w, -player.w / 3,
+         -player.w, player.w / 3
+      );
+
+      // Body
+      fill(255, 200, 50);
+      ellipse(0, 0, player.w * 1.2, player.w * 0.8);
+
+      // Porthole window
+      fill(100, 220, 255);
+      circle(player.w * 0.2, 0, player.w * 0.4);
+
+      pop();
+   }
+
+   //===BUBBLES===//
+   function drawBubbles() {
+      const bubbleList = player.bubbles ?? [];
+      noStroke();
+      for (const b of bubbleList) {
+         if (b.life > 0) {
+            fill(150, 220, 255, b.life);
+            circle(b.x, b.y, b.size);
+         }
+      }
+   }
+
+   //===SONAR PULSES===//
+   function drawSonarPulses() {
+      const pulses = getActivePulses?.() ?? [];
+      strokeWeight(2);
+      for (const pulse of pulses) {
+         for (const p of pulse.particles) {
+            if (p.life > 0) {
+               stroke(0, 220, 0, p.life);
+               point(p.x, p.y);
+            }
+         }
+      }
+   }
+
+   //===SONAR WALLS===//
+   function drawSonarWalls() {
+      const walls = getRevealedWalls?.() ?? [];
+      for (const wall of walls) {
+         if (wall.alpha > 1) {
+            // Dark background rect
+            noStroke();
+            fill(20, 25, 35, wall.alpha);
+            rect(wall.x, wall.y, wall.w, wall.h, 3);
+
+            // Rocky texture overlay
+            fill(40, 50, 65, wall.alpha);
+            beginShape();
+            for (const pt of wall.rockPoints) {
+               vertex(pt.px, pt.py);
+            }
+            endShape(CLOSE);
+         }
+      }
    }
 
    //===LIGHTING===//
@@ -338,6 +411,9 @@ export function createRenderSystem({
             drawTriggers();
             drawEntities();
             drawSpawnPoints();
+            drawSonarWalls();
+            drawSonarPulses();
+            drawBubbles();
             drawPlayer();
             drawLighting(lightSources);
             drawSonarReveals();

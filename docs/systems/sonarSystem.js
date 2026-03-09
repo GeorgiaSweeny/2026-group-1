@@ -1,5 +1,26 @@
 /*
 ========================================
+DESIGN GOALS:
+- Port Sonar 5.0 prototype logic into modular architecture
+- Separate pulse data (state) from rendering (renderSystem draws)
+- Integrate with lightingSystem for darkness layer punch-through
+RESPONSIBILITIES:
+- Create sonar pulses when player triggers sonar intent
+- Update pulse particle positions each frame (velocity * deltaTime)
+- Detect particle collisions with room platforms/walls
+- Illuminate walls on contact, fade wall alpha over time
+- Expose active pulses for renderSystem to draw
+- Expose revealed walls for renderSystem to draw
+- Expose sonar light sources for lightingSystem
+
+DEPENDENCIES:
+- Player entity with sonarIntent, sonarPulses[], power
+- Room platforms (getPlatforms callback) — Wall objects with getCornerX/Y(), getWidth/Height()
+- Config: SONAR constants (speed, rays, fade, cost, cooldown)
+
+USAGE:
+import { createSonarSystem } from './sonarSystem.js';
+const sonarSystem = createSonarSystem(player, getPlatforms);
 VERSION: 4.0
 SYSTEM: SONAR SYSTEM
 AUTHOR: Ben Mounce
@@ -11,21 +32,17 @@ RULES:
 - No direct mutation of shared game state outside this system.
 - Uses player intent (emitSonar) set by inputSystem.
 - Draws additive glow without altering the main render layers.
-========================================
 DESIGN GOALS:
 - Keep the original pulse visible while in darkness but not when torch is on.
 - Work with both Hitbox walls and plain room objects
-========================================
 RESPONSIBILITIES:
 - Spawn pulses when the player requests sonar.
 - Fade pulses over time and stop when finished.
 - Reveal walls near the pulse radius and fade them back out.
-========================================
 DEPENDENCIES:
 - player: exposes intent.emitSonar and getX/getY.
 - roomSystem: exposes getPlatforms() returning walls.
 - config: SONAR.COOLDOWN_MS
-========================================
 USAGE:
 import { createSonarSystem } from './sonarSystem.js';
 const sonarSystem = createSonarSystem(player, () => roomSystem.getPlatforms());
@@ -226,4 +243,5 @@ class Pulse {
 }
 //======================================
 // END
+//======================================
 //======================================

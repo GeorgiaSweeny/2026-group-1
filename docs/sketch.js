@@ -21,6 +21,7 @@ import { createRenderSystem } from './systems/renderSystem.js';
 import { createLightingSystem } from './systems/lightingSystem.js';
 import { createSonarSystem } from './systems/sonarSystem.js';
 import { createRoomSystem } from './systems/roomSystem.js';
+import { createSonarSystem } from './systems/sonarSystem.js';
 import { CANVAS, PLAYER, TORCH } from './config.js';
 import { Player } from './entities/player.js';
 import { createResourceManagementSystem } from './systems/resourceManagementSystem.js';
@@ -33,6 +34,7 @@ let inputSystem;
 let playerSystem;
 let physicsSystem;
 let torchSystem;
+let sonarSystem;
 let renderSystem;
 let lightingSystem;
 let sonarSystem;
@@ -310,13 +312,16 @@ function setup() {
     getSonarReveals: () => sonarSystem?.getRevealedWalls?.(),
     assets,
     darknessLayer,
-    getLightSources: () => lightingSystem.getLightSources()
+    getLightSources: () => lightingSystem.getLightSources(),
+    getActivePulses: () => sonarSystem.getActivePulses(),
+    getRevealedWalls: () => sonarSystem.getRevealedWalls(),
   });
 
   engine = new Engine();
   engine.register(inputSystem);
   engine.register(playerSystem);
   engine.register(physicsSystem);
+  engine.register(sonarSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(renderSystem);

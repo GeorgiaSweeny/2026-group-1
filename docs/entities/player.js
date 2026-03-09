@@ -103,21 +103,12 @@ export class Player extends Hitbox{
       this.nextPos.y = y;
    }
    setNextPosition(){
-      if(this.moveIntent.right){this.nextPos.x += this.velocity.x}
-      if(this.moveIntent.left){this.nextPos.x -= this.velocity.x}
-      if(this.moveIntent.up){this.nextPos.y -= this.velocity.y}
-      if(this.moveIntent.down){this.nextPos.y += this.velocity.y}
-      this.resetMoveIntent();
-  }
+      this.nextPos.x = this.position.x + this.velocity.x;
+      this.nextPos.y = this.position.y + this.velocity.y;
+   }
    movePlayer(){
       this.position.x = this.nextPos.x;
       this.position.y = this.nextPos.y;
-   }
-   setVelocityX(x=0){
-      this.velocity.x = x;
-   }
-   setVelocityY(y=0){
-      this.velocity.y = y;
    }
    getMoveIntent(){
       return this.moveIntent;
