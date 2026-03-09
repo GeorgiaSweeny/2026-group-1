@@ -350,10 +350,10 @@ export function createRenderSystem({
 
    //===UI===//
    function drawUI() {
-      fill(255);
-      noStroke();
       push();
       blendMode(BLEND);
+      fill(255);
+      noStroke();
       textSize(14);
       textAlign(LEFT, TOP);
       text(`Power: ${Math.round(player.power.current)}`, 10, 10);
