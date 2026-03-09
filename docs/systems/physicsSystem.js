@@ -1,11 +1,13 @@
 /*
 ========================================
-VERSION: 3.0
+VERSION: 3.1
 SYSTEM: PHYSICS SYSTEM
 AUTHORs: Nick 
 DESCRIPTION:
-- Physics System: Handles vertical motion, gravity, and collision resolution
-- Updates player state such as position, velocity, and onGround status
+- Physics System: Handles collision resolution for underwater movement
+- Player velocity is set by playerSystem (acceleration + drag model)
+- This system applies the velocity via setNextPosition(), resolves
+  wall collisions, then commits the final position via movePlayer()
 
 RULES:
 - No rendering or drawing in update functions
@@ -18,18 +20,14 @@ DESIGN GOALS:
 - Maintain clean boundaries between systems
 ========================================
 RESPONSIBILITIES:
-- Apply gravity to the player
-- Resolve collisions
+- Resolve collisions between player and walls
 
 DEPENDENCIES:
+- hitboxSystem: isColliding, resolveWallCollision
 
 USAGE:
 const physicsSystem = createPhysicsSystem(...)
 engine.register(physicsSystem);
-========================================
-NOTES:
-- No friction, acceleration, or drag applied yet
-- Can be extended to use deltaTime for true frame-rate independence
 ========================================
 */
 
@@ -64,16 +62,6 @@ export function createPhysicsSystem(player, platformsOrGetter) {
   
 //======================================
 // COLLISON SYSTEM - END
-//======================================
-
-//======================================
-// UNDERWATER PHYSICS 
-//======================================
-// ........
-// underwater movement logic
-// drag, bounce, acceleration
-//======================================
-// UNDERWATER SYSTEM - END
 //======================================
 
 //======================================

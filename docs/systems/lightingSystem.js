@@ -46,7 +46,7 @@ TODO / LIMITATIONS:
 //======================================
 // LIGHTING SYSTEM
 //======================================
-export function createLightingSystem(player = []) {
+export function createLightingSystem(player = [], getSonarLights = () => []) {
    return {
 
       //--- GET LIGHT SOURCES ---//
@@ -65,7 +65,13 @@ export function createLightingSystem(player = []) {
                });
             }
          }
-// bioluminent blob
+
+         // Sonar lights (pulses + illuminated walls)
+         const sonarLights = getSonarLights();
+         for (const light of sonarLights) {
+            lightSources.push(light);
+         }
+
          return lightSources;
       }
    };

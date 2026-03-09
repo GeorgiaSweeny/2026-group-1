@@ -72,6 +72,9 @@ export function createInputSystem(player) {
       if (INPUT.TOGGLE_TORCH_KEY.includes(key)) {
         player.toggleTorchIntent = true;
       }
+      if (INPUT.SONAR_KEY.includes(key)) {
+        player.sonarIntent = true;
+      }
     }
   };
 }

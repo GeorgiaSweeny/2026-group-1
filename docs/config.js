@@ -33,7 +33,8 @@ export const INPUT = {
   RIGHT_ARROW_KEY: 39,
   
   // ACTION KEYS - functions take strings
-  TOGGLE_TORCH_KEY: ['L', 'l']
+  TOGGLE_TORCH_KEY: ['L', 'l'],
+  SONAR_KEY: ['P', 'p']
 };
 
 //======================
@@ -56,9 +57,13 @@ export const CANVAS = {
 export const PLAYER = {
   WIDTH: CANVAS.TILE_SIZE,
   HEIGHT: CANVAS.TILE_SIZE,
+  SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  MOVE_SPEED: 0.2,
+  MOVE_SPEED: 0.9,
+  ACCELERATION: 0.3,
+  DRAG: 0.92,
+  MAX_SPEED: 3,
 };
 
 //======================
@@ -86,6 +91,19 @@ export const TORCH = {
 export const TILE_TYPE = {
   0: 'empty', // water
   1: 'rock'
+};
+
+//======================
+// SONAR CONFIG
+//======================
+export const SONAR = {
+  PULSE_SPEED: 0.2,
+  NUM_RAYS: 360,
+  PARTICLE_FADE: 0.2,
+  WALL_FADE_RATE: 0.1,
+  POWER_COST: 10,
+  COOLDOWN: 500,
+  LIGHT_RADIUS: 80
 };
 
 //======================

@@ -20,6 +20,7 @@ import { createTorchSystem } from './systems/torchSystem.js';
 import { createRenderSystem } from './systems/renderSystem.js';
 import { createLightingSystem } from './systems/lightingSystem.js';
 import { createRoomSystem } from './systems/roomSystem.js';
+import { createSonarSystem } from './systems/sonarSystem.js';
 import { CANVAS, PLAYER, TORCH } from './config.js';
 import { Player } from './entities/player.js';
 import { createResourceManagementSystem } from './systems/resourceManagementSystem.js';
@@ -32,6 +33,7 @@ let inputSystem;
 let playerSystem;
 let physicsSystem;
 let torchSystem;
+let sonarSystem;
 let renderSystem;
 let lightingSystem;
 let roomSystem;
@@ -268,11 +270,12 @@ function setup() {
   inputSystem = createInputSystem(player);
   playerSystem = createPlayerSystem(player);
   physicsSystem = createPhysicsSystem(player, () => roomSystem.getPlatforms());
+  sonarSystem = createSonarSystem(player, () => roomSystem.getPlatforms());
   torchSystem = createTorchSystem(player.torch, player, {
     drainRate: TORCH.DRAIN_RATE
   });
 
-  lightingSystem = createLightingSystem(player, []);
+  lightingSystem = createLightingSystem(player, () => sonarSystem.getSonarLights());
 
   resourceManagementSystem = createResourceManagementSystem(player, roomSystem);
 
@@ -298,13 +301,16 @@ function setup() {
     getPlatformColor: () => roomSystem.getPlatformColor(),
     assets,
     darknessLayer,
-    getLightSources: () => lightingSystem.getLightSources()
+    getLightSources: () => lightingSystem.getLightSources(),
+    getActivePulses: () => sonarSystem.getActivePulses(),
+    getRevealedWalls: () => sonarSystem.getRevealedWalls(),
   });
 
   engine = new Engine();
   engine.register(inputSystem);
   engine.register(playerSystem);
   engine.register(physicsSystem);
+  engine.register(sonarSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(renderSystem);
