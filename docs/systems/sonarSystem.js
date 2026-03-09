@@ -65,6 +65,11 @@ function getNormalisedWalls(getWallsFinal) {
   return Array.isArray(input) ? input : (input?.platforms ?? []);
 }
 
+function getNormalisedObjects(getObjectsFinal) {
+  const input = getObjectsFinal?.() || [];
+  return Array.isArray(input) ? input : [];
+}
+
 function readWallRect(wall) {
   if (!wall || typeof wall !== 'object') return null;
   
@@ -82,9 +87,21 @@ function readWallRect(wall) {
   return { x, y, w, h };
 }
 
-export function createSonarSystem(player, getWalls) {
+function readCenterRect(objectLike) {
+  if (!objectLike || typeof objectLike !== 'object') return null;
+  const w = objectLike?.w ?? objectLike?.width ?? 0;
+  const h = objectLike?.h ?? objectLike?.height ?? 0;
+  const x = objectLike?.x ?? null;
+  const y = objectLike?.y ?? null;
+  if (!w || !h || !Number.isFinite(x) || !Number.isFinite(y)) return null;
+  return { x: x - w / 2, y: y - h / 2, w, h };
+}
+
+export function createSonarSystem(player, getWalls, getHazards = () => [], getCollectables = () => []) {
   let pulses = [];
   const wallAlpha = new WeakMap();
+  const hazardAlpha = new WeakMap();
+  const collectableAlpha = new WeakMap();
   let cooldownTimer = 0;
 
   return {
@@ -107,7 +124,11 @@ export function createSonarSystem(player, getWalls) {
       }
 
       const inputWalls = getNormalisedWalls(getWalls);
+      const inputHazards = getNormalisedObjects(getHazards);
+      const inputCollectables = getNormalisedObjects(getCollectables);
       const wallData = [];
+      const hazardData = [];
+      const collectableData = [];
       
       for (const wall of inputWalls) {
         const rect = readWallRect(wall);
@@ -126,9 +147,43 @@ export function createSonarSystem(player, getWalls) {
         }
       }
 
+      for (const hazard of inputHazards) {
+        const rect = readCenterRect(hazard);
+        if (rect) {
+          hazardData.push({ hazard, rect });
+        }
+
+        const currentAlpha = hazardAlpha.get(hazard);
+        if (currentAlpha != null) {
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * dt));
+          if (nextAlpha <= 0) {
+            hazardAlpha.delete(hazard);
+          } else {
+            hazardAlpha.set(hazard, nextAlpha);
+          }
+        }
+      }
+
+      for (const collectable of inputCollectables) {
+        const rect = readCenterRect(collectable);
+        if (rect) {
+          collectableData.push({ collectable, rect });
+        }
+
+        const currentAlpha = collectableAlpha.get(collectable);
+        if (currentAlpha != null) {
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * dt));
+          if (nextAlpha <= 0) {
+            collectableAlpha.delete(collectable);
+          } else {
+            collectableAlpha.set(collectable, nextAlpha);
+          }
+        }
+      }
+
       for (let i = pulses.length - 1; i >= 0; i--) {
         const p = pulses[i];
-        p.update(dt, wallData, wallAlpha);
+        p.update(dt, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha);
 
         if (p.isFinished()) {
           pulses.splice(i, 1);
@@ -173,6 +228,45 @@ export function createSonarSystem(player, getWalls) {
         }
       }
       return reveals;
+    },
+
+    getRevealedHazards() {
+      const inputHazards = getNormalisedObjects(getHazards);
+      const reveals = [];
+      for (const hazard of inputHazards) {
+        const alpha = hazardAlpha.get(hazard);
+        if (!alpha) continue;
+        const rect = readCenterRect(hazard);
+        if (rect) {
+          reveals.push({ ...rect, alpha: Math.max(0, Math.min(255, alpha)) });
+        }
+      }
+      return reveals;
+    },
+
+    getRevealedCollectables() {
+      const inputCollectables = getNormalisedObjects(getCollectables);
+      const reveals = [];
+      for (const item of inputCollectables) {
+        const alpha = collectableAlpha.get(item);
+        if (!alpha) continue;
+        const rect = readCenterRect(item);
+        if (rect) {
+          reveals.push({
+            ...rect,
+            alpha: Math.max(0, Math.min(255, alpha)),
+            gid: item?.gid ?? null,
+            collectableType: item?.collectableType ?? '',
+            type: item?.type ?? '',
+            resourceType: item?.resourceType ?? item?.properties?.resourceType ?? item?.properties?.type ?? ''
+          });
+        }
+      }
+      return reveals;
+    },
+
+    getActivePulses() {
+      return pulses;
     }
   };
 }
@@ -191,7 +285,7 @@ class Pulse {
     }
   }
 
-  update(dt, wallData, wallAlpha) {
+  update(dt, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha) {
     for (const p of this.particles) {
       if (p.life <= 0) {
         continue;
@@ -215,6 +309,34 @@ class Pulse {
           wallAlpha.set(wall, Math.min(255, current + REVEAL_BONUS));
           collided = true;
           break;
+        }
+      }
+
+      if (!collided) {
+        for (const { hazard, rect } of hazardData) {
+          if (
+            nextX >= rect.x && nextX <= rect.x + rect.w &&
+            nextY >= rect.y && nextY <= rect.y + rect.h
+          ) {
+            const current = hazardAlpha.get(hazard) ?? 0;
+            hazardAlpha.set(hazard, Math.min(255, current + REVEAL_BONUS));
+            collided = true;
+            break;
+          }
+        }
+      }
+
+      if (!collided) {
+        for (const { collectable, rect } of collectableData) {
+          if (
+            nextX >= rect.x && nextX <= rect.x + rect.w &&
+            nextY >= rect.y && nextY <= rect.y + rect.h
+          ) {
+            const current = collectableAlpha.get(collectable) ?? 0;
+            collectableAlpha.set(collectable, Math.min(255, current + REVEAL_BONUS));
+            collided = true;
+            break;
+          }
         }
       }
 

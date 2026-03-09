@@ -21,7 +21,6 @@ import { createRenderSystem } from './systems/renderSystem.js';
 import { createLightingSystem } from './systems/lightingSystem.js';
 import { createSonarSystem } from './systems/sonarSystem.js';
 import { createRoomSystem } from './systems/roomSystem.js';
-import { createSonarSystem } from './systems/sonarSystem.js';
 import { CANVAS, PLAYER, TORCH } from './config.js';
 import { Player } from './entities/player.js';
 import { createResourceManagementSystem } from './systems/resourceManagementSystem.js';
@@ -37,7 +36,6 @@ let torchSystem;
 let sonarSystem;
 let renderSystem;
 let lightingSystem;
-let sonarSystem;
 let roomSystem;
 let resourceManagementSystem;
 let lastEnsuredRoom = null;
@@ -83,6 +81,33 @@ function tilesetSourceToImagePath(source) {
   if (String(source).toLowerCase().endsWith('backgrounds.tsx')) return null;
   const pngSource = source.replace(/\.tsx$/i, '.png');
   return normalizeRelativePath('data/rooms', pngSource);
+}
+
+function parseTsxTileProperties(xmlText) {
+  if (!xmlText || typeof DOMParser === 'undefined') return {};
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'application/xml');
+  const byId = {};
+  const tileNodes = Array.from(doc.querySelectorAll('tile'));
+
+  for (const tileNode of tileNodes) {
+    const localId = Number(tileNode.getAttribute('id'));
+    if (!Number.isFinite(localId)) continue;
+
+    const props = {};
+    const propertyNodes = Array.from(tileNode.querySelectorAll('properties > property'));
+    for (const propNode of propertyNodes) {
+      const name = propNode.getAttribute('name');
+      if (!name) continue;
+      const valueAttr = propNode.getAttribute('value');
+      props[name] = valueAttr ?? propNode.textContent ?? '';
+    }
+    if (Object.keys(props).length) {
+      byId[localId] = props;
+    }
+  }
+
+  return byId;
 }
 
 function getMapProperty(mapData, key, fallback = null) {
@@ -203,6 +228,25 @@ function preload() {
     roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
   }
 
+  const tilePropsBySourcePath = {};
+  for (const room of Object.values(roomData)) {
+    for (const tileset of room?.tilesets ?? []) {
+      const sourcePath = normalizeRelativePath('data/rooms', tileset?.source ?? '');
+      if (!sourcePath.toLowerCase().endsWith('.tsx')) continue;
+      if (tilePropsBySourcePath[sourcePath]) continue;
+
+      const tsxLines = loadStrings(sourcePath) ?? [];
+      tilePropsBySourcePath[sourcePath] = parseTsxTileProperties(tsxLines.join('\n'));
+    }
+  }
+
+  for (const room of Object.values(roomData)) {
+    for (const tileset of room?.tilesets ?? []) {
+      const sourcePath = normalizeRelativePath('data/rooms', tileset?.source ?? '');
+      tileset.tilePropertiesById = tilePropsBySourcePath[sourcePath] ?? {};
+    }
+  }
+
   const imageNames = new Set();
   for (const room of Object.values(roomData)) {
     const imageName = getBackgroundImageName(room);
@@ -239,8 +283,6 @@ function setup() {
  // rectMode(CENTER);
   textSize(20);
   textAlign(LEFT);
-
-  player = new Player(PLAYER);
 
   player = new Player(PLAYER.START_X, PLAYER.START_Y, PLAYER.WIDTH, PLAYER.HEIGHT);
 
@@ -279,12 +321,14 @@ function setup() {
     drainRate: TORCH.DRAIN_RATE
   });
 
-  sonarSystem = createSonarSystem(player, () => roomSystem.getPlatforms());
-
-  lightingSystem = createLightingSystem(() => [
+  sonarSystem = createSonarSystem(
     player,
-    ...(roomSystem.getEntities?.() ?? [])
-  ]);
+    () => roomSystem.getPlatforms(),
+    () => roomSystem.getHazards(),
+    () => roomSystem.getCollectables()
+  );
+
+  lightingSystem = createLightingSystem(player);
 
   resourceManagementSystem = createResourceManagementSystem(player, roomSystem);
 
@@ -310,6 +354,8 @@ function setup() {
     getPlatformColor: () => roomSystem.getPlatformColor(),
     getSonarCooldown: () => sonarSystem?.getCooldownPercent?.(),
     getSonarReveals: () => sonarSystem?.getRevealedWalls?.(),
+    getSonarHazardReveals: () => sonarSystem?.getRevealedHazards?.(),
+    getSonarCollectableReveals: () => sonarSystem?.getRevealedCollectables?.(),
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),
@@ -325,7 +371,6 @@ function setup() {
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(renderSystem);
-  engine.register(sonarSystem);
   engine.register(resourceManagementSystem);
 }
 
