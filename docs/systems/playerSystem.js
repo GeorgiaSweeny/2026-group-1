@@ -56,9 +56,12 @@ export function createPlayerSystem(player) {
       player.setVelocityY();
       
       if(player.moveIntent.right ){player.setVelocityX(speed)}
-      if(player.moveIntent.left){player.setVelocityX(speed)}
-      if(player.moveIntent.up){player.setVelocityY(speed)}
+      if(player.moveIntent.left){player.setVelocityX(-speed)}
+      if(player.moveIntent.up){player.setVelocityY(-speed)}
       if(player.moveIntent.down){player.setVelocityY(speed)}
+
+      if (player.moveIntent.right && !player.moveIntent.left) player.facing = 1;
+      if (player.moveIntent.left && !player.moveIntent.right) player.facing = -1;
     },
   };
 }

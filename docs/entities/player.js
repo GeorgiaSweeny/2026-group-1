@@ -102,6 +102,12 @@ export class Player extends Hitbox{
       this.nextPos.x = x;
       this.nextPos.y = y;
    }
+   setVelocityX(x = 0){
+      this.velocity.x = x;
+   }
+   setVelocityY(y = 0){
+      this.velocity.y = y;
+   }
    setNextPosition(){
       this.nextPos.x = this.position.x + this.velocity.x;
       this.nextPos.y = this.position.y + this.velocity.y;

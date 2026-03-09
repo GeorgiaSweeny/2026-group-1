@@ -83,7 +83,7 @@ export const POWER = {
 // TORCH CONFIG
 //======================
 export const TORCH = {
-  RADIUS: 200,
+  RADIUS: 100,
   FLICKER_POWER_THRESHOLD: 0.15,
   DRAIN_RATE: 1
 };
@@ -93,7 +93,7 @@ export const TORCH = {
 //======================
 export const LIGHTING = {
   PLAYER_AMBIENT: {
-    radius: 70,
+    radius: 30,
     brightness: 0.2
   }
 };

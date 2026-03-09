@@ -77,7 +77,7 @@ export function createInputSystem(player) {
       if (INPUT.EMIT_SONAR_KEY.includes(key) || keyLower === 'k') {
         player.actionIntent.emitSonar = true;
       }
-      if (INPUT.SONAR_KEY.includes(key)) {
+      if (INPUT.SONAR_KEY?.includes?.(key)) {
         player.sonarIntent = true;
       }
     }
