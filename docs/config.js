@@ -34,7 +34,7 @@ export const INPUT = {
   
   // ACTION KEYS - functions take strings
   TOGGLE_TORCH_KEY: ['L', 'l'],
-  SONAR_KEY: ['P', 'p']
+  EMIT_SONAR_KEY: ['K', 'k']
 };
 
 //======================
@@ -46,8 +46,9 @@ clean scaling for modern resolutions like 640x360 or 1920x1080
 Base Resolution: Use 640x360 as a base resolution for 16:9
 then scale up, rather than designing in native 1080p*/
 export const CANVAS = {
-  WIDTH: 640,
-  HEIGHT: 360,
+  WIDTH: 800,
+  HEIGHT: 800,
+
   TILE_SIZE: 16
 };
 
@@ -60,10 +61,12 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  MOVE_SPEED: 0.9,
-  ACCELERATION: 0.3,
-  DRAG: 0.92,
-  MAX_SPEED: 3,
+  MOVE_SPEED: 180,
+  ACCELERATION: 0.8,
+  DRAG: 0.9  ,         // Higher = less friction (0.9-0.95 feels good)
+  BOUNCE_DAMPING: 0.5,  // Velocity kept after bounce (0.5 = half speed)
+  MIN_VELOCITY: 0.1,    // Stop if slower than this
+  SIZE: 20,
 };
 
 //======================
@@ -86,25 +89,30 @@ export const TORCH = {
 };
 
 //======================
-// TILE TYPE CONFIG
+// LIGHTING CONFIG
 //======================
-export const TILE_TYPE = {
-  0: 'empty', // water
-  1: 'rock'
+export const LIGHTING = {
+  PLAYER_AMBIENT: {
+    radius: 70,
+    brightness: 0.2
+  }
 };
 
 //======================
 // SONAR CONFIG
 //======================
 export const SONAR = {
-  PULSE_SPEED: 0.2,
-  NUM_RAYS: 360,
-  PARTICLE_FADE: 0.2,
-  WALL_FADE_RATE: 0.1,
-  POWER_COST: 10,
-  COOLDOWN: 500,
-  LIGHT_RADIUS: 80
+  // Cooldown in seconds for readability; derived ms used by sonarSystem
+  COOLDOWN: 3,
+  COOLDOWN_MS: 3000
 };
+
+//======================
+// GAME CONFIG
+//======================
+export const GAME = {
+};
+
 
 //======================
 // HITBOX DEBUG

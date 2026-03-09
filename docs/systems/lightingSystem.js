@@ -29,7 +29,7 @@ DEPENDENCIES:
 - Uses torch.getIntensity(powerPercent) for smooth light intensity
 
 USAGE:
-const lightingSystem = createLightingSystem(player, enemies);
+const lightingSystem = createLightingSystem(player, enemies, etc. = []);
 const lightSources = lightingSystem.getLightSources();
 ========================================
 NOTES:
@@ -65,13 +65,6 @@ export function createLightingSystem(player = [], getSonarLights = () => []) {
                });
             }
          }
-
-         // Sonar lights (pulses + illuminated walls)
-         const sonarLights = getSonarLights();
-         for (const light of sonarLights) {
-            lightSources.push(light);
-         }
-
          return lightSources;
       }
    };
