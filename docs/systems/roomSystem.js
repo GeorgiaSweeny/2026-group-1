@@ -67,14 +67,8 @@ function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
   const width = layer?.width;
   const height = layer?.height;
   const FLIP_MASK = 0x1FFFFFFF;
-  const FLIP_MASK = 0x1FFFFFFF;
 
-  if (!width || !height) return result;
-  if (!Array.isArray(data)) {
-    // Room exports should use CSV / uncompressed tile arrays for runtime parsing.
-    console.warn(`Collision layer "${layer?.name ?? 'unknown'}" has non-array tile data.`);
-    return result;
-  }
+  if (!Array.isArray(data) || !width || !height) return result;
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
@@ -89,48 +83,6 @@ function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
   }
 
   return result;
-}
-
-function parsePropertiesMap(properties = []) {
-  const result = {};
-  for (const prop of properties) {
-    if (!prop?.name) continue;
-    result[prop.name] = prop.value;
-  }
-  return result;
-}
-
-function getObjectCenter(obj, defaultW, defaultH) {
-  const w = obj?.width ?? defaultW;
-  const h = obj?.height ?? defaultH;
-  const x = (obj?.x ?? 0) + w / 2;
-  // In Tiled, tile objects (with gid) use bottom-left origin on Y.
-  const y = obj?.gid != null
-    ? (obj?.y ?? 0) - h / 2
-    : (obj?.y ?? 0) + h / 2;
-  return { x, y, w, h };
-}
-
-function normalizeObjectGroupObjects(objects = [], tileWidth, tileHeight, layerOpacity = 1) {
-  return objects.map((obj) => {
-    const { x, y, w, h } = getObjectCenter(obj, tileWidth, tileHeight);
-    const properties = parsePropertiesMap(obj.properties ?? []);
-    const visible = obj.visible !== false;
-    const opacity = Math.max(0, Math.min(1, (obj.opacity ?? 1) * (layerOpacity ?? 1)));
-    return {
-      x,
-      y,
-      w,
-      h,
-      gid: obj.gid ?? null,
-      type: obj.type ?? '',
-      name: obj.name ?? '',
-      rotation: obj.rotation ?? 0,
-      visible,
-      opacity,
-      properties
-    };
-  });
 }
 
 function normalizeTiledRoom(roomKey, mapData) {
@@ -164,11 +116,9 @@ function normalizeTiledRoom(roomKey, mapData) {
   };
 
   for (const layer of mapData?.layers ?? []) {
-    const layerName = normalizeLayerName(layer?.name ?? '');
+    const layerName = (layer?.name ?? '').toLowerCase();
 
-    const isCollisionLayer = layer?.type === 'tilelayer'
-      && (layerName.includes('collision') || getLayerProperty(layer, 'collisionLayer', false) === true);
-    if (isCollisionLayer) {
+    if (layer?.type === 'tilelayer' && layerName === 'collision') {
       normalized.platforms.push(...parseCollisionTileLayer(layer, tileWidth, tileHeight));
       continue;
     }
@@ -514,6 +464,25 @@ export function createRoomSystem({
       return { tileWidth, tileHeight };
     },
 
+    getRoomState() {
+      return {
+        platforms,
+        hazards,
+        collectables,
+        triggers,
+        exits,
+        spawnPoints,
+        entities,
+        tileWidth,
+        tileHeight,
+        width: currentConfig?.width,
+        height: currentConfig?.height,
+        background: currentConfig?.background,
+        platformColor: currentConfig?.platformColor,
+        currentRoom
+      };
+    },
+
     getBackground() {
       return currentConfig?.background ?? null;
     },
@@ -524,16 +493,6 @@ export function createRoomSystem({
 
     getPlatformColor() {
       return currentConfig?.platformColor ?? null;
-    },
-
-    getRoomState() {
-      return currentConfig
-        ? {
-            width: currentConfig.width,
-            height: currentConfig.height,
-            platforms
-          }
-        : null;
     }
   };
 }

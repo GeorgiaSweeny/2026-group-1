@@ -125,24 +125,9 @@ function resolveBackgroundImageFromGid(room, gid) {
 function getBackgroundImageName(room) {
   const roomBg = normalizeBackgroundImageName(room?.background?.image);
   if (roomBg) return roomBg;
-  const roomBg = normalizeBackgroundImageName(room?.background?.image);
-  if (roomBg) return roomBg;
 
   const propImage = getMapProperty(room, 'backgroundImage', null);
   if (propImage) return propImage;
-
-  const bgObjectLayer = (room?.layers ?? []).find(
-    (l) => l?.type === 'objectgroup' && String(l?.name ?? '').toLowerCase().includes('background')
-  );
-  const bgObject = (bgObjectLayer?.objects ?? [])[0];
-  const bgObjectProps = bgObject?.properties ?? [];
-  const bgPropImage = bgObjectProps.find((p) => p?.name === 'backgroundImage' || p?.name === 'image')?.value;
-  const propBg = normalizeBackgroundImageName(bgPropImage);
-  if (propBg) return propBg;
-  const bgGidImage = resolveBackgroundImageFromGid(room, bgObject?.gid ?? null);
-  if (bgGidImage) return bgGidImage;
-  const namedBg = normalizeBackgroundImageName(bgObject?.name);
-  if (namedBg) return namedBg;
 
   const bgObjectLayer = (room?.layers ?? []).find(
     (l) => l?.type === 'objectgroup' && String(l?.name ?? '').toLowerCase().includes('background')
@@ -211,33 +196,7 @@ function syncCanvasToCurrentRoom() {
   darknessLayer.resizeCanvas(roomSize.width, roomSize.height);
 }
 
-function ensureRoomAssetsLoaded(roomId) {
-  const room = roomData[roomId];
-  if (!room) return;
-
-  const backgroundImageName = getBackgroundImageName(room);
-  if (backgroundImageName && !assets[backgroundImageName]) {
-    const backgroundPath = backgroundImageName.includes('/')
-      ? backgroundImageName
-      : `assets/backgrounds/${backgroundImageName}`;
-    assets[backgroundImageName] = loadImage(backgroundPath);
-  }
-
-  for (const tileset of room?.tilesets ?? []) {
-    const imagePath = tilesetSourceToImagePath(tileset?.source);
-    if (!imagePath) continue;
-    const key = `tileset:${imagePath}`;
-    if (!assets[key]) {
-      assets[key] = loadImage(imagePath);
-    }
-  }
-}
-
 function preload() {
-  for (const roomId of ROOM_IDS) {
-    roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
-  }
-
   for (const roomId of ROOM_IDS) {
     roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
   }

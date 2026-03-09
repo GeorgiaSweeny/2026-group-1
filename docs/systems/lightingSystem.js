@@ -46,14 +46,14 @@ TODO / LIMITATIONS:
 //======================================
 // LIGHTING SYSTEM
 //======================================
-export function createLightingSystem(player = []) {
+export function createLightingSystem(getEntities) {
    return {
 
       //--- GET LIGHT SOURCES ---//
       getLightSources() {
          const lightSources = [];
 
-         const entities = getEntities ? getEntities() : [];
+         const entities = typeof getEntities === 'function' ? getEntities() : [];
 
          for(const entity of entities) {
             if (typeof entity.getLightSources === 'function') {
