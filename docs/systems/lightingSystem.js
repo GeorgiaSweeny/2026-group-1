@@ -46,23 +46,28 @@ TODO / LIMITATIONS:
 //======================================
 // LIGHTING SYSTEM
 //======================================
+import { LIGHTING } from '../config.js';
+
 export function createLightingSystem(player = [], getSonarLights = () => []) {
    return {
 
       //--- GET LIGHT SOURCES ---//
       getLightSources() {
-         const lightSources = [];
+         if (!player) return [];
+         const x = player.position?.x ?? player.x ?? 0;
+         const y = player.position?.y ?? player.y ?? 0;
 
          // Player torch
-         if (player.torch.isOn) {
-            const intensity = player.torch.getIntensity(player.power.getPercent());
+         if (player.torch?.isOn) {
+            const intensity = player.torch.getIntensity(player.power?.getPercent?.() ?? 0);
             if (intensity > 0) {
-               lightSources.push({
-                  x: player.position.x,
-                  y: player.position.y,
+               return [{
+                  kind: 'torch',
+                  x,
+                  y,
                   radius: player.torch.radius,
                   intensity
-               });
+               }];
             }
          } else {
             // Ambient light when torch is off or power is empty

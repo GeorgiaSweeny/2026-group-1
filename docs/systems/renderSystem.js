@@ -128,6 +128,36 @@ export function createRenderSystem({
       return true;
    }
 
+   function getCollectableType(item) {
+      const explicitType = String(item?.collectableType ?? '').toLowerCase();
+      if (explicitType) return explicitType;
+
+      const gid = Number(item?.gid);
+      if (!Number.isFinite(gid) || gid <= 0) return null;
+
+      const tilesets = getTilesets?.() ?? [];
+      const tileset = getTilesetForGid(gid, tilesets);
+      if (!tileset) return null;
+
+      const localTileId = gid - Number(tileset.firstgid);
+      if (!Number.isFinite(localTileId) || localTileId < 0) return null;
+
+      const tileProps = tileset?.tilePropertiesById?.[localTileId] ?? null;
+      const type = String(tileProps?.collectableType ?? '').toLowerCase();
+      if (type) return type;
+
+      // Fallback for prototype tileset ids when metadata is absent at runtime.
+      if (localTileId === 41 || localTileId === 53) return 'health';
+      if (localTileId === 20) return 'power';
+      return null;
+   }
+
+   function getCollectableColorByType(collectableType, alpha = 220) {
+      if (collectableType === 'health') return color(80, 220, 120, alpha);
+      if (collectableType === 'power') return color(255, 225, 80, alpha);
+      return color(255, 225, 80, alpha);
+   }
+
 //===BACKGROUND===//
    function drawBackground() {
       const bg = getBackground?.();
@@ -179,10 +209,11 @@ export function createRenderSystem({
       if (!collectables.length) return;
 
       noStroke();
-      fill(255, 225, 80, 220);
       for (const item of collectables) {
          if (item.visible === false) continue;
          if (drawSpriteFromTileset(item)) continue;
+         const collectableType = getCollectableType(item);
+         fill(getCollectableColorByType(collectableType, 220));
          ellipse(item.x, item.y, Math.max(8, item.w), Math.max(8, item.h));
       }
    }
@@ -325,8 +356,15 @@ export function createRenderSystem({
             screenX, screenY, scaledRadius * 0.1,
             screenX, screenY, scaledRadius
          );
-         gradient.addColorStop(0, 'rgba(255,255,255,1)');
-         gradient.addColorStop(1, 'rgba(0,0,0,0)');
+         if (kind === 'ambient') {
+            gradient.addColorStop(0, 'rgba(255,255,255,0.55)');
+            gradient.addColorStop(0.6, 'rgba(255,255,255,0.18)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+         } else {
+            gradient.addColorStop(0, 'rgba(255,255,255,1)');
+            gradient.addColorStop(0.25, 'rgba(255,255,255,0.85)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+         }
 
          ctx.fillStyle = gradient;
          ctx.beginPath();
@@ -374,6 +412,41 @@ export function createRenderSystem({
       text(`Power: ${Math.round(player.power.current)}`, barX + 4, barY + 2);
 
       pop();
+   }
+
+   function drawSonarHazardReveals() {
+      if (player?.torch?.isOn) return;
+      const reveals = getSonarHazardReveals?.() ?? [];
+      if (!reveals.length) return;
+
+      rectMode(CORNER);
+      for (const r of reveals) {
+         const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
+         noStroke();
+         fill(220, 70, 70, alpha);
+         rect(r.x, r.y, r.w, r.h);
+      }
+      rectMode(CORNER);
+   }
+
+   function drawSonarCollectableReveals() {
+      if (player?.torch?.isOn) return;
+      const reveals = getSonarCollectableReveals?.() ?? [];
+      if (!reveals.length) return;
+
+      for (const r of reveals) {
+         const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
+         noStroke();
+         const collectableType = getCollectableType(r);
+         if (collectableType === 'health') {
+            fill(80, 220, 120, alpha);
+         } else if (collectableType === 'power') {
+            fill(255, 225, 80, alpha);
+         } else {
+            fill(getCollectableColorByType(null, alpha));
+         }
+         ellipse(r.x + r.w / 2, r.y + r.h / 2, Math.max(8, r.w), Math.max(8, r.h));
+      }
    }
 
 //======================================

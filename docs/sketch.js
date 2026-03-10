@@ -88,6 +88,33 @@ function tilesetSourceToImagePath(source) {
   return normalizeRelativePath('data/rooms', pngSource);
 }
 
+function parseTsxTileProperties(xmlText) {
+  if (!xmlText || typeof DOMParser === 'undefined') return {};
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'application/xml');
+  const byId = {};
+  const tileNodes = Array.from(doc.querySelectorAll('tile'));
+
+  for (const tileNode of tileNodes) {
+    const localId = Number(tileNode.getAttribute('id'));
+    if (!Number.isFinite(localId)) continue;
+
+    const props = {};
+    const propertyNodes = Array.from(tileNode.querySelectorAll('properties > property'));
+    for (const propNode of propertyNodes) {
+      const name = propNode.getAttribute('name');
+      if (!name) continue;
+      const valueAttr = propNode.getAttribute('value');
+      props[name] = valueAttr ?? propNode.textContent ?? '';
+    }
+    if (Object.keys(props).length) {
+      byId[localId] = props;
+    }
+  }
+
+  return byId;
+}
+
 function getMapProperty(mapData, key, fallback = null) {
   const props = mapData?.properties;
   if (!Array.isArray(props)) return fallback;
@@ -205,6 +232,25 @@ function syncCanvasToCurrentRoom() {
 function preload() {
   for (const roomId of ROOM_IDS) {
     roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
+  }
+
+  const tilePropsBySourcePath = {};
+  for (const room of Object.values(roomData)) {
+    for (const tileset of room?.tilesets ?? []) {
+      const sourcePath = normalizeRelativePath('data/rooms', tileset?.source ?? '');
+      if (!sourcePath.toLowerCase().endsWith('.tsx')) continue;
+      if (tilePropsBySourcePath[sourcePath]) continue;
+
+      const tsxLines = loadStrings(sourcePath) ?? [];
+      tilePropsBySourcePath[sourcePath] = parseTsxTileProperties(tsxLines.join('\n'));
+    }
+  }
+
+  for (const room of Object.values(roomData)) {
+    for (const tileset of room?.tilesets ?? []) {
+      const sourcePath = normalizeRelativePath('data/rooms', tileset?.source ?? '');
+      tileset.tilePropertiesById = tilePropsBySourcePath[sourcePath] ?? {};
+    }
   }
 
   const imageNames = new Set();
