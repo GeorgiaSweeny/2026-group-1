@@ -348,7 +348,7 @@ export function createRenderSystem({
       ctx.globalCompositeOperation = 'destination-out';
 
       for (const light of lightSources) {
-         const { x, y, radius, intensity = 1 } = light;
+         const { x, y, radius, intensity = 1, kind } = light;
          const screenX = (x - cam.x) * camScale;
          const screenY = (y - cam.y) * camScale;
          const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
