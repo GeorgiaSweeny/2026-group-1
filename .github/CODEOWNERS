@@ -12,8 +12,8 @@
 
 # Give team access to edit project-docs/ and read.me, and .gitinore
 /project-docs/ @UoB-COMSM0166/2026-group-1
-/README.md @UoB-COMSM0166/2026-group-1
-/.gitignore @UoB-COMSM0166/2026-group-1
+README.md @UoB-COMSM0166/2026-group-1
+.gitignore @UoB-COMSM0166/2026-group-1
 
 # Protect listed root files to prevent accidental overwrites
 CODE_ARCHITECTURE_GUIDE.md @GeorgiaSweeny
