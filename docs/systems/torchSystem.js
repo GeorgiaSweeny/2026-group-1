@@ -53,10 +53,21 @@ TODO / LIMITATIONS:
 //======================
 import { TORCH } from '../config.js';
 
-export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE } = {}) {
+export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE, getDifficulty = () => 'normal' } = {}) {
+  const fullRadius = TORCH.RADIUS;
+  const reducedRadius = 50;
+
   return {
     //---UPDATE---//
     update(deltaTime) {
+      // Hard difficulty: force torch off, reduce radius
+      if (getDifficulty() === 'hard') {
+        if (torch.isOn) torch.isOn = false;
+        player.toggleTorchIntent = false;
+        torch.radius = reducedRadius;
+        return;
+      }
+
       // Update internal flicker timer
       torch.update(deltaTime);
 
@@ -72,6 +83,13 @@ export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE 
 
         // Turn off torch if power depleted
         if (player.power.isEmpty()) torch.isOn = false;
+      }
+
+      // Update radius based on power state
+      if (player.power.isEmpty()) {
+        torch.radius = reducedRadius;
+      } else {
+        torch.radius = fullRadius;
       }
     }
   };

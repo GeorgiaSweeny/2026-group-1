@@ -192,18 +192,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
     },
 
     draw() {
-      if (!pulses.length) {
-        return;
-      }
-
-      push();
-      if (typeof blendMode === 'function' && typeof ADD !== 'undefined') {
-        blendMode(ADD);
-      }
-      for (const p of pulses) {
-        p.show();
-      }
-      pop();
+      // Pulses are drawn by renderSystem inside camera transform
     },
 
     getCooldownPercent() {
@@ -230,43 +219,25 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
       return reveals;
     },
 
-    getRevealedHazards() {
-      const inputHazards = getNormalisedObjects(getHazards);
-      const reveals = [];
-      for (const hazard of inputHazards) {
-        const alpha = hazardAlpha.get(hazard);
-        if (!alpha) continue;
-        const rect = readCenterRect(hazard);
-        if (rect) {
-          reveals.push({ ...rect, alpha: Math.max(0, Math.min(255, alpha)) });
-        }
-      }
-      return reveals;
-    },
-
-    getRevealedCollectables() {
-      const inputCollectables = getNormalisedObjects(getCollectables);
-      const reveals = [];
-      for (const item of inputCollectables) {
-        const alpha = collectableAlpha.get(item);
-        if (!alpha) continue;
-        const rect = readCenterRect(item);
-        if (rect) {
-          reveals.push({
-            ...rect,
-            alpha: Math.max(0, Math.min(255, alpha)),
-            gid: item?.gid ?? null,
-            collectableType: item?.collectableType ?? '',
-            type: item?.type ?? '',
-            resourceType: item?.resourceType ?? item?.properties?.resourceType ?? item?.properties?.type ?? ''
-          });
-        }
-      }
-      return reveals;
-    },
-
     getActivePulses() {
       return pulses;
+    },
+
+    getSonarLights() {
+      const lights = [];
+      for (const pulse of pulses) {
+        for (const p of pulse.particles) {
+          if (p.life > 0) {
+            lights.push({
+              x: p.pos.x,
+              y: p.pos.y,
+              radius: 40,
+              intensity: p.life / RAY_LIFETIME
+            });
+          }
+        }
+      }
+      return lights;
     }
   };
 }
