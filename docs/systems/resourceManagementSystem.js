@@ -1,6 +1,6 @@
 /*
 ========================================
-VERSION: 2.1
+VERSION: 3
 SYSTEM: RESOURCE MANAGEMENT SYSTEM
 AUTHOR: Monal Gupta
 DESCRIPTION:
@@ -17,7 +17,6 @@ HIERARCHY:
 
 RULES:
 - Runs in update(deltaTime)
-- Only processes entities with type === "resource"
 - Delegates to registered handlers based on resourceType
 - Multiple systems can register handlers for different resource types
 
@@ -27,7 +26,7 @@ DESIGN GOALS:
 - Support extensible resource types (power, health, ammo, collectables, etc)
 
 USAGE:
-const resourceMgmt = createResourceManagementSystem(player, roomSystem);
+const resourceMgmt = createResourceManagementSystem(player, roomSystem, getCollectables);
 resourceMgmt.registerHandler('power', (player, item) => {
   player.power.current = Math.min(player.power.current + item.amount, player.power.maxPower);
 });
@@ -42,27 +41,56 @@ resourceMgmt.registerHandler('health', (player, item) => {
 // RESOURCE MANAGEMENT SYSTEM
 //======================================
 
-export function createResourceManagementSystem(player, roomSystem) {
+export function createResourceManagementSystem(player, roomSystem, getCollectables) {
   const collectedEntities = new Set();
   // Maps resource types (power, health, etc) to handler functions
-  const handlers = {}; 
+  const handlers = {};
+
+  function resolveCollectableType(item) {
+    if (item.collectableType) return item.collectableType;
+
+    const gid = Number(item?.gid);
+    if (!gid) return null;
+
+    const tilesets = roomSystem.getTilesets?.() ?? [];
+    let best = null;
+    for (const ts of tilesets) {
+      const firstgid = Number(ts.firstgid ?? 0);
+      if (gid >= firstgid && (!best || firstgid > best.firstgid)) {
+        best = { ...ts, firstgid };
+      }
+    }
+    if (!best) return null;
+
+    const localTileId = gid - best.firstgid;
+    if (localTileId === 20) return 'power';
+    if (localTileId === 41 || localTileId === 53) return 'health';
+    return null;
+  }
 
   function checkCollision(a, b) {
+    const ax = a.position.x;
+    const ay = a.position.y;
+    const aw = a.w;
+    const ah = a.h;
+
+    const bx = b.x + b.w / 2;
+    const by = b.y + b.h / 2;
+    const bw = b.w ?? b.width ?? 16;
+    const bh = b.h ?? b.height ?? 16;
+
     return (
-      // Collision detection (as of now) based on AABB (axis-aligned bounding boxes)
-      a.x - a.w / 2 < b.x + b.width / 2 &&
-      a.x + a.w / 2 > b.x - b.width / 2 &&
-      a.y - a.h / 2 < b.y + b.height / 2 &&
-      a.y + a.h / 2 > b.y - b.height / 2
+      ax - aw / 2 < bx + bw / 2 &&
+      ax + aw / 2 > bx - bw / 2 &&
+      ay - ah / 2 < by + bh / 2 &&
+      ay + ah / 2 > by - bh / 2
     );
   }
 
   function handleCollectedItem(item) {
-    // Calls handler for the specific resource type
     if (handlers[item.resourceType]) {
       handlers[item.resourceType](player, item);
     }
-    
     collectedEntities.add(item);
   }
 
@@ -80,17 +108,19 @@ export function createResourceManagementSystem(player, roomSystem) {
       handlers[resourceType] = handler;
     },
 
-    //Checks collisions and collects resources
+    // Checks collisions and collects resources
     update() {
-      const entities = roomSystem.getEntities();
+      const collectables = getCollectables ? getCollectables() : [];
 
-      for (const e of entities) {
+      for (const e of collectables) {
         if (collectedEntities.has(e)) continue;
 
-        // Only processes items with type === "resource"
-        if (e.type !== 'resource') continue;
+        const resourceType = resolveCollectableType(e);
+        if (!resourceType) continue;
 
         if (checkCollision(player, e)) {
+          e.resourceType = resourceType;
+          //e.amount = 10;               // set here since JSON has no amount field  -->changed right now, different for health and power
           handleCollectedItem(e);
         }
       }
@@ -102,14 +132,12 @@ export function createResourceManagementSystem(player, roomSystem) {
      * @returns {Array} Uncollected resource entities
      */
     getUncollectedEntities(filterResourceType = null) {
-      return roomSystem.getEntities().filter((e) => {
+      const collectables = getCollectables ? getCollectables() : [];
+      return collectables.filter((e) => {
         if (collectedEntities.has(e)) return false;
-        if (e.type !== 'resource') return false;
-        
-        if (filterResourceType) {
-          return e.resourceType === filterResourceType;
-        }
-        
+        const resourceType = resolveCollectableType(e);
+        if (!resourceType) return false;
+        if (filterResourceType) return resourceType === filterResourceType;
         return true;
       });
     },
