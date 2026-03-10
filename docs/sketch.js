@@ -330,13 +330,20 @@ function setup() {
 
   lightingSystem = createLightingSystem(player);
 
-  resourceManagementSystem = createResourceManagementSystem(player, roomSystem);
+  resourceManagementSystem = createResourceManagementSystem(player, roomSystem, () => roomSystem.getCollectables());
 
   //handlers for different item types
   resourceManagementSystem.registerHandler('power', (player, item) => {
     player.power.current = Math.max(
       0,
-      Math.min(player.power.current + item.amount, player.power.maxPower)
+      Math.min(player.power.current + 10, player.power.maxPower)   //item.amount set as 10 for power
+    );
+  });
+
+  resourceManagementSystem.registerHandler('health', (player, item) => {
+    player.power.current = Math.max(
+      0,
+      Math.min(player.power.current + 5, player.power.maxPower)    //item.amount set as 5 for health
     );
   });
 
@@ -344,7 +351,7 @@ function setup() {
     player,
     getPlatforms: () => roomSystem.getPlatforms(),
     getHazards: () => roomSystem.getHazards(),
-    getCollectables: () => roomSystem.getCollectables(),
+    getCollectables: () => roomSystem.getCollectables().filter(c => !resourceManagementSystem.isCollected(c)),
     getTriggers: () => roomSystem.getTriggers(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),
