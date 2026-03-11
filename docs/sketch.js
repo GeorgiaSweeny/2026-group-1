@@ -12,20 +12,21 @@ AUTHOR: Georgia Sweeny
 // MAIN
 //======================================
 
-import { Engine } from './gameEngine/engine.js';
-import { createInputSystem } from './systems/inputSystem.js';
-import { createPlayerSystem } from './systems/playerSystem.js';
-import { createPhysicsSystem } from './systems/physicsSystem.js';
-import { createTorchSystem } from './systems/torchSystem.js';
-import { createRenderSystem } from './systems/renderSystem.js';
-import { createLightingSystem } from './systems/lightingSystem.js';
-import { createSonarSystem } from './systems/sonarSystem.js';
-import { createRoomSystem } from './systems/roomSystem.js';
-import { createPauseMenuSystem } from './systems/pauseMenuSystem.js';
-import { createCameraSystem } from './systems/cameraSystem.js';
-import { CANVAS, DISPLAY, PLAYER, TORCH } from './config.js';
-import { Player } from './entities/player.js';
-import { createResourceManagementSystem } from './systems/resourceManagementSystem.js';
+import { Engine } from "./gameEngine/engine.js";
+import { createInputSystem } from "./systems/inputSystem.js";
+import { createPlayerSystem } from "./systems/playerSystem.js";
+import { createPhysicsSystem } from "./systems/physicsSystem.js";
+import { createTorchSystem } from "./systems/torchSystem.js";
+import { createRenderSystem } from "./systems/renderSystem.js";
+import { createLightingSystem } from "./systems/lightingSystem.js";
+import { createSonarSystem } from "./systems/sonarSystem.js";
+import { createRoomSystem } from "./systems/roomSystem.js";
+import { createPauseMenuSystem } from "./systems/pauseMenuSystem.js";
+import { createCameraSystem } from "./systems/cameraSystem.js";
+import { CANVAS, DISPLAY, PLAYER, TORCH } from "./config.js";
+import { Player } from "./entities/player.js";
+import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
+import { createMenuSystem } from "./systems/menuSystem.js";
 
 let engine;
 let darknessLayer;
@@ -43,16 +44,18 @@ let resourceManagementSystem;
 let pauseMenuSystem;
 let cameraSystem;
 let lastEnsuredRoom = null;
+let gameState = "MENU";
+let menuSystem;
 
 let assets = {};
-const INITIAL_ROOM_ID = 'roomA';
-const ROOM_IDS = ['roomA', 'roomB'];
+const INITIAL_ROOM_ID = "roomA";
+const ROOM_IDS = ["roomA", "roomB"];
 const roomData = {};
 const FIT_CANVAS_TO_ROOM = false;
 let useDevResolution = false;
 const BACKGROUND_FILE_MAP = {
-  'bg-atmosphere': 'bg-atmosphere.jpg',
-  'bg-atmosphere.jpg': 'bg-atmosphere.jpg',
+  "bg-atmosphere": "bg-atmosphere.jpg",
+  "bg-atmosphere.jpg": "bg-atmosphere.jpg",
 };
 
 function getTilesetForGid(room, gid) {
@@ -67,45 +70,49 @@ function getTilesetForGid(room, gid) {
 }
 
 function normalizeRelativePath(basePath, relativePath) {
-  const baseParts = String(basePath).split('/').filter(Boolean);
-  const relParts = String(relativePath ?? '').split('/').filter(Boolean);
+  const baseParts = String(basePath).split("/").filter(Boolean);
+  const relParts = String(relativePath ?? "")
+    .split("/")
+    .filter(Boolean);
   for (const part of relParts) {
-    if (part === '.') continue;
-    if (part === '..') {
+    if (part === ".") continue;
+    if (part === "..") {
       baseParts.pop();
       continue;
     }
     baseParts.push(part);
   }
-  return baseParts.join('/');
+  return baseParts.join("/");
 }
 
 function tilesetSourceToImagePath(source) {
   if (!source) return null;
   // backgrounds.tsx is an image collection (no single .png atlas file to load).
-  if (String(source).toLowerCase().endsWith('backgrounds.tsx')) return null;
-  const pngSource = source.replace(/\.tsx$/i, '.png');
-  return normalizeRelativePath('data/rooms', pngSource);
+  if (String(source).toLowerCase().endsWith("backgrounds.tsx")) return null;
+  const pngSource = source.replace(/\.tsx$/i, ".png");
+  return normalizeRelativePath("data/rooms", pngSource);
 }
 
 function parseTsxTileProperties(xmlText) {
-  if (!xmlText || typeof DOMParser === 'undefined') return {};
+  if (!xmlText || typeof DOMParser === "undefined") return {};
   const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlText, 'application/xml');
+  const doc = parser.parseFromString(xmlText, "application/xml");
   const byId = {};
-  const tileNodes = Array.from(doc.querySelectorAll('tile'));
+  const tileNodes = Array.from(doc.querySelectorAll("tile"));
 
   for (const tileNode of tileNodes) {
-    const localId = Number(tileNode.getAttribute('id'));
+    const localId = Number(tileNode.getAttribute("id"));
     if (!Number.isFinite(localId)) continue;
 
     const props = {};
-    const propertyNodes = Array.from(tileNode.querySelectorAll('properties > property'));
+    const propertyNodes = Array.from(
+      tileNode.querySelectorAll("properties > property"),
+    );
     for (const propNode of propertyNodes) {
-      const name = propNode.getAttribute('name');
+      const name = propNode.getAttribute("name");
       if (!name) continue;
-      const valueAttr = propNode.getAttribute('value');
-      props[name] = valueAttr ?? propNode.textContent ?? '';
+      const valueAttr = propNode.getAttribute("value");
+      props[name] = valueAttr ?? propNode.textContent ?? "";
     }
     if (Object.keys(props).length) {
       byId[localId] = props;
@@ -126,7 +133,7 @@ function normalizeBackgroundImageName(name) {
   if (!name) return null;
   const raw = String(name).trim();
   if (!raw) return null;
-  if (raw.includes('/')) return raw;
+  if (raw.includes("/")) return raw;
   if (BACKGROUND_FILE_MAP[raw]) return BACKGROUND_FILE_MAP[raw];
   if (/\.[a-z0-9]+$/i.test(raw)) return raw;
   return raw;
@@ -143,11 +150,15 @@ function resolveBackgroundImageFromGid(room, gid) {
   }
   if (!best) return null;
 
-  if (String(best.source ?? '').toLowerCase().endsWith('backgrounds.tsx')) {
+  if (
+    String(best.source ?? "")
+      .toLowerCase()
+      .endsWith("backgrounds.tsx")
+  ) {
     const localId = gid - best.firstgid;
     const byId = {
-      0: 'bg-atmosphere.jpg',
-      1: 'bg-atmosphere.jpg'
+      0: "bg-atmosphere.jpg",
+      1: "bg-atmosphere.jpg",
     };
     return byId[localId] ?? null;
   }
@@ -158,15 +169,21 @@ function getBackgroundImageName(room) {
   const roomBg = normalizeBackgroundImageName(room?.background?.image);
   if (roomBg) return roomBg;
 
-  const propImage = getMapProperty(room, 'backgroundImage', null);
+  const propImage = getMapProperty(room, "backgroundImage", null);
   if (propImage) return propImage;
 
   const bgObjectLayer = (room?.layers ?? []).find(
-    (l) => l?.type === 'objectgroup' && String(l?.name ?? '').toLowerCase().includes('background')
+    (l) =>
+      l?.type === "objectgroup" &&
+      String(l?.name ?? "")
+        .toLowerCase()
+        .includes("background"),
   );
   const bgObject = (bgObjectLayer?.objects ?? [])[0];
   const bgObjectProps = bgObject?.properties ?? [];
-  const bgPropImage = bgObjectProps.find((p) => p?.name === 'backgroundImage' || p?.name === 'image')?.value;
+  const bgPropImage = bgObjectProps.find(
+    (p) => p?.name === "backgroundImage" || p?.name === "image",
+  )?.value;
   const propBg = normalizeBackgroundImageName(bgPropImage);
   if (propBg) return propBg;
   const bgGidImage = resolveBackgroundImageFromGid(room, bgObject?.gid ?? null);
@@ -174,7 +191,9 @@ function getBackgroundImageName(room) {
   const namedBg = normalizeBackgroundImageName(bgObject?.name);
   if (namedBg) return namedBg;
 
-  const imageLayer = (room?.layers ?? []).find((l) => l?.type === 'imagelayer' && l?.image);
+  const imageLayer = (room?.layers ?? []).find(
+    (l) => l?.type === "imagelayer" && l?.image,
+  );
   if (imageLayer?.image) return imageLayer.image;
 
   return null;
@@ -186,7 +205,7 @@ function ensureRoomAssetsLoaded(roomId) {
 
   const backgroundImageName = getBackgroundImageName(room);
   if (backgroundImageName && !assets[backgroundImageName]) {
-    const backgroundPath = backgroundImageName.includes('/')
+    const backgroundPath = backgroundImageName.includes("/")
       ? backgroundImageName
       : `assets/backgrounds/${backgroundImageName}`;
     assets[backgroundImageName] = loadImage(backgroundPath);
@@ -210,7 +229,7 @@ function getRoomPixelSize(roomKey) {
   const tileHeight = room.tileheight ?? CANVAS.TILE_SIZE;
   return {
     width: (room.width ?? 0) * tileWidth,
-    height: (room.height ?? 0) * tileHeight
+    height: (room.height ?? 0) * tileHeight,
   };
 }
 
@@ -237,18 +256,26 @@ function preload() {
   const tilePropsBySourcePath = {};
   for (const room of Object.values(roomData)) {
     for (const tileset of room?.tilesets ?? []) {
-      const sourcePath = normalizeRelativePath('data/rooms', tileset?.source ?? '');
-      if (!sourcePath.toLowerCase().endsWith('.tsx')) continue;
+      const sourcePath = normalizeRelativePath(
+        "data/rooms",
+        tileset?.source ?? "",
+      );
+      if (!sourcePath.toLowerCase().endsWith(".tsx")) continue;
       if (tilePropsBySourcePath[sourcePath]) continue;
 
       const tsxLines = loadStrings(sourcePath) ?? [];
-      tilePropsBySourcePath[sourcePath] = parseTsxTileProperties(tsxLines.join('\n'));
+      tilePropsBySourcePath[sourcePath] = parseTsxTileProperties(
+        tsxLines.join("\n"),
+      );
     }
   }
 
   for (const room of Object.values(roomData)) {
     for (const tileset of room?.tilesets ?? []) {
-      const sourcePath = normalizeRelativePath('data/rooms', tileset?.source ?? '');
+      const sourcePath = normalizeRelativePath(
+        "data/rooms",
+        tileset?.source ?? "",
+      );
       tileset.tilePropertiesById = tilePropsBySourcePath[sourcePath] ?? {};
     }
   }
@@ -256,12 +283,14 @@ function preload() {
   const imageNames = new Set();
   for (const room of Object.values(roomData)) {
     const imageName = getBackgroundImageName(room);
-    
+
     if (imageName) imageNames.add(imageName);
   }
 
   for (const imageName of imageNames) {
-    const imagePath = imageName.includes('/') ? imageName : `assets/backgrounds/${imageName}`;
+    const imagePath = imageName.includes("/")
+      ? imageName
+      : `assets/backgrounds/${imageName}`;
     assets[imageName] = loadImage(imagePath);
   }
 
@@ -286,10 +315,12 @@ function preload() {
 
 function setup() {
   createCanvas(CANVAS.WIDTH, CANVAS.HEIGHT);
- // rectMode(CENTER);
+  // rectMode(CENTER);
   textSize(20);
   textAlign(LEFT);
   applyDisplayScale();
+
+  menuSystem = createMenuSystem();
 
   player = new Player(PLAYER);
 
@@ -310,13 +341,13 @@ function setup() {
       if (darknessLayer) {
         darknessLayer.resizeCanvas(roomWidth, roomHeight);
       }
-    }
+    },
   });
-  roomSystem.goToRoom(initialRoom, { spawnId: 'default' });
+  roomSystem.goToRoom(initialRoom, { spawnId: "default" });
   syncCanvasToCurrentRoom();
   const playerStart = roomSystem.getPlayerStart();
   if (playerStart) {
-    player.setCurrentPosition(playerStart.x, playerStart.y); 
+    player.setCurrentPosition(playerStart.x, playerStart.y);
   }
 
   darknessLayer = createGraphics(width, height);
@@ -329,27 +360,38 @@ function setup() {
   cameraSystem.snapTo(player.position.x, player.position.y);
   torchSystem = createTorchSystem(player.torch, player, {
     drainRate: TORCH.DRAIN_RATE,
-    getDifficulty: () => pauseMenuSystem ? pauseMenuSystem.getDifficulty() : 'normal',
+    getDifficulty: () =>
+      pauseMenuSystem ? pauseMenuSystem.getDifficulty() : "normal",
   });
 
   sonarSystem = createSonarSystem(player, () => roomSystem.getPlatforms());
 
-  lightingSystem = createLightingSystem(player, () => sonarSystem?.getSonarLights?.() ?? []);
+  lightingSystem = createLightingSystem(
+    player,
+    () => sonarSystem?.getSonarLights?.() ?? [],
+  );
 
-  resourceManagementSystem = createResourceManagementSystem(player, roomSystem, () => roomSystem.getCollectables());
+  resourceManagementSystem = createResourceManagementSystem(
+    player,
+    roomSystem,
+    () => roomSystem.getCollectables(),
+  );
 
   //handlers for different item types
-  resourceManagementSystem.registerHandler('power', (player, item) => {
+  resourceManagementSystem.registerHandler("power", (player, item) => {
     player.power.current = Math.max(
       0,
-      Math.min(player.power.current + 10, player.power.maxPower)   //item.amount set as 10 for power
+      Math.min(player.power.current + 10, player.power.maxPower), //item.amount set as 10 for power
     );
   });
 
-  resourceManagementSystem.registerHandler('health', (player, item) => {
+  resourceManagementSystem.registerHandler("health", (player, item) => {
+    const currentDiff = pauseMenuSystem.getDifficulty();
+    const healAmount = currentDiff === "hard" ? 2 : 5;
+
     player.power.current = Math.max(
       0,
-      Math.min(player.power.current + 5, player.power.maxPower)    //item.amount set as 5 for health
+      Math.min(player.power.current + 5, player.power.maxPower), //item.amount set as 5 for health
     );
   });
 
@@ -357,7 +399,10 @@ function setup() {
     player,
     getPlatforms: () => roomSystem.getPlatforms(),
     getHazards: () => roomSystem.getHazards(),
-    getCollectables: () => roomSystem.getCollectables().filter(c => !resourceManagementSystem.isCollected(c)),
+    getCollectables: () =>
+      roomSystem
+        .getCollectables()
+        .filter((c) => !resourceManagementSystem.isCollected(c)),
     getTriggers: () => roomSystem.getTriggers(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),
@@ -396,6 +441,11 @@ function setup() {
 }
 
 function draw() {
+  if (gameState === "MENU") {
+    menuSystem.draw(null);
+    return;
+  }
+
   const currentRoom = roomSystem?.getCurrentRoom?.();
   if (currentRoom && currentRoom !== lastEnsuredRoom) {
     ensureRoomAssetsLoaded(currentRoom);
@@ -411,7 +461,8 @@ function draw() {
 }
 
 function keyPressed() {
-  if (keyCode === 27) { // ESC
+  if (keyCode === 27) {
+    // ESC
     pauseMenuSystem?.togglePause();
     return;
   }
@@ -420,7 +471,26 @@ function keyPressed() {
 }
 
 function mousePressed() {
+  if (gameState === "MENU") {
+    const selection = menuSystem.checkClick(mouseX, mouseY);
+
+    if (selection === "EASY" || selection === "HARD") {
+      applyDifficultyConfig(selection);
+      gameState = "PLAYING";
+    }
+    return;
+  }
+
   pauseMenuSystem?.onMousePressed();
+}
+
+function applyDifficultyConfig(selection) {
+  const diffLevel = selection === "EASY" ? "normal" : "hard";
+
+  if (pauseMenuSystem) {
+    pauseMenuSystem.setDifficulty(diffLevel);
+    console.log(`Game started on ${diffLevel} difficulty.`);
+  }
 }
 
 function mouseDragged() {
@@ -435,20 +505,20 @@ function mouseReleased() {
 // DISPLAY SCALING
 //--------------------------------------
 function applyDisplayScale() {
-  const canvasEl = document.querySelector('canvas');
+  const canvasEl = document.querySelector("canvas");
   if (!canvasEl) return;
 
   if (useDevResolution) {
     // Dev mode: native resolution, no CSS scaling
-    canvasEl.style.width = '';
-    canvasEl.style.height = '';
+    canvasEl.style.width = "";
+    canvasEl.style.height = "";
   } else {
     // Production mode: scale canvas to fit 1920x1080
     const scaleX = DISPLAY.WIDTH / width;
     const scaleY = DISPLAY.HEIGHT / height;
     const s = Math.min(scaleX, scaleY);
-    canvasEl.style.width = (width * s) + 'px';
-    canvasEl.style.height = (height * s) + 'px';
+    canvasEl.style.width = width * s + "px";
+    canvasEl.style.height = height * s + "px";
   }
 }
 
