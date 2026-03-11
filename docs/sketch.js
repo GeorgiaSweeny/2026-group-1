@@ -375,29 +375,7 @@ function setup() {
     () => sonarSystem?.getSonarLights?.() ?? [],
   );
 
-  resourceManagementSystem = createResourceManagementSystem(
-    player,
-    roomSystem,
-    () => roomSystem.getCollectables(),
-  );
-
-  //handlers for different item types
-  resourceManagementSystem.registerHandler("power", (player, item) => {
-    player.power.current = Math.max(
-      0,
-      Math.min(player.power.current + 10, player.power.maxPower), //item.amount set as 10 for power
-    );
-  });
-
-  resourceManagementSystem.registerHandler("health", (player, item) => {
-    const currentDiff = pauseMenuSystem.getDifficulty();
-    const healAmount = currentDiff === "hard" ? 2 : 5;
-
-    player.power.current = Math.max(
-      0,
-      Math.min(player.power.current + 5, player.power.maxPower), //item.amount set as 5 for health
-    );
-  });
+  resourceManagementSystem = createResourceManagementSystem(player, roomSystem, () => roomSystem.getCollectables(), () => roomSystem.getHazards());
 
   renderSystem = createRenderSystem({
     player,
@@ -448,6 +426,15 @@ function draw() {
   if (gameState === "MENU") {
     menuSystem.draw(null);
     return;
+  } else if (gameState === "SETTINGS") {
+    // Use pauseMenuSystem to render the settings
+    pauseMenuSystem.draw();
+
+    // If the back button closed it, return to the start menu
+    if (!pauseMenuSystem.isPaused()) {
+      gameState = "MENU";
+    }
+    return;
   }
 
   if (gameState === WIN_STATE) {
@@ -494,11 +481,17 @@ function mousePressed() {
     if (selection === "EASY" || selection === "HARD") {
       applyDifficultyConfig(selection);
       gameState = "PLAYING";
+    } else if (selection === "SETTINGS") {
+      gameState = "SETTINGS";
+      pauseMenuSystem.openSettingsMenu(true);
     }
     return;
   }
 
-  pauseMenuSystem?.onMousePressed();
+  if (gameState === "SETTINGS") {
+    pauseMenuSystem?.onMousePressed();
+    return;
+  }
 }
 
 function applyDifficultyConfig(selection) {
