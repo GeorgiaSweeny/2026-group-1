@@ -23,7 +23,20 @@ export function createMenuSystem() {
 
   const btnEasyX = startX;
   const btnHardX = startX + btnWidth + gap;
+
   const btnY = CANVAS.HEIGHT / 2;
+  const settingsY = btnY + btnHeight + 20;
+  const hoverSettings =
+    mouseX > startX &&
+    mouseX < startX + totalWidth &&
+    mouseY > settingsY &&
+    mouseY < settingsY + btnHeight;
+
+  fill(hoverSettings ? color(60, 140, 220) : color(30, 100, 180));
+  rect(startX, settingsY, totalWidth, btnHeight, 10);
+
+  fill(255);
+  text("SETTINGS", startX + totalWidth / 2, settingsY + btnHeight / 2);
 
   return {
     draw(titleImage) {
@@ -40,7 +53,7 @@ export function createMenuSystem() {
       fill(255);
       textAlign(CENTER, CENTER);
       textSize(48);
-      text("MY AWESOME GAME", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 - 40);
+      text("the GAME", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 - 40);
 
       textSize(20);
       text("Select Difficulty", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 + 10);
@@ -72,11 +85,19 @@ export function createMenuSystem() {
       else fill(120, 25, 25); // Deep red for hard mode normal
 
       rect(btnHardX, btnY, btnWidth, btnHeight, 10);
-
       fill(255);
       text("HARD", btnHardX + btnWidth / 2, btnY + btnHeight / 2);
 
-      textAlign(LEFT, BASELINE); // Reset alignment
+      const hoverSettings =
+        mouseX > startX &&
+        mouseX < startX + totalWidth &&
+        mouseY > settingsY &&
+        mouseY < settingsY + btnHeight;
+      fill(hoverSettings ? color(60, 140, 220) : color(30, 100, 180));
+      rect(startX, settingsY, totalWidth, btnHeight, 10);
+
+      fill(255);
+      text("SETTINGS", startX + totalWidth / 2, settingsY + btnHeight / 2);
     },
 
     checkClick(mX, mY) {
@@ -97,6 +118,16 @@ export function createMenuSystem() {
         mY < btnY + btnHeight
       ) {
         return "HARD";
+      }
+
+      const settingsY = btnY + btnHeight + 20;
+      if (
+        mX > startX &&
+        mX < startX + totalWidth &&
+        mY > settingsY &&
+        mY < settingsY + btnHeight
+      ) {
+        return "SETTINGS";
       }
       return null; // Clicked somewhere else on the screen
     },
