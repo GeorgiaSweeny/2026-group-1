@@ -46,6 +46,8 @@ export function createPauseMenuSystem({
   // Track mouse interaction state
   let draggingVolume = false;
 
+  let returnToMainMenu = false;
+
   //--------------------------------------
   // HIT TESTING
   //--------------------------------------
@@ -288,7 +290,12 @@ export function createPauseMenuSystem({
       // Back button
       const backY = debugY + 55;
       if (isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H)) {
-        currentPage = "main";
+        if (returnToMainMenu) {
+          paused = false; // Close the overlay
+          returnToMainMenu = false; // Reset flag
+        } else {
+          currentPage = "main"; // Normal pause menu behavior
+        }
       }
     } else if (currentPage === "debug") {
       const baseY = height / 2 - 100;
@@ -388,6 +395,12 @@ export function createPauseMenuSystem({
       } else if (currentPage === "debug") {
         drawDebugPage();
       }
+    },
+
+    openSettingsMenu(fromMain = false) {
+      paused = true;
+      currentPage = "settings";
+      returnToMainMenu = fromMain;
     },
   };
 }
