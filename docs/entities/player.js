@@ -70,6 +70,8 @@ export class Player extends Hitbox{
       this.health = null;
       this.oxygen = null;
 
+      this.bubbles = [];
+
       this.moveIntent = {
          left: false,
          right: false,
@@ -78,8 +80,7 @@ export class Player extends Hitbox{
       };
       this.actionIntent = {
          toggleTorch: false,
-         //sonar
-         //missile
+         emitSonar: false,
       };
    
    }

@@ -56,33 +56,38 @@ export function createLightingSystem(player = [], getSonarLights = () => []) {
          if (!player) return [];
          const x = player.position?.x ?? player.x ?? 0;
          const y = player.position?.y ?? player.y ?? 0;
+         const lightSources = [];
 
          // Player torch
          if (player.torch?.isOn) {
             const intensity = player.torch.getIntensity(player.power?.getPercent?.() ?? 0);
             if (intensity > 0) {
-               return [{
+               lightSources.push({
                   kind: 'torch',
                   x,
                   y,
                   radius: player.torch.radius,
                   intensity
-               }];
+               });
             }
-         }
-
-         const ambientRadius = LIGHTING?.PLAYER_AMBIENT?.radius ?? 0;
-         const ambientIntensity = LIGHTING?.PLAYER_AMBIENT?.brightness ?? 0;
-         if (ambientRadius > 0 && ambientIntensity > 0) {
-            return [{
+         } else {
+            // Ambient light when torch is off or power is empty
+            lightSources.push({
                kind: 'ambient',
                x,
                y,
-               radius: ambientRadius,
-               intensity: ambientIntensity
-            }];
+               radius: player.torch.radius || 50,
+               intensity: 0.35
+            });
          }
-         return [];
+
+         // Sonar lights
+         const sonarLights = getSonarLights?.() ?? [];
+         for (const light of sonarLights) {
+            lightSources.push(light);
+         }
+
+         return lightSources;
       }
    };
 }

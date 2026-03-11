@@ -19,17 +19,23 @@ RULES:
 // PAUSE MENU SYSTEM
 //======================================
 
-export function createPauseMenuSystem({ onDifficultyChange } = {}) {
+export function createPauseMenuSystem({
+  onDifficultyChange,
+  onResolutionChange,
+} = {}) {
   let paused = false;
-  let currentPage = 'main'; // 'main' | 'settings'
+  let currentPage = "main"; // 'main' | 'settings' | 'debug'
 
   // Difficulty: 'normal' | 'hard'
-  let difficulty = 'normal';
+  let difficulty = "normal";
 
   // Settings (UI only — values stored but not wired to audio etc.)
-  let volume = 80;        // 0–100
+  let volume = 80; // 0–100
   let showFPS = false;
   let screenShake = true;
+
+  // Debug settings
+  let devResolution = false; // false = 1920x1080, true = dev (640x360)
 
   // Button layout constants
   const BUTTON_W = 180;
@@ -44,7 +50,9 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
   // HIT TESTING
   //--------------------------------------
   function isOver(bx, by, bw, bh) {
-    return mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + bh;
+    return (
+      mouseX >= bx && mouseX <= bx + bw && mouseY >= by && mouseY <= by + bh
+    );
   }
 
   //--------------------------------------
@@ -110,22 +118,35 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
     textSize(28);
     fill(255);
     noStroke();
-    text('PAUSED', cx, baseY);
+    text("PAUSED", cx, baseY);
 
     // Resume
     const resumeY = baseY + 50;
-    drawButton('Resume', cx - BUTTON_W / 2, resumeY, BUTTON_W, BUTTON_H,
-      isOver(cx - BUTTON_W / 2, resumeY, BUTTON_W, BUTTON_H));
+    drawButton(
+      "Resume",
+      cx - BUTTON_W / 2,
+      resumeY,
+      BUTTON_W,
+      BUTTON_H,
+      isOver(cx - BUTTON_W / 2, resumeY, BUTTON_W, BUTTON_H),
+    );
 
     // Settings
     const settingsY = resumeY + 55;
-    drawButton('Settings', cx - BUTTON_W / 2, settingsY, BUTTON_W, BUTTON_H,
-      isOver(cx - BUTTON_W / 2, settingsY, BUTTON_W, BUTTON_H));
+    drawButton(
+      "Settings",
+      cx - BUTTON_W / 2,
+      settingsY,
+      BUTTON_W,
+      BUTTON_H,
+      isOver(cx - BUTTON_W / 2, settingsY, BUTTON_W, BUTTON_H),
+    );
 
     // Difficulty
     const diffY = settingsY + 55;
     const diffLabel = `Difficulty: ${difficulty.toUpperCase()}`;
-    const diffColor = difficulty === 'hard' ? color(200, 80, 80) : color(60, 160, 90);
+    const diffColor =
+      difficulty === "hard" ? color(200, 80, 80) : color(60, 160, 90);
     const hovered = isOver(cx - BUTTON_W / 2, diffY, BUTTON_W, BUTTON_H);
     noStroke();
     fill(hovered ? diffColor : lerpColor(color(50, 60, 80), diffColor, 0.6));
@@ -149,19 +170,75 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
     textSize(24);
     fill(255);
     noStroke();
-    text('SETTINGS', cx, baseY);
+    text("SETTINGS", cx, baseY);
 
     // Volume slider
-    drawSlider('Volume', volume, 0, 100, leftX, baseY + 50);
+    drawSlider("Volume", volume, 0, 100, leftX, baseY + 50);
 
     // Toggles (UI only)
-    drawToggle('Show FPS', showFPS, leftX, baseY + 110);
-    drawToggle('Screen Shake', screenShake, leftX, baseY + 150);
+    drawToggle("Show FPS", showFPS, leftX, baseY + 110);
+    drawToggle("Screen Shake", screenShake, leftX, baseY + 150);
+
+    // Debug button
+    const debugY = baseY + 200;
+    drawButton(
+      "Debug",
+      cx - BUTTON_W / 2,
+      debugY,
+      BUTTON_W,
+      BUTTON_H,
+      isOver(cx - BUTTON_W / 2, debugY, BUTTON_W, BUTTON_H),
+    );
 
     // Back button
-    const backY = baseY + 200;
-    drawButton('Back', cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H,
-      isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H));
+    const backY = debugY + 55;
+    drawButton(
+      "Back",
+      cx - BUTTON_W / 2,
+      backY,
+      BUTTON_W,
+      BUTTON_H,
+      isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H),
+    );
+  }
+
+  //--------------------------------------
+  // DEBUG PAGE
+  //--------------------------------------
+  function drawDebugPage() {
+    const cx = width / 2;
+    const leftX = cx - 120;
+    const baseY = height / 2 - 100;
+
+    // Title
+    textAlign(CENTER, CENTER);
+    textSize(24);
+    fill(255);
+    noStroke();
+    text("DEBUG", cx, baseY);
+
+    // Dev Resolution toggle
+    drawToggle("Dev Resolution (640x360)", devResolution, leftX, baseY + 60);
+
+    // Info text
+    textAlign(LEFT, TOP);
+    textSize(11);
+    fill(150);
+    const modeLabel = devResolution
+      ? "640x360 (dev)"
+      : "1920x1080 (production)";
+    text(`Current: ${modeLabel}`, leftX, baseY + 90);
+
+    // Back button
+    const backY = baseY + 150;
+    drawButton(
+      "Back",
+      cx - BUTTON_W / 2,
+      backY,
+      BUTTON_W,
+      BUTTON_H,
+      isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H),
+    );
   }
 
   //--------------------------------------
@@ -172,7 +249,7 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
 
     const cx = width / 2;
 
-    if (currentPage === 'main') {
+    if (currentPage === "main") {
       const baseY = height / 2 - 80;
       const resumeY = baseY + 50;
       const settingsY = resumeY + 55;
@@ -180,14 +257,14 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
 
       if (isOver(cx - BUTTON_W / 2, resumeY, BUTTON_W, BUTTON_H)) {
         paused = false;
-        currentPage = 'main';
+        currentPage = "main";
       } else if (isOver(cx - BUTTON_W / 2, settingsY, BUTTON_W, BUTTON_H)) {
-        currentPage = 'settings';
+        currentPage = "settings";
       } else if (isOver(cx - BUTTON_W / 2, diffY, BUTTON_W, BUTTON_H)) {
-        difficulty = difficulty === 'normal' ? 'hard' : 'normal';
+        difficulty = difficulty === "normal" ? "hard" : "normal";
         onDifficultyChange?.(difficulty);
       }
-    } else if (currentPage === 'settings') {
+    } else if (currentPage === "settings") {
       const baseY = height / 2 - 100;
       const leftX = cx - 120;
 
@@ -202,10 +279,32 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
         screenShake = !screenShake;
       }
 
+      // Debug button
+      const debugY = baseY + 200;
+      if (isOver(cx - BUTTON_W / 2, debugY, BUTTON_W, BUTTON_H)) {
+        currentPage = "debug";
+      }
+
       // Back button
-      const backY = baseY + 200;
+      const backY = debugY + 55;
       if (isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H)) {
-        currentPage = 'main';
+        currentPage = "main";
+      }
+    } else if (currentPage === "debug") {
+      const baseY = height / 2 - 100;
+      const leftX = cx - 120;
+
+      // Dev Resolution toggle hit area
+      const toggleX = leftX + 160;
+      if (isOver(toggleX, baseY + 60 - 12, 48, 24)) {
+        devResolution = !devResolution;
+        onResolutionChange?.(devResolution);
+      }
+
+      // Back button
+      const backY = baseY + 150;
+      if (isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H)) {
+        currentPage = "settings";
       }
     }
   }
@@ -214,10 +313,10 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
   // VOLUME SLIDER DRAG
   //--------------------------------------
   function handleMousePressed() {
-    if (!paused || currentPage !== 'settings') return;
+    if (!paused || currentPage !== "settings") return;
     const cx = width / 2;
     const leftX = cx - 120;
-    const sliderY = (height / 2 - 100) + 50 + 18;
+    const sliderY = height / 2 - 100 + 50 + 18;
     if (isOver(leftX - 10, sliderY - 10, SLIDER_W + 20, SLIDER_H + 20)) {
       draggingVolume = true;
     }
@@ -247,13 +346,17 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
       return difficulty;
     },
 
+    setDifficulty(level) {
+      difficulty = level.toLowerCase();
+    },
+
     getSettings() {
-      return { volume, showFPS, screenShake };
+      return { volume, showFPS, screenShake, devResolution };
     },
 
     togglePause() {
       paused = !paused;
-      if (!paused) currentPage = 'main';
+      if (!paused) currentPage = "main";
     },
 
     onMousePressed() {
@@ -278,10 +381,12 @@ export function createPauseMenuSystem({ onDifficultyChange } = {}) {
       fill(0, 0, 0, 160);
       rect(0, 0, width, height);
 
-      if (currentPage === 'main') {
+      if (currentPage === "main") {
         drawMainPage();
-      } else if (currentPage === 'settings') {
+      } else if (currentPage === "settings") {
         drawSettingsPage();
+      } else if (currentPage === "debug") {
+        drawDebugPage();
       }
     },
   };

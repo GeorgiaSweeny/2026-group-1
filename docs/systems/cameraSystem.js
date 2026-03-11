@@ -4,51 +4,62 @@ VERSION: 1.0
 SYSTEM: CAMERA SYSTEM
 AUTHOR: Jude
 DESCRIPTION:
-- Camera System: Manages viewport and visual focus
-- Tracks entities (player or other targets) and adjusts view
-- Handles camera smoothing, bounds, and potential effects (shake, zoom)
+- Smooth lerp camera that follows the player
+- Viewport is fixed at base resolution (640x360)
+- Provides offset for renderSystem to translate world drawing
 
 RULES:
 - Must not modify entity or system state directly
-- Must only affect what is drawn (render offset, scaling, etc.)
-- Should remain independent of physics or input systems
-========================================
-DESIGN GOALS:
-- Provide smooth camera following of player or targets
-- Clamp camera to level or room boundaries
-- Allow optional effects like screen shake or zoom
-- Centralize camera logic for rendering consistency
-========================================
-RESPONSIBILITIES:
-- Track target position(s) for camera focus
-- Calculate camera offset (x, y) for render system
-- Apply optional smoothing to movement
-- Expose camera data to render system
-- Handle room/level boundaries for camera position
-- Provide API for temporary effects (shake, zoom)
-
-DEPENDENCIES:
-- Engine update loop for update()
-- Target entity (usually the player)
-- Room or level dimensions (to clamp camera)
-- Render system to apply offset/transform
-
-USAGE:
-const cameraSystem = createCameraSystem({ target: player });
-engine.register(cameraSystem);
-========================================
-NOTES:
-- Camera transforms are applied in renderSystem
-- All coordinates are relative to camera for rendering
-========================================
-TODO / LIMITATIONS:
-- implement basic player tracking viewport
+- Must only affect what is drawn (render offset)
 ========================================
 */
 
 //======================================
 // CAMERA SYSTEM
 //======================================
+
+export function createCameraSystem(player, viewportWidth, viewportHeight) {
+  // Effective viewport size is viewportWidth/SCALE × viewportHeight/SCALE
+  // Higher SCALE = more zoomed in, lower = more zoomed out
+  // 1.0 = 640×360 visible area, 2.0 = 320×180 visible area
+  let SCALE = 1.0;
+
+  let camX = player.position.x - (viewportWidth / SCALE) / 2;
+  let camY = player.position.y - (viewportHeight / SCALE) / 2;
+
+  const LERP_SPEED = 0.08;
+
+  return {
+    update() {
+      const vw = viewportWidth / SCALE;
+      const vh = viewportHeight / SCALE;
+      const targetX = player.position.x - vw / 2;
+      const targetY = player.position.y - vh / 2;
+      camX += (targetX - camX) * LERP_SPEED;
+      camY += (targetY - camY) * LERP_SPEED;
+    },
+
+    getOffset() {
+      return { x: camX, y: camY };
+    },
+
+    getScale() {
+      return SCALE;
+    },
+
+    setScale(s) {
+      SCALE = Math.max(0.25, Math.min(s, 4.0));
+    },
+
+    /** Snap camera instantly (e.g. on room change) */
+    snapTo(x, y) {
+      const vw = viewportWidth / SCALE;
+      const vh = viewportHeight / SCALE;
+      camX = x - vw / 2;
+      camY = y - vh / 2;
+    },
+  };
+}
 
 //======================================
 // END
