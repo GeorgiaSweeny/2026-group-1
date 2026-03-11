@@ -328,7 +328,10 @@ function setup() {
     () => roomSystem.getCollectables()
   );
 
-  lightingSystem = createLightingSystem(player);
+  lightingSystem = createLightingSystem(
+    player,
+    () => sonarSystem?.getSonarLights?.() ?? [],
+  );
 
   resourceManagementSystem = createResourceManagementSystem(player, roomSystem, () => roomSystem.getCollectables(), () => roomSystem.getHazards());
 
