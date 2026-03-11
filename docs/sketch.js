@@ -444,6 +444,15 @@ function draw() {
   if (gameState === "MENU") {
     menuSystem.draw(null);
     return;
+  } else if (gameState === "SETTINGS") {
+    // Use pauseMenuSystem to render the settings
+    pauseMenuSystem.draw();
+
+    // If the back button closed it, return to the start menu
+    if (!pauseMenuSystem.isPaused()) {
+      gameState = "MENU";
+    }
+    return;
   }
 
   const currentRoom = roomSystem?.getCurrentRoom?.();
@@ -477,11 +486,17 @@ function mousePressed() {
     if (selection === "EASY" || selection === "HARD") {
       applyDifficultyConfig(selection);
       gameState = "PLAYING";
+    } else if (selection === "SETTINGS") {
+      gameState = "SETTINGS";
+      pauseMenuSystem.openSettingsMenu(true);
     }
     return;
   }
 
-  pauseMenuSystem?.onMousePressed();
+  if (gameState === "SETTINGS") {
+    pauseMenuSystem?.onMousePressed();
+    return;
+  }
 }
 
 function applyDifficultyConfig(selection) {
