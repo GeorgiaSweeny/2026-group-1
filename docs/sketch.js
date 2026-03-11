@@ -371,29 +371,7 @@ function setup() {
     () => sonarSystem?.getSonarLights?.() ?? [],
   );
 
-  resourceManagementSystem = createResourceManagementSystem(
-    player,
-    roomSystem,
-    () => roomSystem.getCollectables(),
-  );
-
-  //handlers for different item types
-  resourceManagementSystem.registerHandler("power", (player, item) => {
-    player.power.current = Math.max(
-      0,
-      Math.min(player.power.current + 10, player.power.maxPower), //item.amount set as 10 for power
-    );
-  });
-
-  resourceManagementSystem.registerHandler("health", (player, item) => {
-    const currentDiff = pauseMenuSystem.getDifficulty();
-    const healAmount = currentDiff === "hard" ? 2 : 5;
-
-    player.power.current = Math.max(
-      0,
-      Math.min(player.power.current + 5, player.power.maxPower), //item.amount set as 5 for health
-    );
-  });
+  resourceManagementSystem = createResourceManagementSystem(player, roomSystem, () => roomSystem.getCollectables(), () => roomSystem.getHazards());
 
   renderSystem = createRenderSystem({
     player,
