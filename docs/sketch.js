@@ -250,7 +250,7 @@ function preload() {
   const imageNames = new Set();
   for (const room of Object.values(roomData)) {
     const imageName = getBackgroundImageName(room);
-    
+
     if (imageName) imageNames.add(imageName);
   }
 
@@ -280,7 +280,7 @@ function preload() {
 
 function setup() {
   createCanvas(CANVAS.WIDTH, CANVAS.HEIGHT);
- // rectMode(CENTER);
+  // rectMode(CENTER);
   textSize(20);
   textAlign(LEFT);
 
@@ -309,7 +309,7 @@ function setup() {
   syncCanvasToCurrentRoom();
   const playerStart = roomSystem.getPlayerStart();
   if (playerStart) {
-    player.setCurrentPosition(playerStart.x, playerStart.y); 
+    player.setCurrentPosition(playerStart.x, playerStart.y);
   }
 
   darknessLayer = createGraphics(width, height);
@@ -330,22 +330,7 @@ function setup() {
 
   lightingSystem = createLightingSystem(player);
 
-  resourceManagementSystem = createResourceManagementSystem(player, roomSystem, () => roomSystem.getCollectables());
-
-  //handlers for different item types
-  resourceManagementSystem.registerHandler('power', (player, item) => {
-    player.power.current = Math.max(
-      0,
-      Math.min(player.power.current + 10, player.power.maxPower)   //item.amount set as 10 for power
-    );
-  });
-
-  resourceManagementSystem.registerHandler('health', (player, item) => {
-    player.power.current = Math.max(
-      0,
-      Math.min(player.power.current + 5, player.power.maxPower)    //item.amount set as 5 for health
-    );
-  });
+  resourceManagementSystem = createResourceManagementSystem(player, roomSystem, () => roomSystem.getCollectables(), () => roomSystem.getHazards());
 
   renderSystem = createRenderSystem({
     player,

@@ -1,14 +1,13 @@
 /*
 ========================================
-VERSION: 3
+VERSION: 3.2
 SYSTEM: RESOURCE MANAGEMENT SYSTEM
 AUTHOR: Monal Gupta
 DESCRIPTION:
 - Handles player's resources and interactions with resource entities in the room.
-- "resource" is the main superclass; specific types (power, health, etc) are resourceTypes.
-- Extensible handler system for different resource types.
-- Registers handlers that are called when items are collected.
-- Does not directly handle specific game logic
+- Collectables: one-shot collection with type-based handlers
+- Hazards: continuous power drain while overlapping
+- Handlers defined internally — sketch.js just wires systems
 
 HIERARCHY:
 - type: "resource" (main category)
@@ -17,23 +16,13 @@ HIERARCHY:
 
 RULES:
 - Runs in update(deltaTime)
-- Delegates to registered handlers based on resourceType
-- Multiple systems can register handlers for different resource types
+- Only processes entities with type === "resource" or gid-resolved collectables
+- Delegates to internal handlers based on resourceType
+- Hazard drain is continuous, not one-shot 
 
 DESIGN GOALS:
 - Decouple collision detection from item handling
-- Allow any system to register handlers for resource types
-- Support extensible resource types (power, health, ammo, collectables, etc)
-
-USAGE:
-const resourceMgmt = createResourceManagementSystem(player, roomSystem, getCollectables);
-resourceMgmt.registerHandler('power', (player, item) => {
-  player.power.current = Math.min(player.power.current + item.amount, player.power.maxPower);
-});
-resourceMgmt.registerHandler('health', (player, item) => {
-  player.health.current = Math.min(player.health.current + item.amount, player.health.maxHealth);
-});
-
+- Keep all resource game logic inside this system
 ========================================
 */
 
@@ -41,11 +30,18 @@ resourceMgmt.registerHandler('health', (player, item) => {
 // RESOURCE MANAGEMENT SYSTEM
 //======================================
 
-export function createResourceManagementSystem(player, roomSystem, getCollectables) {
-  const collectedEntities = new Set();
-  // Maps resource types (power, health, etc) to handler functions
-  const handlers = {};
+import { TORCH } from '../config.js';
 
+// Drain rates — tune these values
+const HAZARD_DRAIN_RATE = TORCH.DRAIN_RATE * 2;  // power lost per ms while on hazard
+
+export function createResourceManagementSystem(player, roomSystem, getCollectables, getHazards) {
+  const collectedEntities = new Set();
+
+  /*======================================
+  COLLECTABLE TYPE RESOLUTION
+  Mirrors renderSystem's getCollectableType logic
+  ======================================*/
   function resolveCollectableType(item) {
     if (item.collectableType) return item.collectableType;
 
@@ -68,17 +64,19 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
     return null;
   }
 
+  //======================================
+  // COLLISION CHECK
+  // Player is center-based, Tiled objects are top-left corner
+  //======================================
   function checkCollision(a, b) {
     const ax = a.position.x;
     const ay = a.position.y;
     const aw = a.w;
     const ah = a.h;
-
-    const bx = b.x + b.w / 2;
-    const by = b.y + b.h / 2;
+    const bx = b.x + (b.w ?? b.width ?? 16) / 2;
+    const by = b.y - (b.h ?? b.height ?? 16) / 2;
     const bw = b.w ?? b.width ?? 16;
     const bh = b.h ?? b.height ?? 16;
-
     return (
       ax - aw / 2 < bx + bw / 2 &&
       ax + aw / 2 > bx - bw / 2 &&
@@ -87,50 +85,80 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
     );
   }
 
-  function handleCollectedItem(item) {
-    if (handlers[item.resourceType]) {
-      handlers[item.resourceType](player, item);
+  //======================================
+  // HANDLERS
+  // All resource game logic lives here, not in sketch.js
+  //======================================
+  const handlers = {
+    power(player, item) {
+      player.power.current = Math.max(
+        0,
+        Math.min(player.power.current + 10, player.power.maxPower)
+      );
+    },
+    health(player, item) {
+      player.power.current = Math.max(
+        0,
+        Math.min(player.power.current + 5, player.power.maxPower)
+      );
     }
-    collectedEntities.add(item);
+  };
+
+  //======================================
+  // HAZARD OVERLAP + DRAIN
+  // Continuous drain while player is on hazard
+  //======================================
+  function processHazards(deltaTime) {
+    const hazards = getHazards ? getHazards() : [];
+    for (const h of hazards) {
+      if (checkCollision(player, h)) {
+        player.isOnHazard = true;
+        // Drain directly here — mirrors how torchSystem calls player.power.drain
+        player.power.drain(HAZARD_DRAIN_RATE, deltaTime);
+        return;
+      }
+    }
+    player.isOnHazard = false;
+  }
+
+  //======================================
+  // COLLECTABLE COLLECTION
+  // One-shot — item is added to collected set on pickup
+  //======================================
+  function processCollectables() {
+    const collectables = getCollectables ? getCollectables() : [];
+    for (const e of collectables) {
+      if (collectedEntities.has(e)) continue;
+      const resourceType = resolveCollectableType(e);
+      if (!resourceType) continue;
+      if (checkCollision(player, e)) {
+        e.resourceType = resourceType;
+        if (handlers[resourceType]) {
+          handlers[resourceType](player, e);
+        }
+        collectedEntities.add(e);
+      }
+    }
   }
 
   return {
-    /**
-     * Registers a handler for a specific resource type
-     * @param {string} resourceType - The resource type (e.g., 'power', 'health')
-     * @param {Function} handler - Function called on collection: handler(player, item)
-     */
-    registerHandler(resourceType, handler) {
-      if (typeof handler !== 'function') {
-        console.error(`Handler for ${resourceType} must be a function`);
-        return;
-      }
-      handlers[resourceType] = handler;
+    //======================================
+    // UPDATE — called by engine each frame
+    //======================================
+    update(deltaTime) {
+      processHazards(deltaTime);
+      processCollectables();
     },
 
-    // Checks collisions and collects resources
-    update() {
-      const collectables = getCollectables ? getCollectables() : [];
-
-      for (const e of collectables) {
-        if (collectedEntities.has(e)) continue;
-
-        const resourceType = resolveCollectableType(e);
-        if (!resourceType) continue;
-
-        if (checkCollision(player, e)) {
-          e.resourceType = resourceType;
-          //e.amount = 10;               // set here since JSON has no amount field  -->changed right now, different for health and power
-          handleCollectedItem(e);
-        }
-      }
+    // Used by renderSystem in sketch.js to filter out collected items
+    isCollected(entity) {
+      return collectedEntities.has(entity);
     },
 
-    /**
-     * Gets all uncollected resource entities
-     * @param {string} filterResourceType - Optional: filter by specific resource type
-     * @returns {Array} Uncollected resource entities
-     */
+    collectEntity(entity) {
+      collectedEntities.add(entity);
+    },
+
     getUncollectedEntities(filterResourceType = null) {
       const collectables = getCollectables ? getCollectables() : [];
       return collectables.filter((e) => {
@@ -140,23 +168,6 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
         if (filterResourceType) return resourceType === filterResourceType;
         return true;
       });
-    },
-
-    /**
-     * Checks if an entity has been collected
-     * @param {Object} entity - The entity to check
-     * @returns {boolean} Whether the entity is collected
-     */
-    isCollected(entity) {
-      return collectedEntities.has(entity);
-    },
-
-    /**
-     * Manually marks an entity as collected
-     * @param {Object} entity - The entity to collect
-     */
-    collectEntity(entity) {
-      collectedEntities.add(entity);
     }
   };
 }
