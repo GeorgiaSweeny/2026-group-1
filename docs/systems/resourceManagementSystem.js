@@ -30,10 +30,9 @@ DESIGN GOALS:
 // RESOURCE MANAGEMENT SYSTEM
 //======================================
 
-import { TORCH } from '../config.js';
-
-// Drain rates — tune these values
-const HAZARD_DRAIN_RATE = TORCH.DRAIN_RATE * 2;  // power lost per ms while on hazard
+let wasOnHazard = false;
+const HAZARD_DRAIN_RATE = 1.5;       // continuous drain per frame while on hazard
+const HAZARD_ENTRY_PENALTY = 10;     // instant drain on first contact
 
 export function createResourceManagementSystem(player, roomSystem, getCollectables, getHazards) {
   const collectedEntities = new Set();
@@ -99,7 +98,7 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
     health(player, item) {
       player.power.current = Math.max(
         0,
-        Math.min(player.power.current + 5, player.power.maxPower)
+        Math.min(player.power.current + 10, player.power.maxPower)
       );
     }
   };
@@ -108,18 +107,30 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
   // HAZARD OVERLAP + DRAIN
   // Continuous drain while player is on hazard
   //======================================
-  function processHazards(deltaTime) {
-    const hazards = getHazards ? getHazards() : [];
-    for (const h of hazards) {
-      if (checkCollision(player, h)) {
-        player.isOnHazard = true;
-        // Drain directly here — mirrors how torchSystem calls player.power.drain
-        player.power.drain(HAZARD_DRAIN_RATE, deltaTime);
-        return;
+function processHazards(deltaTime) {
+  const hazards = getHazards ? getHazards() : [];
+  
+  for (const h of hazards) {
+    if (checkCollision(player, h)) {
+      
+      // First frame of contact — apply entry penalty
+      if (!wasOnHazard) {
+        player.power.current = Math.max(0, player.power.current - HAZARD_ENTRY_PENALTY);
       }
+      
+      // Every frame of contact — continuous drain
+      player.power.drain(HAZARD_DRAIN_RATE, deltaTime);
+      
+      wasOnHazard = true;
+      player.isOnHazard = true;
+      return;
     }
-    player.isOnHazard = false;
   }
+  
+  // Not on any hazard this frame
+  wasOnHazard = false;
+  player.isOnHazard = false;
+}
 
   //======================================
   // COLLECTABLE COLLECTION
