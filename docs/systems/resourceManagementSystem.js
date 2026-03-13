@@ -32,6 +32,8 @@ DESIGN GOALS:
 // RESOURCE MANAGEMENT SYSTEM
 //======================================
 
+import { isColliding } from './hitboxSystem.js';
+
 export function createResourceManagementSystem(player, roomSystem, getCollectables, getHazards, getDifficulty) {
   const collectedEntities = new Set();
 
@@ -69,22 +71,9 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
   // COLLISION CHECK
   //======================================
   function checkCollision(a, b) {
-    const ax = a.position.x;
-    const ay = a.position.y;
-    const aw = a.w;
-    const ah = a.h;
-    const bw = b.w ?? b.width ?? 16;
-    const bh = b.h ?? b.height ?? 16;
-    const bx = b.x + bw / 2;
-    const by = b.y - bh / 2;
-    return (
-      ax - aw / 2 < bx + bw / 2 &&
-      ax + aw / 2 > bx - bw / 2 &&
-      ay - ah / 2 < by + bh / 2 &&
-      ay + ah / 2 > by - bh / 2
-    );
+    b.position = { x: b.x, y: b.y };
+    return isColliding(b, a);
   }
-
   //======================================
   // HANDLERS
   // Added easy - hard mode

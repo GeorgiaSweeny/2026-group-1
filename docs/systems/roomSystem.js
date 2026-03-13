@@ -317,7 +317,8 @@ export function createRoomSystem({
   initialRoom = null,
   roomData = {},
   player = null,
-  onRoomLoaded = null
+  onRoomLoaded = null,
+  onWin = null
 } = {}) {
   let currentRoom = null;
   let currentConfig = null;
@@ -418,6 +419,12 @@ export function createRoomSystem({
     for (const exit of exits) {
       if (exit.visible === false) continue;
       if (!isOverlappingPlayer(exit)) continue;
+
+      if (exit?.properties?.isWin === true) {
+        onWin?.({ exit, room: currentRoom });
+        exitCooldownMs = 250;
+        break;
+      }
 
       const targetRoom = exit?.properties?.targetRoom;
       if (!targetRoom || !roomData[targetRoom]) continue;

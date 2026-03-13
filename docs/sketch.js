@@ -46,6 +46,7 @@ let cameraSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
 let menuSystem;
+const WIN_STATE = "WIN";
 
 let assets = {};
 const INITIAL_ROOM_ID = "roomA";
@@ -342,6 +343,9 @@ function setup() {
         darknessLayer.resizeCanvas(roomWidth, roomHeight);
       }
     },
+    onWin: () => {
+      gameState = WIN_STATE;
+    },
   });
   roomSystem.goToRoom(initialRoom, { spawnId: "default" });
   syncCanvasToCurrentRoom();
@@ -436,6 +440,19 @@ function draw() {
     if (!pauseMenuSystem.isPaused()) {
       gameState = "MENU";
     }
+    return;
+  }
+
+  if (gameState === WIN_STATE) {
+    renderSystem?.draw?.(0);
+    push(); // placeholder win screen
+    fill(255);
+    stroke(0);
+    strokeWeight(4);
+    textAlign(CENTER, CENTER);
+    textSize(48);
+    text("You Win!", width / 2, height / 2);
+    pop();
     return;
   }
 
