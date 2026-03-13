@@ -28,6 +28,9 @@ import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
 
+let accumulator = 0;
+let alpha;
+
 let engine;
 let darknessLayer;
 let player;
@@ -316,7 +319,6 @@ function preload() {
 
 function setup() {
   createCanvas(CANVAS.WIDTH, CANVAS.HEIGHT);
-  // rectMode(CENTER);
   textSize(20);
   textAlign(LEFT);
   applyDisplayScale();
@@ -462,14 +464,20 @@ function draw() {
     lastEnsuredRoom = currentRoom;
   }
 
-  // accumulator
+  accumulator += deltaTime;
 
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
   } else {
     // if accumulator gained enough frames
-    engine.update(TIME.fixedDeltaTime);
+    //while(accumulator >= TIME.fixedDeltaTime){
+      // previous state = current state
+      engine.update(TIME.fixedDeltaTime);
+      //accumulator -= TIME.fixedDeltaTime;
+    //}
+    // alpha = accumulator / TIME.fixedDeltaTime;
+    // render position = previous position + (current position - previous position) * alpha
     renderSystem.draw(TIME.fixedDeltaTime);
   }
 }

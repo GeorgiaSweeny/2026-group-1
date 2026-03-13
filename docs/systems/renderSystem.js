@@ -482,15 +482,15 @@ export function createRenderSystem({
             scale(camScale);
             translate(-cam.x, -cam.y);
 
-            drawPlatforms();
-            drawHazards();
-            drawCollectables();
-            drawTriggers();
-            drawEntities();
-            drawSpawnPoints();
-            drawSonarWalls();
-            drawSonarPulses();
-            drawBubbles();
+           // drawPlatforms();
+           // drawHazards();
+           // drawCollectables();
+          //  drawTriggers();
+          //  drawEntities();
+          //  drawSpawnPoints();
+          //  drawSonarWalls();
+           // drawSonarPulses();
+          //  drawBubbles();
             drawPlayer();
             debugHitbox(DEBUG_COLOR.DRAW);
 

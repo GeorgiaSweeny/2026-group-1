@@ -194,16 +194,19 @@ accumulator
 
 
 fixed_dt = 1 / 60
-frame_rate = 75
+frame_rate = 75 (or any)
 accumulator = 0;
 
 draw(){
   frameRate(frame_rate);
   accumulator += deltaTime;
   while(accumulator >= fixed_dt){
-    engineUpdate(fixed_dt);
+    previous_state = current_state;
+    current state = engineUpdate(fixed_dt);
     accumulator -= fixed_dt;
   }
+  alpha = accumulator / fixed_dt;
+  render position = previous position + (current position - previous position) * alpha
 }
 
 loop 1
