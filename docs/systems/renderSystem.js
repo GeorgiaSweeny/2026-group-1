@@ -468,8 +468,8 @@ export function createRenderSystem({
 // DRAW EVERYTHING
 //======================================
       return {
-         draw(deltaTime) {
-            elapsedTime += deltaTime;
+         draw(fixedDeltaTime) {
+            elapsedTime += fixedDeltaTime;
             const lightSources = getLightSources?.() ?? [];
             const cam = getCameraOffset?.() ?? { x: 0, y: 0 };
             const camScale = getCameraScale?.() ?? 1;
@@ -497,7 +497,7 @@ export function createRenderSystem({
             pop();
 
             // --- Screen space (fixed to viewport) ---
-            drawLighting(lightSources, cam, camScale);
+            //drawLighting(lightSources, cam, camScale);
             drawUI();
          }
       };

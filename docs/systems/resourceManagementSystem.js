@@ -15,7 +15,7 @@ HIERARCHY:
   - resourceType: "health" (specific resource)
 
 RULES:
-- Runs in update(deltaTime)
+- Runs in update(fixedDeltaTime)
 - Only processes entities with type === "resource" or gid-resolved collectables
 - Delegates to internal handlers based on resourceType
 - Hazard drain is continuous, not one-shot 
@@ -108,13 +108,13 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
   // HAZARD OVERLAP + DRAIN
   // Continuous drain while player is on hazard
   //======================================
-  function processHazards(deltaTime) {
+  function processHazards(fixedDeltaTime) {
     const hazards = getHazards ? getHazards() : [];
     for (const h of hazards) {
       if (checkCollision(player, h)) {
         player.isOnHazard = true;
         // Drain directly here — mirrors how torchSystem calls player.power.drain
-        player.power.drain(HAZARD_DRAIN_RATE, deltaTime);
+        player.power.drain(HAZARD_DRAIN_RATE, fixedDeltaTime);
         return;
       }
     }
@@ -145,8 +145,8 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
     //======================================
     // UPDATE — called by engine each frame
     //======================================
-    update(deltaTime) {
-      processHazards(deltaTime);
+    update(fixedDeltaTime) {
+      processHazards(fixedDeltaTime);
       processCollectables();
     },
 

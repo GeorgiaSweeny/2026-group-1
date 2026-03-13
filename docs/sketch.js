@@ -23,7 +23,7 @@ import { createSonarSystem } from "./systems/sonarSystem.js";
 import { createRoomSystem } from "./systems/roomSystem.js";
 import { createPauseMenuSystem } from "./systems/pauseMenuSystem.js";
 import { createCameraSystem } from "./systems/cameraSystem.js";
-import { CANVAS, DISPLAY, PLAYER, TORCH } from "./config.js";
+import { CANVAS, DISPLAY, PLAYER, TORCH, TIME, GAME } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
@@ -423,6 +423,7 @@ function setup() {
 }
 
 function draw() {
+  frameRate(GAME.fps);
   if (gameState === "MENU") {
     menuSystem.draw(null);
     return;
@@ -456,11 +457,14 @@ function draw() {
     lastEnsuredRoom = currentRoom;
   }
 
+  // accumulator
+
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
   } else {
-    engine.update(deltaTime);
+    // if accumulator gained enough frames
+    engine.update(TIME.fixedDeltaTime);
   }
 }
 

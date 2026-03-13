@@ -53,7 +53,7 @@ engine.register(sonarSystem);
 import { SONAR } from '../config.js';
 
 const RAY_COUNT = 360;
-const RAY_SPEED = 0.22;
+const RAY_SPEED = 0.22 * 1000;
 const RAY_DECAY = 0.22;
 const RAY_LIFETIME = 255;
 
@@ -105,9 +105,9 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
   let cooldownTimer = 0;
 
   return {
-    update(dt = 16) {
+    update(fixedDeltaTime) {
       if (cooldownTimer > 0) {
-        cooldownTimer = Math.max(0, cooldownTimer - dt);
+        cooldownTimer = Math.max(0, cooldownTimer - fixedDeltaTime);
       }
 
       if (player?.actionIntent?.emitSonar) {
@@ -138,7 +138,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
         
         const currentAlpha = wallAlpha.get(wall);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * dt));
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * fixedDeltaTime));
           if (nextAlpha <= 0) {
             wallAlpha.delete(wall);
           } else {
@@ -155,7 +155,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
         const currentAlpha = hazardAlpha.get(hazard);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * dt));
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * fixedDeltaTime));
           if (nextAlpha <= 0) {
             hazardAlpha.delete(hazard);
           } else {
@@ -172,7 +172,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
         const currentAlpha = collectableAlpha.get(collectable);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * dt));
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * fixedDeltaTime));
           if (nextAlpha <= 0) {
             collectableAlpha.delete(collectable);
           } else {
@@ -183,7 +183,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
       for (let i = pulses.length - 1; i >= 0; i--) {
         const p = pulses[i];
-        p.update(dt, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha);
+        p.update(fixedDeltaTime, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha);
 
         if (p.isFinished()) {
           pulses.splice(i, 1);
@@ -256,19 +256,19 @@ class Pulse {
     }
   }
 
-  update(dt, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha) {
+  update(fixedDeltaTime, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha) {
     for (const p of this.particles) {
       if (p.life <= 0) {
         continue;
       }
 
-      p.life -= RAY_DECAY * dt;
+      p.life -= RAY_DECAY * fixedDeltaTime;
       if (p.life <= 0) {
         continue;
       }
 
-      const nextX = p.pos.x + p.vel.x * dt;
-      const nextY = p.pos.y + p.vel.y * dt;
+      const nextX = p.pos.x + p.vel.x * fixedDeltaTime;
+      const nextY = p.pos.y + p.vel.y * fixedDeltaTime;
       let collided = false;
 
       for (const { wall, rect } of wallData) {

@@ -61,13 +61,13 @@ export class Engine {
     this.systems.push(system);
   }
 
-  update(deltaTime) {
+  update(fixedDeltaTime) {
     for (const system of this.systems) {
-      system.update?.(deltaTime);
+      system.update?.(fixedDeltaTime);
     }
 
     for (const system of this.systems) {
-      system.draw?.(deltaTime);
+      system.draw?.(fixedDeltaTime);
     }
   }
 }

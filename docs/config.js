@@ -16,6 +16,10 @@ RULES:
 ========================================
 */
 
+export const TIME = {
+  fixedDeltaTime : 1 / 60,
+}
+
 //======================
 // KEY CODES CONFIG
 //======================
@@ -73,12 +77,9 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  MOVE_SPEED: 180,
-  ACCELERATION: 0.8,
-  DRAG: 0.9  ,         // Higher = less friction (0.9-0.95 feels good)
-  BOUNCE_DAMPING: 0.5,  // Velocity kept after bounce (0.5 = half speed)
-  MIN_VELOCITY: 0.1,    // Stop if slower than this
-  SIZE: 20,
+  MAX_SPEED : 100,
+  ACCELERATION: 10,
+  FRICTION : 0.1
 };
 
 //======================
@@ -116,13 +117,14 @@ export const LIGHTING = {
 export const SONAR = {
   // Cooldown in seconds for readability; derived ms used by sonarSystem
   COOLDOWN: 3,
-  COOLDOWN_MS: 3000
+  COOLDOWN_MS: 3
 };
 
 //======================
 // GAME CONFIG
 //======================
 export const GAME = {
+  fps : 60,
 };
 
 
@@ -130,7 +132,7 @@ export const GAME = {
 // HITBOX DEBUG
 //======================
 export const DEBUG_COLOR = {
-  DRAW : false,
+  DRAW : true,
   WALL : "wall",
   PLAYER : "player",
 }

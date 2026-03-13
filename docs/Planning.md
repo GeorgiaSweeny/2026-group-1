@@ -190,3 +190,15 @@ alpha = remainder in accumulator / fixed timestep duration
 
 accumulator
 - 
+
+change logic for
+- playerSystem
+- powerSystem
+- renderSystem
+- resourceManagmentSystem
+- roomSystem
+- torchSystem
+
+current position = a + (b - a) * alpha
+render position = previous position + (current position - previous position) * alpha
+alpha = time accumulated / fixed time step

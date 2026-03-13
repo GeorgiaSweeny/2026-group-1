@@ -61,6 +61,7 @@ export class Player extends Hitbox{
 
       this.nextPos = createVector(this.position.x, this.position.y);
       this.velocity = createVector(0, 0);
+      this.oldVelocity = createVector(0, 0);
 
       this.size = PLAYER.SIZE;
       this.facing = 1; // 1 for right, -1 for left
