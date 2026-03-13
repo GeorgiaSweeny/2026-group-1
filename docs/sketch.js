@@ -375,8 +375,14 @@ function setup() {
     () => sonarSystem?.getSonarLights?.() ?? [],
   );
 
-  resourceManagementSystem = createResourceManagementSystem(player, roomSystem, () => roomSystem.getCollectables(), () => roomSystem.getHazards());
-
+  resourceManagementSystem = createResourceManagementSystem(
+  player,
+  roomSystem,
+  () => roomSystem.getCollectables(),
+  () => roomSystem.getHazards(),
+  () => pauseMenuSystem.getDifficulty()
+  );
+  
   renderSystem = createRenderSystem({
     player,
     getPlatforms: () => roomSystem.getPlatforms(),

@@ -1,12 +1,13 @@
 /*
-========================================
-VERSION: 3.2
+=========================================
+VERSION: 3.3
 SYSTEM: RESOURCE MANAGEMENT SYSTEM
 AUTHOR: Monal Gupta
 DESCRIPTION:
 - Handles player's resources and interactions with resource entities in the room.
 - Collectables: one-shot collection with type-based handlers
-- Hazards: continuous power drain while overlapping
+- Hazards: continuous power drain + entry penalty while overlapping
+- Difficulty-aware handlers — hard mode gives less reward
 - Handlers defined internally — sketch.js just wires systems
 
 HIERARCHY:
@@ -18,11 +19,12 @@ RULES:
 - Runs in update(fixedDeltaTime)
 - Only processes entities with type === "resource" or gid-resolved collectables
 - Delegates to internal handlers based on resourceType
-- Hazard drain is continuous, not one-shot 
+- Hazard drain is one shot (burst) + continuous if it stays
 
 DESIGN GOALS:
 - Decouple collision detection from item handling
 - Keep all resource game logic inside this system
+- sketch.js only wires — no game logic lives there
 ========================================
 */
 
@@ -30,18 +32,19 @@ DESIGN GOALS:
 // RESOURCE MANAGEMENT SYSTEM
 //======================================
 
-import { TORCH } from '../config.js';
+import { isColliding } from './hitboxSystem.js';
 
-// Drain rates — tune these values
-const HAZARD_DRAIN_RATE = TORCH.DRAIN_RATE * 2;  // power lost per ms while on hazard
-
-export function createResourceManagementSystem(player, roomSystem, getCollectables, getHazards) {
+export function createResourceManagementSystem(player, roomSystem, getCollectables, getHazards, getDifficulty) {
   const collectedEntities = new Set();
 
-  /*======================================
-  COLLECTABLE TYPE RESOLUTION
-  Mirrors renderSystem's getCollectableType logic
-  ======================================*/
+  let wasOnHazard = false;
+  const HAZARD_DRAIN_RATE = 1.5;    // continuous drain
+  const HAZARD_ENTRY_PENALTY = 10;  // instant drain on first contact
+
+  //=======================================
+  // COLLECTABLE TYPE RESOLUTION
+  // Mirrors renderSystem's getCollectableType logic
+  //======================================
   function resolveCollectableType(item) {
     if (item.collectableType) return item.collectableType;
 
@@ -64,66 +67,66 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
     return null;
   }
 
-  //======================================
+  //=======================================
   // COLLISION CHECK
-  // Player is center-based, Tiled objects are top-left corner
   //======================================
   function checkCollision(a, b) {
-    const ax = a.position.x;
-    const ay = a.position.y;
-    const aw = a.w;
-    const ah = a.h;
-    const bx = b.x + (b.w ?? b.width ?? 16) / 2;
-    const by = b.y - (b.h ?? b.height ?? 16) / 2;
-    const bw = b.w ?? b.width ?? 16;
-    const bh = b.h ?? b.height ?? 16;
-    return (
-      ax - aw / 2 < bx + bw / 2 &&
-      ax + aw / 2 > bx - bw / 2 &&
-      ay - ah / 2 < by + bh / 2 &&
-      ay + ah / 2 > by - bh / 2
-    );
+    b.position = { x: b.x, y: b.y };
+    return isColliding(b, a);
   }
-
   //======================================
   // HANDLERS
-  // All resource game logic lives here, not in sketch.js
+  // Added easy - hard mode
+  // Moved game logic from sketch.js to here
   //======================================
   const handlers = {
     power(player, item) {
+      const difficulty = getDifficulty?.() ?? 'normal';
+      const amount = difficulty === 'hard' ? 5 : 10;
       player.power.current = Math.max(
         0,
-        Math.min(player.power.current + 10, player.power.maxPower)
+        Math.min(player.power.current + amount, player.power.maxPower)
       );
     },
     health(player, item) {
+      const difficulty = getDifficulty?.() ?? 'normal';
+      const amount = difficulty === 'hard' ? 2 : 5;
       player.power.current = Math.max(
         0,
-        Math.min(player.power.current + 5, player.power.maxPower)
+        Math.min(player.power.current + amount, player.power.maxPower)
       );
     }
   };
 
   //======================================
   // HAZARD OVERLAP + DRAIN
-  // Continuous drain while player is on hazard
+  //  penalty on first contact, then continuous drain while on hazard
   //======================================
   function processHazards(fixedDeltaTime) {
     const hazards = getHazards ? getHazards() : [];
+
     for (const h of hazards) {
       if (checkCollision(player, h)) {
+
+        if (!wasOnHazard) {
+          player.power.current = Math.max(0, player.power.current - HAZARD_ENTRY_PENALTY);
+        }
+
+        player.power.drain(HAZARD_DRAIN_RATE, deltaTime);
+
+        wasOnHazard = true;
         player.isOnHazard = true;
-        // Drain directly here — mirrors how torchSystem calls player.power.drain
-        player.power.drain(HAZARD_DRAIN_RATE, fixedDeltaTime);
         return;
       }
     }
+
+    // Not on any hazard this frame
+    wasOnHazard = false;
     player.isOnHazard = false;
   }
 
   //======================================
-  // COLLECTABLE COLLECTION
-  // One-shot — item is added to collected set on pickup
+  // COLLECTABLE
   //======================================
   function processCollectables() {
     const collectables = getCollectables ? getCollectables() : [];
@@ -150,15 +153,17 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
       processCollectables();
     },
 
-    // Used by renderSystem in sketch.js to filter out collected items
+    // filters collected items for renderSystem
     isCollected(entity) {
       return collectedEntities.has(entity);
     },
 
+    
     collectEntity(entity) {
       collectedEntities.add(entity);
     },
 
+    // optional filter by resourceType
     getUncollectedEntities(filterResourceType = null) {
       const collectables = getCollectables ? getCollectables() : [];
       return collectables.filter((e) => {
