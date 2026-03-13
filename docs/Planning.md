@@ -162,4 +162,31 @@ CALCULATING BOUNDARIES
   |_ one issue still remains which I was hoping was fixed - player still gets caught on edges where wall hitboxes touch
   |_ also need to introduce testing to make sure the hitbox corners are working as intended
 
+Physics engine - multiple contribution
+======================================
 
+- There is a choice to be made as to how to handle physics
+  |_ fixed timestep
+  |  |_ interval between game updates is fixed
+  |  |_ consistent and reliable physics that is easier to test
+  |  |_ simpler logic for calculating movement or physics
+  |  |_ can not keep up with higher refresh rate monitors, needs time to render each frame
+  |  |_ can cause problems if physics take longer to calculate than frame count - crash as calculation times from previous frames try to catch up with current frame 
+  |_ deltaTime -
+     |_ interval between game updates is based on time difference between last and current frame (current monitor refresh rate)
+     |_ updates exactly when a frame is rendered leading to smoother rendering
+     |_ harder to test due to variable framerates
+     |_ can cause issues with frame drops as deltaTime becomes larger
+- since fixed timestep is better for physics and deltaTime is better for rendering we can split physics and rendering into 2 systems
+  |_ physics handled by fixed timesteps
+  |_ rendering handled by deltaTime
+  |_ we can use an interpolation to ensure that with a fixed timestep (60 fps) movement looks smooth with a higher refresh rate (75 fps)
+  |_ interpolation has to be 60 Hz behind actual simulation leading to input latency problems - should not be an issue as latency is only 1 frame
+- interpolation method
+  |_ physics fixed, create fixed timestep (deltaTimeFixed = 1 / 60) for physics engine updates
+
+visual position = previous state + (current state - previous state) * alpha
+alpha = remainder in accumulator / fixed timestep duration
+
+accumulator
+- 
