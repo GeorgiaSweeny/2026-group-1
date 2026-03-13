@@ -189,7 +189,47 @@ visual position = previous state + (current state - previous state) * alpha
 alpha = remainder in accumulator / fixed timestep duration
 
 accumulator
-- 
+- renderer time
+- engine consumes render time in fixedDeltaTime steps
+
+
+fixed_dt = 1 / 60
+frame_rate = 75
+accumulator = 0;
+
+draw(){
+  frameRate(frame_rate);
+  accumulator += deltaTime;
+  while(accumulator >= fixed_dt){
+    engineUpdate(fixed_dt);
+    accumulator -= fixed_dt;
+  }
+}
+
+loop 1
+- accumulator = 0
+- 0 += 0
+- accumulator = 0
+- 0 >= 0.01666 - false do not update engine
+
+loop 2
+- accumulator = 0
+- 0 += 0.01333
+- accumulator = 0.01333
+- 0.01333 >= 0.01666 - false do not update engine
+
+loop 3
+- accumulator = 0
+- 0.01333 += 0.01333
+- accumulator = 0.02666
+- 0.02666 >= 0.01666 - true update engine
+  - engineupdate
+  - 0.02666 -= 0.01666
+  - accumulator = 0.01
+- 0.01 >= 0.01666 - false do not update engine
+
+
+might need to clamp initial deltaTime to stop missed first loop
 
 change logic for
 - playerSystem

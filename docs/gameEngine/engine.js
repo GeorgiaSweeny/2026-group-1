@@ -65,10 +65,6 @@ export class Engine {
     for (const system of this.systems) {
       system.update?.(fixedDeltaTime);
     }
-
-    for (const system of this.systems) {
-      system.draw?.(fixedDeltaTime);
-    }
   }
 }
 

@@ -417,13 +417,12 @@ function setup() {
   engine.register(cameraSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
-  engine.register(renderSystem);
   engine.register(resourceManagementSystem);
   engine.register(pauseMenuSystem);
 }
 
 function draw() {
-  frameRate(GAME.fps);
+  frameRate(GAME.FPS);
   if (gameState === "MENU") {
     menuSystem.draw(null);
     return;
@@ -465,6 +464,7 @@ function draw() {
   } else {
     // if accumulator gained enough frames
     engine.update(TIME.fixedDeltaTime);
+    renderSystem.draw(TIME.fixedDeltaTime);
   }
 }
 

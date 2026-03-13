@@ -124,7 +124,7 @@ export const SONAR = {
 // GAME CONFIG
 //======================
 export const GAME = {
-  fps : 60,
+  FPS : 60,
 };
 
 
