@@ -406,6 +406,7 @@ function setup() {
     getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
     getCameraOffset: () => cameraSystem.getOffset(),
+    getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
   });
 
@@ -464,21 +465,19 @@ function draw() {
     lastEnsuredRoom = currentRoom;
   }
 
-  accumulator += deltaTime;
+  accumulator += (deltaTime / 1000);
 
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
   } else {
     // if accumulator gained enough frames
-    //while(accumulator >= TIME.fixedDeltaTime){
-      // previous state = current state
+    while(accumulator >= TIME.fixedDeltaTime){
       engine.update(TIME.fixedDeltaTime);
-      //accumulator -= TIME.fixedDeltaTime;
-    //}
-    // alpha = accumulator / TIME.fixedDeltaTime;
-    // render position = previous position + (current position - previous position) * alpha
-    renderSystem.draw(TIME.fixedDeltaTime);
+      accumulator -= TIME.fixedDeltaTime;
+    }
+    alpha = accumulator / TIME.fixedDeltaTime;
+    renderSystem.draw(TIME.fixedDeltaTime, alpha);
   }
 }
 

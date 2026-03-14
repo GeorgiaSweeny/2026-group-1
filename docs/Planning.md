@@ -242,6 +242,18 @@ change logic for
 - roomSystem
 - torchSystem
 
-current position = a + (b - a) * alpha
 render position = previous position + (current position - previous position) * alpha
 alpha = time accumulated / fixed time step
+
+2 methods for previous position storage
+- objects - simpler, slower
+- files - complex, (can create save states)
+
+- use object storage for now for simplicity due to time constraints
+
+kep track of
+- player position
+- camera position
+- movable hitboxes/entities
+
+updated render system to include interpolation formula, only need to modify render system components that move (at the time of writing this 14/03/26 that is the camera and player), sonar component might need to be interpolated if future rendering looks odd. Lighting might need interpolation.

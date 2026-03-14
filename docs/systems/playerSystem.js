@@ -50,16 +50,13 @@ export function createPlayerSystem(player) {
   return {
     update(fixedDeltaTime) {
 
-      var velocityX;
-      var velocityY; 
-      var normalizedSpeed;
-      var normalizedAcceleration;
+      let velocityX;
+      let velocityY; 
+      let normalizedSpeed;
+      let normalizedAcceleration;
 
       normalizedSpeed = PLAYER.MAX_SPEED * fixedDeltaTime;
       normalizedAcceleration = PLAYER.ACCELERATION * fixedDeltaTime;
-      
-      player.oldVelocity.x = player.velocity.x;
-      player.oldVelocity.y = player.velocity.y;
 
       if((Object.values(player.getMoveIntent()).some(Boolean))){
         velocityX = normalizedAcceleration;  

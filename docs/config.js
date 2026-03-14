@@ -124,7 +124,7 @@ export const SONAR = {
 // GAME CONFIG
 //======================
 export const GAME = {
-  FPS : 60,
+  FPS : 75,
 };
 
 
@@ -132,7 +132,7 @@ export const GAME = {
 // HITBOX DEBUG
 //======================
 export const DEBUG_COLOR = {
-  DRAW : true,
+  DRAW : false,
   WALL : "wall",
   PLAYER : "player",
 }
