@@ -528,7 +528,7 @@ function renderInterpolate(oldState, newState, alpha){
          // --- World space overlays (drawn above lighting) --- //
          push();
          scale(camScale);
-         translate(-cam.x, -cam.y);
+         translate(renderInterpolate(-oldCam.x, -cam.x, alpha), renderInterpolate(-oldCam.y, -cam.y, alpha));
          drawSonarReveals();
          drawSonarHazardReveals();
          drawSonarCollectableReveals();

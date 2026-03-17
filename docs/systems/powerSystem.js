@@ -60,7 +60,7 @@ export class PowerSystem {
   }
 
   drain(rate, fixedDeltaTime) {
-    this.current -= rate * fixedDeltaTime;
+    this.current -= rate * (fixedDeltaTime / 1000);
     this.current = Math.max(0, Math.min(this.current, this.maxPower));
   }
   
