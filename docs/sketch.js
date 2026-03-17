@@ -370,7 +370,12 @@ function setup() {
       pauseMenuSystem ? pauseMenuSystem.getDifficulty() : "normal",
   });
 
-  sonarSystem = createSonarSystem(player, () => roomSystem.getPlatforms());
+  sonarSystem = createSonarSystem(
+    player,
+    () => roomSystem.getPlatforms(),
+    () => roomSystem.getHazards(),
+    () => roomSystem.getCollectables(),
+  );
 
   lightingSystem = createLightingSystem(
     player,
@@ -400,6 +405,10 @@ function setup() {
     getTileSize: () => roomSystem.getTileSize(),
     getBackground: () => roomSystem.getBackground(),
     getPlatformColor: () => roomSystem.getPlatformColor(),
+    getSonarCooldown: () => sonarSystem?.getCooldownPercent?.(),
+    getSonarReveals: () => sonarSystem?.getRevealedWalls?.(),
+    getSonarHazardReveals: () => sonarSystem?.getRevealedHazards?.(),
+    getSonarCollectableReveals: () => sonarSystem?.getRevealedCollectables?.(),
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),
