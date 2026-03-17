@@ -319,15 +319,16 @@ export function createRenderSystem({
    //===SONAR PULSES===//
    function drawSonarPulses() {
       const pulses = getActivePulses?.() ?? [];
-      strokeWeight(2);
-      for (const pulse of pulses) {
-         for (const p of pulse.particles) {
-            if (p.life > 0) {
-               stroke(0, 220, 0, p.life);
-               point(p.x ?? p.pos?.x ?? 0, p.y ?? p.pos?.y ?? 0);
-            }
-         }
+      if (!pulses.length) return;
+
+      push();
+      if (typeof blendMode === 'function' && typeof ADD !== 'undefined') {
+         blendMode(ADD);
       }
+      for (const pulse of pulses) {
+         pulse?.show?.();
+      }
+      pop();
    }
 
    //===SONAR WALLS===//
@@ -490,14 +491,15 @@ export function createRenderSystem({
             const cam = getCameraOffset?.() ?? { x: 0, y: 0 };
             const camScale = getCameraScale?.() ?? 1;
 
-            // --- Screen space: background fills viewport ---
+            // --- Screen space: background fills viewport --- //
             drawBackground();
 
-            // --- World space (scaled + translated by camera) ---
+            // --- World space (scaled + translated by camera) --- //
             push();
             scale(camScale);
             translate(-cam.x, -cam.y);
 
+            // Comment out prototype visuals from render
             drawPlatforms();
             drawHazards();
             drawCollectables();
@@ -512,12 +514,22 @@ export function createRenderSystem({
 
             pop();
 
-            // --- Screen space (fixed to viewport) ---
-            drawLighting(lightSources, cam, camScale);
-            drawUI();
-         }
-      };
-   }
+            // --- Screen space (fixed to viewport) --- //
+         drawLighting(lightSources, cam, camScale);
+
+         // --- World space overlays (drawn above lighting) --- //
+         push();
+         scale(camScale);
+         translate(-cam.x, -cam.y);
+         drawSonarReveals();
+         drawSonarHazardReveals();
+         drawSonarCollectableReveals();
+         pop();
+
+         drawUI();
+      }
+   };
+}
 //======================================
 // END
 //======================================
