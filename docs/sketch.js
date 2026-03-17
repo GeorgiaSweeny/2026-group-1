@@ -27,6 +27,7 @@ import { CANVAS, DISPLAY, PLAYER, TORCH } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
+import { createShopSystem } from "./systems/shopSystem.js";
 
 let engine;
 let darknessLayer;
@@ -42,6 +43,7 @@ let lightingSystem;
 let roomSystem;
 let resourceManagementSystem;
 let pauseMenuSystem;
+let shopSystem;
 let cameraSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
@@ -415,6 +417,8 @@ function setup() {
     },
   });
 
+  shopSystem = createShopSystem(player);
+
   engine = new Engine();
   engine.register(inputSystem);
   engine.register(playerSystem);
@@ -426,6 +430,7 @@ function setup() {
   engine.register(renderSystem);
   engine.register(resourceManagementSystem);
   engine.register(pauseMenuSystem);
+  engine.register(shopSystem);
 }
 
 function draw() {
@@ -462,6 +467,13 @@ function draw() {
     lastEnsuredRoom = currentRoom;
   }
 
+  // Shop overlay (blocks all input/gameplay)
+  if (shopSystem && shopSystem.isShopOpen()) {
+    renderSystem?.draw?.(0);
+    shopSystem.draw();
+    return;
+  }
+
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
@@ -475,7 +487,7 @@ function draw() {
     strokeWeight(4);
     textAlign(LEFT, TOP);
     textSize(20);
-    text(`Coins: ${player?.coins ?? 0}`, width / 2 , height / 2);
+    text(`Coins: ${player?.coins ?? 0}`, 100 , 100);
     pop();
 
   }
@@ -490,11 +502,23 @@ function keyPressed() {
     player.actionIntent.togglePause = false;
   }
 
+  // Always process shop toggle (B)
+  if (player?.actionIntent?.toggleShop) {
+    shopSystem?.toggleShop();
+    player.actionIntent.toggleShop = false;
+  }
+
   // Only process other actions if not paused
   if (pauseMenuSystem?.isPaused()) return;
 }
 
 function mousePressed() {
+  // Shop overlay blocks all clicks
+  if (shopSystem?.isShopOpen()) {
+    shopSystem?.onMousePressed();
+    return;
+  }
+
   if (gameState === "MENU") {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 

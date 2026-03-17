@@ -88,7 +88,6 @@ export const POWER = {
   MAX_POWER: 100,
   CURRENT_POWER: 100,
   LOW_POWER_THRESHOLD: 0.15
-  
 };
 
 //======================

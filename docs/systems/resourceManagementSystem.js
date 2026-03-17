@@ -2,7 +2,7 @@
 =========================================
 VERSION: 3.3
 SYSTEM: RESOURCE MANAGEMENT SYSTEM
-AUTHOR: Monal Gupta
+AUTHOR: Monal Gupta, Archie Brown
 DESCRIPTION:
 - Handles player's resources and interactions with resource entities in the room.
 - Collectables: one-shot collection with type-based handlers
