@@ -29,6 +29,10 @@ export function createRenderSystem({
    getTileSize,
    getBackground,
    getPlatformColor,
+   getSonarReveals,
+   getSonarHazardReveals,
+   getSonarCollectableReveals,
+   getSonarCooldown,
    assets,
    darknessLayer,
    getLightSources,
@@ -314,15 +318,15 @@ export function createRenderSystem({
 
    //===SONAR PULSES===//
    function drawSonarPulses() {
-      const activePulses = getActivePulses?.() ?? [];
-      if (!activePulses.length) return;
+      const pulses = getActivePulses?.() ?? [];
+      if (!pulses.length) return;
 
       push();
-      blendMode(ADD);
-      for (const pulse of activePulses) {
-         if (typeof pulse.show === 'function') {
-            pulse.show();
-         }
+      if (typeof blendMode === 'function' && typeof ADD !== 'undefined') {
+         blendMode(ADD);
+      }
+      for (const pulse of pulses) {
+         pulse?.show?.();
       }
       pop();
    }
@@ -332,9 +336,23 @@ export function createRenderSystem({
       const walls = getRevealedWalls?.() ?? [];
       for (const wall of walls) {
          if (wall.alpha > 1) {
+            // Dark background rect
             noStroke();
-            fill(90, 110, 130, wall.alpha);
+            fill(20, 25, 35, wall.alpha);
             rect(wall.x, wall.y, wall.w, wall.h, 3);
+
+            // Rocky texture overlay
+            fill(40, 50, 65, wall.alpha);
+            const rockPoints = Array.isArray(wall.rockPoints) ? wall.rockPoints : null;
+            if (rockPoints && rockPoints.length > 1) {
+               beginShape();
+               for (const pt of rockPoints) {
+                  vertex(pt.px, pt.py);
+               }
+               endShape(CLOSE);
+            } else {
+               rect(wall.x, wall.y, wall.w, wall.h, 3);
+            }
          }
       }
    }
@@ -378,40 +396,39 @@ export function createRenderSystem({
 
    //===UI===//
    function drawUI() {
-      push();
-      blendMode(BLEND);
-
-      const barX = 10;
-      const barY = 10;
-      const barW = 120;
-      const barH = 14;
-      const pct = constrain(player.power.getPercent(), 0, 1);
-
-      // Background
-      noStroke();
-      fill(40, 40, 40, 200);
-      rect(barX, barY, barW, barH, 3);
-
-      // Fill — green to red
-      const r = lerp(220, 50, pct);
-      const g = lerp(60, 200, pct);
-      fill(r, g, 60);
-      rect(barX, barY, barW * pct, barH, 3);
-
-      // Border
-      noFill();
-      stroke(200);
-      strokeWeight(1);
-      rect(barX, barY, barW, barH, 3);
-
-      // Label
-      noStroke();
       fill(255);
-      textSize(10);
-      textAlign(LEFT, TOP);
-      text(`Power: ${Math.round(player.power.current)}`, barX + 4, barY + 2);
+      noStroke();
+      text(`Power: ${Math.round(player.power.current)}`, 20, 30);
 
-      pop();
+      const sonarCooldown = getSonarCooldown?.() ?? 0;
+      if (Number.isFinite(sonarCooldown) && sonarCooldown > 0) {
+         fill('#d61b1b');
+         text(`Sonar: cooling`, 20, 55);
+      } else {
+         fill('#64ff64');
+         text(`Sonar: ready (K)`, 20, 55);
+      }
+   }
+
+//======================================
+// DRAW SONAR
+//======================================
+   function drawSonarReveals() {
+      if (player?.torch?.isOn) return;
+      const reveals = getSonarReveals?.() ?? [];
+      if (!reveals.length) return;
+
+      rectMode(CORNER);
+      for (const r of reveals) {
+         const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
+         noStroke();
+         fill(90, 110, 130, alpha);
+         rect(r.x, r.y, r.w, r.h);
+
+         noFill();
+         rect(r.x, r.y, r.w, r.h);
+      }
+      rectMode(CORNER);
    }
 
    function drawSonarHazardReveals() {
@@ -474,14 +491,15 @@ export function createRenderSystem({
             const cam = getCameraOffset?.() ?? { x: 0, y: 0 };
             const camScale = getCameraScale?.() ?? 1;
 
-            // --- Screen space: background fills viewport ---
+            // --- Screen space: background fills viewport --- //
             drawBackground();
 
-            // --- World space (scaled + translated by camera) ---
+            // --- World space (scaled + translated by camera) --- //
             push();
             scale(camScale);
             translate(-cam.x, -cam.y);
 
+            // Comment out prototype visuals from render
             drawPlatforms();
             drawHazards();
             drawCollectables();
@@ -496,12 +514,22 @@ export function createRenderSystem({
 
             pop();
 
-            // --- Screen space (fixed to viewport) ---
-            drawLighting(lightSources, cam, camScale);
-            drawUI();
-         }
-      };
-   }
+            // --- Screen space (fixed to viewport) --- //
+         drawLighting(lightSources, cam, camScale);
+
+         // --- World space overlays (drawn above lighting) --- //
+         push();
+         scale(camScale);
+         translate(-cam.x, -cam.y);
+         drawSonarReveals();
+         drawSonarHazardReveals();
+         drawSonarCollectableReveals();
+         pop();
+
+         drawUI();
+      }
+   };
+}
 //======================================
 // END
 //======================================
