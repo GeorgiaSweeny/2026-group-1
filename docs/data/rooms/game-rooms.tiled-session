@@ -10,6 +10,12 @@
         "tilesets"
     ],
     "fileStates": {
+        "/Users/archiebrown/2026-group-1/docs/assets/backgrounds/backgrounds.tsx": {
+            "dynamicWrapping": true
+        },
+        "/Users/archiebrown/2026-group-1/docs/data/tilesets/prototype-tileset/prototype-tileset.tsx": {
+            "dynamicWrapping": false
+        },
         "/Users/georgia/COMSCI/SEP/backgrounds.tsx": {
             "scaleInDock": 1
         },
@@ -60,18 +66,18 @@
         },
         "roomB.json": {
             "expandedObjectLayers": [
-                5,
-                4,
-                3,
                 6,
-                8,
-                2
+                4,
+                5,
+                3,
+                2,
+                8
             ],
             "scale": 0.77,
             "selectedLayer": 5,
             "viewCenter": {
-                "x": 240.25974025974028,
-                "y": 559.7402597402598
+                "x": 239.6103896103896,
+                "y": 551.9480519480519
             }
         },
         "tilesets/prototype-tileset/protoype-tileset.tsx": {

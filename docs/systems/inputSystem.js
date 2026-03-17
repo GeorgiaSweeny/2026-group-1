@@ -67,8 +67,16 @@ export function createInputSystem(player) {
   player.moveIntent.down = keyIsDown(downKey) || keyIsDown(INPUT.DOWN_ARROW_KEY);
     },
 
-    onKeyPressed(key) {
+    onKeyPressed(key, keyCode) {
       const keyLower = typeof key === 'string' ? key.toLowerCase() : '';
+
+      if (keyCode === 27) {
+        // ESC
+        player.actionIntent.togglePause = true;
+      }
+      if (keyCode === 66){
+        player.actionIntent.toggleShop = true;
+      }
 
       if (INPUT.TOGGLE_TORCH_KEY.includes(key) || keyLower === 'l') {
         player.actionIntent.toggleTorch = true;

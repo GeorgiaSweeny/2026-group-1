@@ -82,6 +82,9 @@ export class Player extends Hitbox{
          toggleTorch: false,
          emitSonar: false,
       };
+
+      // Resource tracking
+      this.coins = 0;
    
    }
    get x(){

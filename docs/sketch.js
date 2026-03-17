@@ -467,17 +467,31 @@ function draw() {
     pauseMenuSystem.draw();
   } else {
     engine.update(deltaTime);
+    
+    //Display coin count
+    push(); 
+    fill(255);
+    stroke(0);
+    strokeWeight(4);
+    textAlign(LEFT, TOP);
+    textSize(20);
+    text(`Coins: ${player?.coins ?? 0}`, width / 2 , height / 2);
+    pop();
+
   }
 }
 
 function keyPressed() {
-  if (keyCode === 27) {
-    // ESC
-    pauseMenuSystem?.togglePause();
-    return;
-  }
-  if (pauseMenuSystem?.isPaused()) return;
   inputSystem?.onKeyPressed?.(key, keyCode);
+
+  // Always process pause toggle (ESC)
+  if (player?.actionIntent?.togglePause) {
+    pauseMenuSystem?.togglePause();
+    player.actionIntent.togglePause = false;
+  }
+
+  // Only process other actions if not paused
+  if (pauseMenuSystem?.isPaused()) return;
 }
 
 function mousePressed() {
