@@ -38,9 +38,7 @@ engine.register(playerSystem); // playerSystem consumes this class
 //======================
 // PLAYER CLASS
 //======================
-import { TORCH } from '../config.js';
-import { LIGHTING } from '../config.js';
-import { PLAYER } from '../config.js';
+import { TORCH, LIGHTING, PLAYER } from '../config.js';
 import { Torch } from './components/torch.js';  // torch class in same folder
 import { PowerSystem } from '../systems/powerSystem.js';
 import { Hitbox } from '../systems/hitboxSystem.js';
@@ -59,8 +57,13 @@ export class Player extends Hitbox{
 
       super(cornerX, cornerY, width ?? PLAYER.WIDTH, height ?? PLAYER.HEIGHT);
 
-      this.nextPos = createVector(this.position.x, this.position.y);
+      this.nextPos = createVector(this.position.x ?? 0, this.position.y ?? 0);
       this.velocity = createVector(0, 0);
+     
+      //==for interpolation in rendering==//
+      this.previousPos = createVector(0, 0);
+      this.previousVel = createVector(0, 0);
+      // ================================ //
 
       this.size = PLAYER.SIZE;
       this.facing = 1; // 1 for right, -1 for left
@@ -110,6 +113,8 @@ export class Player extends Hitbox{
       this.velocity.y = y;
    }
    setNextPosition(){
+      this.previousPos.x = this.position.x;
+      this.previousPos.y = this.position.y;
       this.nextPos.x = this.position.x + this.velocity.x;
       this.nextPos.y = this.position.y + this.velocity.y;
    }

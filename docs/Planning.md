@@ -162,4 +162,98 @@ CALCULATING BOUNDARIES
   |_ one issue still remains which I was hoping was fixed - player still gets caught on edges where wall hitboxes touch
   |_ also need to introduce testing to make sure the hitbox corners are working as intended
 
+Physics engine - multiple contribution
+======================================
 
+- There is a choice to be made as to how to handle physics
+  |_ fixed timestep
+  |  |_ interval between game updates is fixed
+  |  |_ consistent and reliable physics that is easier to test
+  |  |_ simpler logic for calculating movement or physics
+  |  |_ can not keep up with higher refresh rate monitors, needs time to render each frame
+  |  |_ can cause problems if physics take longer to calculate than frame count - crash as calculation times from previous frames try to catch up with current frame 
+  |_ deltaTime -
+     |_ interval between game updates is based on time difference between last and current frame (current monitor refresh rate)
+     |_ updates exactly when a frame is rendered leading to smoother rendering
+     |_ harder to test due to variable framerates
+     |_ can cause issues with frame drops as deltaTime becomes larger
+- since fixed timestep is better for physics and deltaTime is better for rendering we can split physics and rendering into 2 systems
+  |_ physics handled by fixed timesteps
+  |_ rendering handled by deltaTime
+  |_ we can use an interpolation to ensure that with a fixed timestep (60 fps) movement looks smooth with a higher refresh rate (75 fps)
+  |_ interpolation has to be 60 Hz behind actual simulation leading to input latency problems - should not be an issue as latency is only 1 frame
+- interpolation method
+  |_ physics fixed, create fixed timestep (deltaTimeFixed = 1 / 60) for physics engine updates
+
+visual position = previous state + (current state - previous state) * alpha
+alpha = remainder in accumulator / fixed timestep duration
+
+accumulator
+- renderer time
+- engine consumes render time in fixedDeltaTime steps
+
+
+fixed_dt = 1 / 60
+frame_rate = 75 (or any)
+accumulator = 0;
+
+draw(){
+  frameRate(frame_rate);
+  accumulator += deltaTime;
+  while(accumulator >= fixed_dt){
+    previous_state = current_state;
+    current state = engineUpdate(fixed_dt);
+    accumulator -= fixed_dt;
+  }
+  alpha = accumulator / fixed_dt;
+  render position = previous position + (current position - previous position) * alpha
+}
+
+loop 1
+- accumulator = 0
+- 0 += 0
+- accumulator = 0
+- 0 >= 0.01666 - false do not update engine
+
+loop 2
+- accumulator = 0
+- 0 += 0.01333
+- accumulator = 0.01333
+- 0.01333 >= 0.01666 - false do not update engine
+
+loop 3
+- accumulator = 0
+- 0.01333 += 0.01333
+- accumulator = 0.02666
+- 0.02666 >= 0.01666 - true update engine
+  - engineupdate
+  - 0.02666 -= 0.01666
+  - accumulator = 0.01
+- 0.01 >= 0.01666 - false do not update engine
+
+
+might need to clamp initial deltaTime to stop missed first loop
+
+change logic for
+- playerSystem
+- powerSystem
+- renderSystem
+- resourceManagmentSystem
+- roomSystem
+- torchSystem
+
+render position = previous position + (current position - previous position) * alpha
+alpha = time accumulated / fixed time step
+
+2 methods for previous position storage
+- objects - simpler, slower
+- files - complex, (can create save states)
+
+- use object storage for now for simplicity due to time constraints
+
+kep track of
+- player position
+- camera position
+- movable hitboxes/entities
+
+updated render system to include interpolation formula, only need to modify render system components that move (at the time of writing this 14/03/26 that is the camera and player), sonar component might need to be interpolated if future rendering looks odd. Lighting might need interpolation.

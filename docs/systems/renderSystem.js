@@ -39,6 +39,7 @@ export function createRenderSystem({
    getActivePulses,
    getRevealedWalls,
    getCameraOffset,
+   getOldCamPosition,
    getCameraScale,
 
 }) {
@@ -274,9 +275,10 @@ export function createRenderSystem({
    }
 
    //===PLAYER===//
-   function drawPlayer() {
+   function drawPlayer(alpha) {
       push();
-      translate(player.position.x, player.position.y);
+      translate(renderInterpolate(player.previousPos.x, player.position.x, alpha), renderInterpolate(player.previousPos.y, player.position.y, alpha));
+      //translate(player.position.x, player.position.y);
       scale(player.facing, 1);
 
       // Periscope
@@ -481,14 +483,20 @@ export function createRenderSystem({
       }
    }
 
+// calculate rendering positions for higher fps
+function renderInterpolate(oldState, newState, alpha){
+   return (oldState + (newState - oldState) * alpha);
+}
+
 //======================================
 // DRAW EVERYTHING
 //======================================
       return {
-         draw(deltaTime) {
-            elapsedTime += deltaTime;
+         draw(fixedDeltaTime, alpha) {
+            elapsedTime += fixedDeltaTime;
             const lightSources = getLightSources?.() ?? [];
             const cam = getCameraOffset?.() ?? { x: 0, y: 0 };
+            const oldCam = getOldCamPosition?.() ?? {x: 0, y: 0};
             const camScale = getCameraScale?.() ?? 1;
 
             // --- Screen space: background fills viewport --- //
@@ -497,19 +505,19 @@ export function createRenderSystem({
             // --- World space (scaled + translated by camera) --- //
             push();
             scale(camScale);
-            translate(-cam.x, -cam.y);
+            translate(renderInterpolate(-oldCam.x, -cam.x, alpha), renderInterpolate(-oldCam.y, -cam.y, alpha));
 
             // Comment out prototype visuals from render
             drawPlatforms();
             drawHazards();
             drawCollectables();
             drawTriggers();
-            drawEntities();
+          //  drawEntities(); - will need interpolation
             drawSpawnPoints();
-            drawSonarWalls();
-            drawSonarPulses();
+          //  drawSonarWalls(); - might need interpolation
+          //  drawSonarPulses(); - might need interpolation
             drawBubbles();
-            drawPlayer();
+            drawPlayer(alpha);
             debugHitbox(DEBUG_COLOR.DRAW);
 
             pop();
@@ -520,7 +528,7 @@ export function createRenderSystem({
          // --- World space overlays (drawn above lighting) --- //
          push();
          scale(camScale);
-         translate(-cam.x, -cam.y);
+         translate(renderInterpolate(-oldCam.x, -cam.x, alpha), renderInterpolate(-oldCam.y, -cam.y, alpha));
          drawSonarReveals();
          drawSonarHazardReveals();
          drawSonarCollectableReveals();

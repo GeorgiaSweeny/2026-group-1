@@ -334,7 +334,7 @@ export function createRoomSystem({
   let tilesets = [];
   let tileWidth = CANVAS.TILE_SIZE;
   let tileHeight = CANVAS.TILE_SIZE;
-  let exitCooldownMs = 0;
+  let exitCoolDownSeconds = 0;
 
   function loadRoom(roomKey, { spawnId = null } = {}) {
     const roomSource = roomData[roomKey];
@@ -380,9 +380,9 @@ export function createRoomSystem({
     });
   }
 
-  function updateRoomLogic(deltaTime) {
+  function updateRoomLogic(fixedDeltaTime) {
     for (const entity of entities) {
-      entity.update?.(deltaTime);
+      entity.update?.(fixedDeltaTime);
     }
   }
 
@@ -414,7 +414,7 @@ export function createRoomSystem({
   }
 
   function applyExitTransitions() {
-    if (!exits.length || !player || exitCooldownMs > 0) return;
+    if (!exits.length || !player || exitCoolDownSeconds > 0) return;
 
     for (const exit of exits) {
       if (exit.visible === false) continue;
@@ -422,7 +422,7 @@ export function createRoomSystem({
 
       if (exit?.properties?.isWin === true) {
         onWin?.({ exit, room: currentRoom });
-        exitCooldownMs = 250;
+        exitCoolDownSeconds = 0.25;
         break;
       }
 
@@ -431,7 +431,7 @@ export function createRoomSystem({
 
       const targetSpawn = exit?.properties?.targetSpawn ?? null;
       loadRoom(targetRoom, { spawnId: targetSpawn });
-      exitCooldownMs = 250;
+      exitCoolDownSeconds = 0.25;
       break;
     }
   }
@@ -441,10 +441,10 @@ export function createRoomSystem({
   }
 
   return {
-    update(deltaTime) {
+    update(fixedDeltaTime) {
       if (!currentRoom) return;
-      exitCooldownMs = Math.max(0, exitCooldownMs - (deltaTime ?? 0));
-      updateRoomLogic(deltaTime);
+      exitCoolDownSeconds = Math.max(0, exitCoolDownSeconds - (fixedDeltaTime ?? 0));
+      updateRoomLogic(fixedDeltaTime);
       applyExitTransitions();
     },
 

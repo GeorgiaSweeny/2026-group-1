@@ -23,10 +23,13 @@ import { createSonarSystem } from "./systems/sonarSystem.js";
 import { createRoomSystem } from "./systems/roomSystem.js";
 import { createPauseMenuSystem } from "./systems/pauseMenuSystem.js";
 import { createCameraSystem } from "./systems/cameraSystem.js";
-import { CANVAS, DISPLAY, PLAYER, TORCH } from "./config.js";
+import { CANVAS, DISPLAY, PLAYER, TORCH, TIME, GAME } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
+
+let accumulator = 0;
+let alpha;
 
 let engine;
 let darknessLayer;
@@ -316,7 +319,6 @@ function preload() {
 
 function setup() {
   createCanvas(CANVAS.WIDTH, CANVAS.HEIGHT);
-  // rectMode(CENTER);
   textSize(20);
   textAlign(LEFT);
   applyDisplayScale();
@@ -413,6 +415,7 @@ function setup() {
     getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
     getCameraOffset: () => cameraSystem.getOffset(),
+    getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
   });
 
@@ -432,12 +435,12 @@ function setup() {
   engine.register(cameraSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
-  engine.register(renderSystem);
   engine.register(resourceManagementSystem);
   engine.register(pauseMenuSystem);
 }
 
 function draw() {
+  frameRate(GAME.FPS);
   if (gameState === "MENU") {
     menuSystem.draw(null);
     return;
@@ -471,11 +474,19 @@ function draw() {
     lastEnsuredRoom = currentRoom;
   }
 
+  accumulator += (deltaTime / 1000);
+
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
   } else {
-    engine.update(deltaTime);
+    // if accumulator gained enough frames
+    while(accumulator >= TIME.fixedDeltaTime){
+      engine.update(TIME.fixedDeltaTime);
+      accumulator -= TIME.fixedDeltaTime;
+    }
+    alpha = accumulator / TIME.fixedDeltaTime;
+    renderSystem.draw(TIME.fixedDeltaTime, alpha);
   }
 }
 

@@ -16,7 +16,7 @@ RULES:
 ========================================
 DESIGN GOALS:
 - Keep torch logic modular and separate from rendering
-- Ensure frame-rate independent updates using deltaTime
+- Ensure frame-rate independent updates using fixedDeltaTime
 - Maintain clear boundaries between systems
 ========================================
 RESPONSIBILITIES:
@@ -37,7 +37,7 @@ engine.register(torchSystem);
 ========================================
 NOTES:
 - Torch visibility flickers when power is low (handled in Torch class)
-- Torch system relies on deltaTime for frame-rate independence
+- Torch system relies on fixedDeltaTime for frame-rate independence
 - Torch does not know the internal details of PowerSystem
 ========================================
 TODO / LIMITATIONS:
@@ -59,7 +59,7 @@ export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE,
 
   return {
     //---UPDATE---//
-    update(deltaTime) {
+    update(fixedDeltaTime) {
       // Hard difficulty: force torch off, reduce radius
       if (getDifficulty() === 'hard') {
         if (torch.isOn) torch.isOn = false;
@@ -69,7 +69,7 @@ export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE,
       }
 
       // Update internal flicker timer
-      torch.update(deltaTime);
+      torch.update(fixedDeltaTime);
 
       // Handle player intent to toggle torch
       if (player.actionIntent?.toggleTorch) {
@@ -79,7 +79,7 @@ export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE,
 
       // Drain player power if torch is active
       if (torch.isOn) {
-        player.power.drain(drainRate, deltaTime);
+        player.power.drain(drainRate, fixedDeltaTime);
 
         // Turn off torch if power depleted
         if (player.power.isEmpty()) torch.isOn = false;

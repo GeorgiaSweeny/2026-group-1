@@ -16,7 +16,7 @@ HIERARCHY:
   - resourceType: "health" (specific resource)
 
 RULES:
-- Runs in update(deltaTime)
+- Runs in update(fixedDeltaTime)
 - Only processes entities with type === "resource" or gid-resolved collectables
 - Delegates to internal handlers based on resourceType
 - Hazard drain is one shot (burst) + continuous if it stays
@@ -102,7 +102,7 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
   // HAZARD OVERLAP + DRAIN
   //  penalty on first contact, then continuous drain while on hazard
   //======================================
-  function processHazards(deltaTime) {
+  function processHazards(fixedDeltaTime) {
     const hazards = getHazards ? getHazards() : [];
 
     for (const h of hazards) {
@@ -148,8 +148,8 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
     //======================================
     // UPDATE — called by engine each frame
     //======================================
-    update(deltaTime) {
-      processHazards(deltaTime);
+    update(fixedDeltaTime) {
+      processHazards(fixedDeltaTime);
       processCollectables();
     },
 
