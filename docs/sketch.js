@@ -28,6 +28,8 @@ import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
 import { createShopSystem } from "./systems/shopSystem.js";
+import { createMissileSystem } from "./systems/missileSystem.js";
+import { createParticleSystem } from "./systems/particleSystem.js";
 
 let engine;
 let darknessLayer;
@@ -44,6 +46,8 @@ let roomSystem;
 let resourceManagementSystem;
 let pauseMenuSystem;
 let shopSystem;
+let missileSystem;
+let particleSystem;
 let cameraSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
@@ -93,7 +97,7 @@ function tilesetSourceToImagePath(source) {
   // backgrounds.tsx is an image collection (no single .png atlas file to load).
   if (String(source).toLowerCase().endsWith("backgrounds.tsx")) return null;
   const pngSource = source.replace(/\.tsx$/i, ".png");
-  return normalizeRelativePath("data/rooms", pngSource);
+  return normalizeRelativePath("mapdata/rooms", pngSource);
 }
 
 function parseTsxTileProperties(xmlText) {
@@ -253,14 +257,14 @@ function syncCanvasToCurrentRoom() {
 
 function preload() {
   for (const roomId of ROOM_IDS) {
-    roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
+    roomData[roomId] = loadJSON(`mapdata/rooms/${roomId}.json`);
   }
 
   const tilePropsBySourcePath = {};
   for (const room of Object.values(roomData)) {
     for (const tileset of room?.tilesets ?? []) {
       const sourcePath = normalizeRelativePath(
-        "data/rooms",
+        "mapdata/rooms",
         tileset?.source ?? "",
       );
       if (!sourcePath.toLowerCase().endsWith(".tsx")) continue;
@@ -276,7 +280,7 @@ function preload() {
   for (const room of Object.values(roomData)) {
     for (const tileset of room?.tilesets ?? []) {
       const sourcePath = normalizeRelativePath(
-        "data/rooms",
+        "mapdata/rooms",
         tileset?.source ?? "",
       );
       tileset.tilePropertiesById = tilePropsBySourcePath[sourcePath] ?? {};
@@ -372,6 +376,10 @@ function setup() {
 
   sonarSystem = createSonarSystem(player, () => roomSystem.getPlatforms());
 
+  missileSystem = createMissileSystem(player);
+
+  particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
+
   lightingSystem = createLightingSystem(
     player,
     () => sonarSystem?.getSonarLights?.() ?? [],
@@ -407,6 +415,8 @@ function setup() {
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
     getCameraOffset: () => cameraSystem.getOffset(),
     getCameraScale: () => cameraSystem.getScale(),
+    getMissiles: () => missileSystem.getMissiles(),
+    getParticles: () => particleSystem.getParticles(),
   });
 
   pauseMenuSystem = createPauseMenuSystem({
@@ -424,6 +434,8 @@ function setup() {
   engine.register(playerSystem);
   engine.register(physicsSystem);
   engine.register(sonarSystem);
+  engine.register(missileSystem);
+  engine.register(particleSystem);
   engine.register(cameraSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
@@ -480,7 +492,7 @@ function draw() {
   } else {
     engine.update(deltaTime);
     
-    //Display coin count
+    //Display coin count ingame
     push(); 
     fill(255);
     stroke(0);
@@ -493,6 +505,7 @@ function draw() {
   }
 }
 
+// TODO: input handling in inputsystem
 function keyPressed() {
   inputSystem?.onKeyPressed?.(key, keyCode);
 

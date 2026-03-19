@@ -70,20 +70,20 @@ TODO / LIMITATIONS:
 export function createShopSystem(player) {
   let shopOpen = false;
 
-  // Upgrade levels (cosmetic display, actual upgrades handled by other systems)
+  // Upgrade levels (now synced with player)
   const upgrades = {
     power: { 
-      level: 1, 
+      level: player?.upgrades?.power ?? 1, 
       cost: 50, 
       description: "Increase max power capacity",   
     },
     torch: { 
-      level: 1, 
+      level: player?.upgrades?.torch ?? 1, 
       cost: 40, 
       description: "Expand torch radius" 
     },
     sonar: { 
-      level: 1, 
+      level: player?.upgrades?.sonar ?? 1, 
       cost: 60, 
       description: "Increase sonar range" 
     },
@@ -92,7 +92,7 @@ export function createShopSystem(player) {
   // Purchasable items
   const items = {
     missiles: { 
-      quantity: 0, 
+      quantity: player?.missiles ?? 0, 
       costPerUnit: 20, 
       description: "Missiles" 
     },
@@ -134,6 +134,7 @@ export function createShopSystem(player) {
   function drawUpgradeCard(name, upgrade, x, y) {
     const playerCoins = player?.coins ?? 0;
     const canAfford = playerCoins >= upgrade.cost;
+    const currentLevel = player?.upgrades?.[name] ?? upgrade.level;
 
     // Card background
     noStroke();
@@ -156,7 +157,7 @@ export function createShopSystem(player) {
     // Level
     textSize(12);
     fill(150);
-    text(`Level: ${upgrade.level}`, x + 10, y + 28);
+    text(`Level: ${currentLevel}`, x + 10, y + 28);
 
     // Description
     textSize(11);
@@ -172,6 +173,7 @@ export function createShopSystem(player) {
   function drawItemCard(itemName, item, x, y) {
     const playerCoins = player?.coins ?? 0;
     const canAfford = playerCoins >= item.costPerUnit;
+    const currentQuantity = itemName === 'missiles' ? (player?.missiles ?? 0) : (item.quantity ?? 0);
 
     // Card background
     noStroke();
@@ -194,7 +196,7 @@ export function createShopSystem(player) {
     // Quantity
     textSize(12);
     fill(150);
-    text(`Owned: ${item.quantity}`, x + 10, y + 28);
+    text(`Owned: ${currentQuantity}`, x + 10, y + 28);
 
     // Description
     textSize(11);
@@ -274,7 +276,7 @@ export function createShopSystem(player) {
   }
 
   //--------------------------------------
-  // PURCHASE LOGIC (frontend only - displays feedback)
+  // PURCHASE LOGIC (now wired to player state)
   //--------------------------------------
   function attemptUpgradePurchase(upgradeName) {
     const upgrade = upgrades[upgradeName];
@@ -286,8 +288,19 @@ export function createShopSystem(player) {
       return false;
     }
 
-    // Display only - actual purchase handling done by other systems
-    console.log(`✓ Attempting to purchase ${upgradeName} upgrade for ${upgrade.cost} coins`);
+    // Deduct coins
+    player.coins -= upgrade.cost;
+    
+    // Increment upgrade level
+    if (player.upgrades && upgradeName in player.upgrades) {
+      player.upgrades[upgradeName]++;
+    }
+    
+    // Update shop display
+    upgrade.level++;
+    upgrade.cost = Math.ceil(upgrade.cost * 1.5); // Increase cost for next level
+    
+    console.log(`✓ Purchased ${upgradeName} upgrade! New level: ${upgrade.level}, Coins left: ${player.coins}`);
     return true;
   }
 
@@ -302,7 +315,18 @@ export function createShopSystem(player) {
       return false;
     }
 
-    console.log(`✓ Attempting to purchase ${quantity}x ${itemName} for ${totalCost} coins`);
+    // Deduct coins
+    player.coins -= totalCost;
+    
+    // Add to inventory
+    if (itemName === 'missiles') {
+      player.missiles = (player.missiles ?? 0) + quantity;
+    }
+    
+    // Update shop display
+    item.quantity += quantity;
+    
+    console.log(`✓ Purchased ${quantity}x ${itemName}! Total owned: ${item.quantity}, Coins left: ${player.coins}`);
     return true;
   }
 

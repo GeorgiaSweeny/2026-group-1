@@ -36,7 +36,8 @@ export function createRenderSystem({
    getRevealedWalls,
    getCameraOffset,
    getCameraScale,
-
+   getMissiles,
+   getParticles,
 }) {
    let elapsedTime = 0;
    const oscillationSpeed = 2; // Hz
@@ -312,6 +313,43 @@ export function createRenderSystem({
       }
    }
 
+   //===MISSILES===//
+   function drawMissiles() {
+      const missiles = getMissiles?.() ?? [];
+      if (!missiles.length) return;
+
+      noStroke();
+      for (const missile of missiles) {
+         // Draw missile as a small orange/yellow projectile
+         fill(255, 165, 0, 220);
+         circle(missile.x, missile.y, 6);
+
+         // Draw a trailing glow
+         fill(255, 200, 100, 100);
+         circle(missile.x, missile.y, 10);
+      }
+   }
+
+   //===PARTICLES===//
+   function drawParticles() {
+      const allParticles = getParticles?.() ?? [];
+      if (!allParticles.length) return;
+
+      noStroke();
+      for (const particle of allParticles) {
+         const alpha = Math.max(0, (particle.life / particle.maxLife) * 200);
+         
+         if (particle.type === 'dust') {
+            fill(150, 140, 120, alpha);
+            circle(particle.x, particle.y, particle.size * 1.5);
+         } else {
+            // float particles - ethereal blue/white
+            fill(180, 200, 255, alpha * 0.6);
+            circle(particle.x, particle.y, particle.size);
+         }
+      }
+   }
+
    //===SONAR PULSES===//
    function drawSonarPulses() {
       const activePulses = getActivePulses?.() ?? [];
@@ -489,8 +527,10 @@ export function createRenderSystem({
             drawEntities();
             drawSpawnPoints();
             drawSonarWalls();
+            drawParticles();
             drawSonarPulses();
             drawBubbles();
+            drawMissiles();
             drawPlayer();
             debugHitbox(DEBUG_COLOR.DRAW);
 

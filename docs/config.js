@@ -34,7 +34,8 @@ export const INPUT = {
   
   // ACTION KEYS - functions take strings
   TOGGLE_TORCH_KEY: ['L', 'l'],
-  SONAR_KEY: ['E', 'e']
+  SONAR_KEY: ['E', 'e'],
+  FIRE_MISSILE_KEY: ['space', ' ']
 };
 
 //======================
@@ -73,12 +74,11 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  MOVE_SPEED: 180,
-  ACCELERATION: 0.8,
+  MOVE_SPEED: 480,      // Pixels per second (clamped to /60 per frame)
+  ACCELERATION: 3,      // Velocity increase per frame
   DRAG: 0.9  ,         // Higher = less friction (0.9-0.95 feels good)
   BOUNCE_DAMPING: 0.5,  // Velocity kept after bounce (0.5 = half speed)
   MIN_VELOCITY: 0.1,    // Stop if slower than this
-  SIZE: 20,
 };
 
 //======================
@@ -116,6 +116,18 @@ export const SONAR = {
   // Cooldown in seconds for readability; derived ms used by sonarSystem
   COOLDOWN: 3,
   COOLDOWN_MS: 3000
+};
+
+//======================
+// MISSILE CONFIG
+//======================
+export const MISSILE = {
+  WIDTH: 8,
+  HEIGHT: 8,
+  SPEED: 2,
+  MAX_DISTANCE: 2000,
+  TARGET_RADIUS: 150,
+  MAX_CONCURRENT: 5
 };
 
 //======================
