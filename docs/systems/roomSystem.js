@@ -135,7 +135,8 @@ function normalizeTiledRoom(roomKey, mapData) {
     triggers: [],
     entities: [],
     exits: [],
-    foreground: []
+    foreground: [],
+    enemies: [],
   };
 
   for (const layer of mapData?.layers ?? []) {
@@ -183,6 +184,16 @@ function normalizeTiledRoom(roomKey, mapData) {
         const collectable = normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1);
         collectable.collectableType = getCollectableTypeFromGid(normalized.tilesets, collectable.gid);
         return collectable;
+      });
+      continue;
+    }
+
+    if (layer?.type === 'objectgroup' && layerName === 'enemies') {
+      normalized.enemies = (layer.objects ?? []).map((obj) => {
+        const e = normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1);
+        e.patrolDistance = Number(e.properties?.patrolDistance ?? 64);
+        e.speed = Number(e.properties?.speed ?? 0.8);
+        return e;
       });
       continue;
     }
@@ -327,6 +338,7 @@ export function createRoomSystem({
   let platforms = [];
   let hazards = [];
   let collectables = [];
+  let enemies = [];
   let triggers = [];
   let exits = [];
   let spawnPoints = [];
@@ -350,6 +362,7 @@ export function createRoomSystem({
     platforms = [...(normalized.platforms ?? [])];
     hazards = [...(normalized.hazards ?? [])];
     collectables = [...(normalized.collectables ?? [])];
+    enemies = [...(normalized.enemies ?? [])];
     triggers = [...(normalized.triggers ?? [])];
     exits = [...(normalized.exits ?? [])];
     spawnPoints = [...(normalized.spawnPoints ?? [])];
@@ -472,6 +485,10 @@ export function createRoomSystem({
       return collectables;
     },
 
+    getEnemies() {
+      return enemies;
+    },
+
     getTriggers() {
       return triggers;
     },
@@ -501,6 +518,7 @@ export function createRoomSystem({
         platforms,
         hazards,
         collectables,
+        enemies,
         triggers,
         exits,
         spawnPoints,

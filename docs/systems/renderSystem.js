@@ -7,7 +7,7 @@ DESCRIPTION:
 - Draws room background, platforms, player, UI.
   and ligthing
 
-- Power modifiers added by Monal
+- Power modifiers, enemy stuff added by Monal
 - Hitbox debug by Nick
 ========================================
 */
@@ -22,6 +22,7 @@ export function createRenderSystem({
    getPlatforms,
    getHazards,
    getCollectables,
+   getEnemies,
    getTriggers,
    getEntities,
    getSpawnPoints,
@@ -274,6 +275,41 @@ export function createRenderSystem({
       }
    }
 
+   //=== ENEMIES - Crab ===//
+   function drawEnemies() {
+      const enemies = getEnemies?.() ?? [];
+      if (!enemies.length) return;
+
+      for (const crab of enemies) {
+         push();
+         translate(crab.position.x, crab.position.y);
+         scale(crab.facing, 1);
+
+         // body
+         noStroke();
+         fill(200, 80, 50);
+         ellipse(0, 0, crab.w, crab.h);
+
+         // left claw
+         fill(180, 60, 40);
+         triangle(-crab.w / 2 - 6, -4, -crab.w / 2, -8, -crab.w / 2, 0);
+
+         // right claw  
+         triangle(crab.w / 2 + 6, -4, crab.w / 2, -8, crab.w / 2, 0);
+
+         // eyes
+         fill(255);
+         circle(-4, -3, 4);
+         circle(4, -3, 4);
+         fill(0);
+         circle(-4, -3, 2);
+         circle(4, -3, 2);
+
+         pop();
+      }
+   }
+
+
    //===PLAYER===//
    function drawPlayer(alpha) {
       push();
@@ -510,6 +546,7 @@ function renderInterpolate(oldState, newState, alpha){
             // Comment out prototype visuals from render
             drawPlatforms();
             drawHazards();
+            drawEnemies();
             drawCollectables();
             drawTriggers();
           //  drawEntities(); - will need interpolation
@@ -523,7 +560,7 @@ function renderInterpolate(oldState, newState, alpha){
             pop();
 
             // --- Screen space (fixed to viewport) --- //
-         drawLighting(lightSources, cam, camScale);
+         //drawLighting(lightSources, cam, camScale);
 
          // --- World space overlays (drawn above lighting) --- //
          push();

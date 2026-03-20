@@ -27,6 +27,7 @@ import { CANVAS, DISPLAY, PLAYER, TORCH, TIME, GAME } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
+import { createEnemySystem } from './systems/enemySystem.js';
 
 let accumulator = 0;
 let alpha;
@@ -44,6 +45,7 @@ let renderSystem;
 let lightingSystem;
 let roomSystem;
 let resourceManagementSystem;
+let enemySystem;
 let pauseMenuSystem;
 let cameraSystem;
 let lastEnsuredRoom = null;
@@ -389,6 +391,11 @@ function setup() {
   () => roomSystem.getHazards(),
   () => pauseMenuSystem.getDifficulty()
   );
+
+  enemySystem = createEnemySystem(
+    player,
+    () => roomSystem.getEnemies()
+  );
   
   renderSystem = createRenderSystem({
     player,
@@ -398,6 +405,7 @@ function setup() {
       roomSystem
         .getCollectables()
         .filter((c) => !resourceManagementSystem.isCollected(c)),
+    getEnemies: () => enemySystem.getCrabs(),
     getTriggers: () => roomSystem.getTriggers(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),
@@ -436,6 +444,7 @@ function setup() {
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
+  engine.register(enemySystem);
   engine.register(pauseMenuSystem);
 }
 
