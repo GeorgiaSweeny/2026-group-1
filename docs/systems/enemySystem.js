@@ -5,7 +5,7 @@ SYSTEM: ENEMY SYSTEM
 AUTHOR: Monal Gupta
 DESCRIPTION:
 - Updates crab patrol movement
-- Handles player contact — drains power on touch
+- Drains power on touch
 ========================================
 */
 
@@ -20,7 +20,7 @@ export function createEnemySystem(player, getEnemies) {
   let crabs = [];
   let initialised = false;
 
-  // convert plain room objects into Crab instances once
+  // converting plain room objects into Crab instances once
   function initCrabs() {
     const raw = getEnemies ? getEnemies() : [];
     crabs = raw.map(e => new Crab(e.x, e.y, e.w, e.h, e.patrolDistance, e.speed));
@@ -40,7 +40,7 @@ export function createEnemySystem(player, getEnemies) {
       crab.facing = 1;
     }
 
-    // keep nextPos in sync for isColliding
+    // keeping nextPos in sync for isColliding
     crab.nextPos.x = crab.position.x;
     crab.nextPos.y = crab.position.y;
   }
@@ -59,7 +59,7 @@ export function createEnemySystem(player, getEnemies) {
 
   return {
     update(fixedDeltaTime) {
-      if (!initialised) initCrabs();  // lazy init — roomSystem is ready by first update
+      if (!initialised) initCrabs();
       for (const crab of crabs) {
         updateCrab(crab, fixedDeltaTime);
         checkPlayerContact(crab);

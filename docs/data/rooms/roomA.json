@@ -2886,7 +2886,7 @@
         "name": "crab",
         "properties": [
             { "name": "patrolDistance", "type": "int", "value": 64 },
-            { "name": "speed", "type": "float", "value": 0.8 }
+            { "name": "speed", "type": "float", "value": 8 }
         ],
         "rotation": 0,
         "type": "enemy",

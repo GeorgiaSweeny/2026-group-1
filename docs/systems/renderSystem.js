@@ -560,7 +560,7 @@ function renderInterpolate(oldState, newState, alpha){
             pop();
 
             // --- Screen space (fixed to viewport) --- //
-         //drawLighting(lightSources, cam, camScale);
+         drawLighting(lightSources, cam, camScale);
 
          // --- World space overlays (drawn above lighting) --- //
          push();
