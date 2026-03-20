@@ -27,6 +27,7 @@ import { CANVAS, DISPLAY, PLAYER, TORCH, TIME, GAME } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
+import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 
 let accumulator = 0;
 let alpha;
@@ -49,6 +50,7 @@ let cameraSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
 let menuSystem;
+let winScreenSystem;
 const WIN_STATE = "WIN";
 
 let assets = {};
@@ -324,6 +326,7 @@ function setup() {
   applyDisplayScale();
 
   menuSystem = createMenuSystem();
+  winScreenSystem = createWinScreenSystem();
 
   player = new Player(PLAYER);
 
@@ -383,13 +386,13 @@ function setup() {
   );
 
   resourceManagementSystem = createResourceManagementSystem(
-  player,
-  roomSystem,
-  () => roomSystem.getCollectables(),
-  () => roomSystem.getHazards(),
-  () => pauseMenuSystem.getDifficulty()
+    player,
+    roomSystem,
+    () => roomSystem.getCollectables(),
+    () => roomSystem.getHazards(),
+    () => pauseMenuSystem.getDifficulty(),
   );
-  
+
   renderSystem = createRenderSystem({
     player,
     getPlatforms: () => roomSystem.getPlatforms(),
@@ -457,14 +460,15 @@ function draw() {
 
   if (gameState === WIN_STATE) {
     renderSystem?.draw?.(0);
-    push(); // placeholder win screen
-    fill(255);
-    stroke(0);
-    strokeWeight(4);
-    textAlign(CENTER, CENTER);
-    textSize(48);
-    text("You Win!", width / 2, height / 2);
-    pop();
+    winScreenSystem.draw();
+    // push(); // placeholder win screen
+    // fill(255);
+    // stroke(0);
+    // strokeWeight(4);
+    // textAlign(CENTER, CENTER);
+    // textSize(48);
+    // text("You Win!", width / 2, height / 2);
+    // pop();
     return;
   }
 
@@ -474,14 +478,14 @@ function draw() {
     lastEnsuredRoom = currentRoom;
   }
 
-  accumulator += (deltaTime / 1000);
+  accumulator += deltaTime / 1000;
 
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
   } else {
     // if accumulator gained enough frames
-    while(accumulator >= TIME.fixedDeltaTime){
+    while (accumulator >= TIME.fixedDeltaTime) {
       engine.update(TIME.fixedDeltaTime);
       accumulator -= TIME.fixedDeltaTime;
     }
@@ -501,7 +505,17 @@ function keyPressed() {
 }
 
 function mousePressed() {
-  if (gameState === "MENU") {
+  // 1. check win screen
+  if (gameState === WIN_STATE) {
+    const selection = winScreenSystem.checkClick(mouseX, mouseY);
+    if (selection === "MENU") {
+      resetGameToStart();
+      gameState = "MENU";
+    }
+    // return;
+  }
+  // 2. Check Start Menu
+  else if (gameState === "MENU") {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
     if (selection === "EASY" || selection === "HARD") {
@@ -511,12 +525,12 @@ function mousePressed() {
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
     }
-    return;
+    // return;
   }
-
-  if (gameState === "SETTINGS") {
+  // 3. check settings
+  else if (gameState === "SETTINGS") {
     pauseMenuSystem?.onMousePressed();
-    return;
+    // return;
   }
 }
 
@@ -555,6 +569,36 @@ function applyDisplayScale() {
     const s = Math.min(scaleX, scaleY);
     canvasEl.style.width = width * s + "px";
     canvasEl.style.height = height * s + "px";
+  }
+}
+
+function resetGameToStart() {
+  // 1. Send the player back to the first room
+  roomSystem.goToRoom(INITIAL_ROOM_ID, { spawnId: "default" });
+
+  // 2. Snap the player's physical coordinates to the spawn point
+  const playerStart = roomSystem.getPlayerStart();
+  if (playerStart) {
+    player.setCurrentPosition(playerStart.x, playerStart.y);
+  }
+
+  // 3. Snap the camera back to the start
+  cameraSystem.snapTo(playerStart.x, playerStart.y);
+
+  // 4. Reset Player stats
+  if (player.power) {
+    player.power.current = player.power.max || 100;
+  }
+  if (player.torch) {
+    player.torch.isOn = false;
+  }
+
+  // 5. Reset Collectables (requires a reset method in resourceManagementSystem)
+  if (
+    resourceManagementSystem &&
+    typeof resourceManagementSystem.reset === "function"
+  ) {
+    resourceManagementSystem.reset();
   }
 }
 
