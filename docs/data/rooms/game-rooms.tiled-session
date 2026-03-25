@@ -10,6 +10,16 @@
         "tilesets"
     ],
     "fileStates": {
+        "": {
+            "scaleInDock": 1
+        },
+        "/Users/benmounce/Documents/Software Engineering/Coursework/2026-group-1/docs/assets/backgrounds/backgrounds.tsx": {
+            "dynamicWrapping": true
+        },
+        "/Users/benmounce/Documents/Software Engineering/Coursework/2026-group-1/docs/data/tilesets/prototype-tileset/prototype-tileset.tsx": {
+            "dynamicWrapping": false,
+            "scaleInEditor": 1
+        },
         "/Users/georgia/COMSCI/SEP/backgrounds.tsx": {
             "scaleInDock": 1
         },
@@ -44,34 +54,25 @@
             }
         },
         "roomA.json": {
-            "expandedObjectLayers": [
-                5,
-                9,
-                8,
-                7,
-                2
-            ],
-            "scale": 0.9923,
-            "selectedLayer": 7,
+            "scale": 1.4528,
+            "selectedLayer": -1,
             "viewCenter": {
-                "x": 339.6150357754711,
-                "y": 380.93318552856994
+                "x": 256.40143171806164,
+                "y": 663.8904185022027
             }
+        },
+        "roomA.json#prototype": {
+            "scaleInEditor": 1
         },
         "roomB.json": {
             "expandedObjectLayers": [
-                5,
-                4,
-                3,
-                6,
-                8,
-                2
+                5
             ],
             "scale": 0.77,
-            "selectedLayer": 5,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 240.25974025974028,
-                "y": 559.7402597402598
+                "x": 340.90909090909093,
+                "y": 560.3896103896104
             }
         },
         "tilesets/prototype-tileset/protoype-tileset.tsx": {
@@ -96,6 +97,7 @@
     "project": "game-rooms.tiled-project",
     "property.type": "string",
     "recentFiles": [
+        "/Users/benmounce/Documents/Software Engineering/Coursework/2026-group-1/docs/data/tilesets/prototype-tileset/prototype-tileset.tsx",
         "/Users/georgia/COMSCI/SEP/gameProject/docs/assets/backgrounds/backgrounds.tsx",
         "/Users/georgia/COMSCI/SEP/gameProject/docs/data/tilesets/prototype-tileset/prototype-tileset.tsx",
         "roomB.json",

@@ -28,6 +28,8 @@ export function createEnemySystem(player, getEnemies) {
   }
 
   function updateCrab(crab, fixedDeltaTime) {
+    if (crab.pendingDestroy) return; // Skip destroyed crabs
+
     const step = crab.speed * fixedDeltaTime;
     crab.position.x += crab.direction * step;
 
@@ -60,6 +62,14 @@ export function createEnemySystem(player, getEnemies) {
   return {
     update(fixedDeltaTime) {
       if (!initialised) initCrabs();
+
+      // Clean up dead crabs
+      for (let i = crabs.length - 1; i >= 0; i--) {
+        if (crabs[i].pendingDestroy) {
+          crabs.splice(i, 1);
+        }
+      }
+
       for (const crab of crabs) {
         updateCrab(crab, fixedDeltaTime);
         checkPlayerContact(crab);

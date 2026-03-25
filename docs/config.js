@@ -38,7 +38,8 @@ export const INPUT = {
   
   // ACTION KEYS - functions take strings
   TOGGLE_TORCH_KEY: ['L', 'l'],
-  SONAR_KEY: ['E', 'e']
+  SONAR_KEY: ['E', 'e'],
+  MISSILE_KEY: ['F', 'f']
 };
 
 //======================
@@ -99,6 +100,17 @@ export const TORCH = {
   RADIUS: 100,
   FLICKER_POWER_THRESHOLD: 0.15,
   DRAIN_RATE: 1
+};
+
+//======================
+// MISSILE CONFIG
+//======================
+export const MISSILE = {
+  SPEED: 150, //pixels per second
+  TURN_SPEED: 5,
+  COOLDOWN: 2000, //milliseconds
+  LIFETIME: 3000,
+  SIZE: 6, //pixels
 };
 
 //======================

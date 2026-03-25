@@ -84,6 +84,7 @@ export class Player extends Hitbox{
       this.actionIntent = {
          toggleTorch: false,
          emitSonar: false,
+         launchMissile: false,
       };
    
    }

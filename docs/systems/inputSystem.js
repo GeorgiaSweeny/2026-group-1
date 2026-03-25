@@ -77,6 +77,10 @@ export function createInputSystem(player) {
       if (INPUT.SONAR_KEY.includes(key) || keyLower === 'e') {
         player.actionIntent.emitSonar = true;
       }
+
+      if (INPUT.MISSILE_KEY.includes(key) || keyLower === 'f') {
+        player.actionIntent.launchMissile = true;
+      }
     }
   };
 }
