@@ -62,7 +62,9 @@ const REVEAL_FADE_PER_MS = 0.2;
 
 function getNormalisedWalls(getWallsFinal) {
   const input = getWallsFinal?.() || [];
-  return Array.isArray(input) ? input : (input?.platforms ?? []);
+  const list = Array.isArray(input) ? input : (input?.platforms ?? []);
+  // sonar doesnt reveal destroyed blocks
+  return list.filter(wall => !wall.isDestroyed);
 }
 
 function getNormalisedObjects(getObjectsFinal) {
