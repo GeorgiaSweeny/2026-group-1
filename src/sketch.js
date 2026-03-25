@@ -70,9 +70,9 @@ let lightingSystem;
 let roomSystem;
 let resourceManagementSystem;
 let enemySystem;
+let missileSystem;
 let pauseMenuSystem;
 let shopSystem;
-let missileSystem;
 let particleSystem;
 let cameraSystem;
 let miniMapSystem;
@@ -497,6 +497,8 @@ function setup() {
     getLightSources: () => lightingSystem.getLightSources(),
     getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
+    getMissiles: () => missileSystem.getMissiles(),
+    getMissileMessage: () => missileSystem.getMessage(),
     getCameraOffset: () => cameraSystem.getOffset(),
     getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
@@ -550,6 +552,7 @@ function setup() {
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
   engine.register(enemySystem);
+  engine.register(missileSystem);
   engine.register(pauseMenuSystem);
   engine.register(shopSystem);
 }
