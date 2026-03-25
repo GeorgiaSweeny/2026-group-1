@@ -11,6 +11,11 @@ DESCRIPTION:
 RULES:
 - Missiles lock on to nearest valid target
 - Missiles are destroyed on impact or timeout
+
+Limitations:
+- Homing only reads position on where enemy was at time of launch
+- Would be preferred if missiles destroyed larger areas in easy mode
+  only one tile in hard mode
 ========================================
 */
 
