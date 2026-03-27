@@ -95,7 +95,12 @@ export function createMissileSystem(player) {
     fireMissile() {
       // Don't exceed max concurrent missiles
       if (missiles.length >= maxConcurrentMissiles) {
-        return;
+        return false;
+      }
+
+      // Missiles are inventory-based and bought in the shop.
+      if ((player?.missiles ?? 0) <= 0) {
+        return false;
       }
 
       // Get random target within radius
@@ -104,6 +109,8 @@ export function createMissileSystem(player) {
       // Create missile at player position
       const missile = new Missile(player.x, player.y, target.x, target.y);
       missiles.push(missile);
+      player.missiles -= 1;
+      return true;
     },
 
     getMissiles() {

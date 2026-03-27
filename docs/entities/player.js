@@ -85,7 +85,7 @@ export class Player extends Hitbox{
       };
 
       // Resource tracking
-      this.coins = 0;
+      this.coins = PLAYER.STARTING_COINS ?? 0;
       this.missiles = 0;
       this.upgrades = {
          power: 1,

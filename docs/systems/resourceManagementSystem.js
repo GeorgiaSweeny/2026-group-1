@@ -108,6 +108,7 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
   // HAZARD OVERLAP + DRAIN
   //  penalty on first contact, then continuous drain while on hazard
   //======================================
+  // TODO: move this to a different system to do with player entity interactions
   function processHazards(deltaTime) {
     const hazards = getHazards ? getHazards() : [];
 

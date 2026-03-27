@@ -98,11 +98,13 @@ export function createShopSystem(player) {
     },
   };
 
-  // Button constants
-  const BUTTON_W = 160;
-  const BUTTON_H = 40;
-  const ITEM_WIDTH = 200;
-  const ITEM_HEIGHT = 80;
+  // Layout constants
+  const PANEL_W = 900;
+  const PANEL_H = 520;
+  const CARD_W = 190;
+  const CARD_H = 118;
+  const BUTTON_W = 150;
+  const BUTTON_H = 38;
 
   //--------------------------------------
   // HIT TESTING
@@ -118,17 +120,103 @@ export function createShopSystem(player) {
   //--------------------------------------
   function drawButton(label, x, y, w, h, hovered, canAfford = true) {
     noStroke();
-    const bgColor = !canAfford 
-      ? color(80, 80, 80)
-      : hovered 
-      ? color(80, 130, 200) 
-      : color(50, 60, 80);
+    const bgColor = !canAfford
+      ? color(74, 74, 74)
+      : hovered
+        ? color(92, 170, 212)
+        : color(49, 78, 97);
     fill(bgColor);
-    rect(x, y, w, h, 6);
-    fill(canAfford ? 255 : 150);
+    rect(x, y, w, h, 4);
+    stroke(194, 240, 255, 170);
+    strokeWeight(1.5);
+    noFill();
+    rect(x, y, w, h, 4);
+    noStroke();
+    fill(canAfford ? 240 : 150);
     textAlign(CENTER, CENTER);
-    textSize(14);
+    textSize(13);
     text(label, x + w / 2, y + h / 2);
+  }
+
+  function drawTechFrame(x, y, w, h, title) {
+    noStroke();
+    fill(12, 23, 31, 240);
+    rect(x, y, w, h, 10);
+
+    stroke(126, 220, 224, 200);
+    strokeWeight(2);
+    noFill();
+    rect(x, y, w, h, 10);
+
+    noStroke();
+    fill(33, 56, 70, 240);
+    rect(x + 14, y + 12, w - 28, 28, 5);
+
+    fill(227, 244, 248);
+    textAlign(LEFT, CENTER);
+    textSize(14);
+    text(title, x + 24, y + 26);
+  }
+
+  function drawLevelTicks(x, y, level, maxTicks = 8) {
+    const safeLevel = Math.max(0, Math.min(maxTicks, level ?? 0));
+    for (let i = 0; i < maxTicks; i++) {
+      const tx = x + i * 9;
+      noStroke();
+      fill(i < safeLevel ? color(117, 250, 126) : color(53, 83, 65));
+      rect(tx, y, 6, 10, 1);
+    }
+  }
+
+  function getLayout() {
+    const panelX = width / 2 - PANEL_W / 2;
+    const panelY = height / 2 - PANEL_H / 2;
+    const upgradesStartX = panelX + 32;
+    const upgradesStartY = panelY + 86;
+    const cardGap = 18;
+    const sectionGapY = 150;
+
+    const upgradeCards = [];
+    let i = 0;
+    for (const key of Object.keys(upgrades)) {
+      upgradeCards.push({
+        key,
+        x: upgradesStartX + i * (CARD_W + cardGap),
+        y: upgradesStartY,
+        w: CARD_W,
+        h: CARD_H,
+      });
+      i += 1;
+    }
+
+    const itemCards = [];
+    let j = 0;
+    for (const key of Object.keys(items)) {
+      itemCards.push({
+        key,
+        x: upgradesStartX + j * (CARD_W + cardGap),
+        y: upgradesStartY + sectionGapY,
+        w: CARD_W,
+        h: CARD_H,
+      });
+      j += 1;
+    }
+
+    const rightPanel = {
+      x: panelX + PANEL_W - 250,
+      y: panelY + 86,
+      w: 220,
+      h: 306,
+    };
+
+    const closeButton = {
+      x: panelX + PANEL_W - BUTTON_W - 30,
+      y: panelY + PANEL_H - BUTTON_H - 18,
+      w: BUTTON_W,
+      h: BUTTON_H,
+    };
+
+    return { panelX, panelY, upgradeCards, itemCards, rightPanel, closeButton };
   }
 
   function drawUpgradeCard(name, upgrade, x, y) {
@@ -136,38 +224,37 @@ export function createShopSystem(player) {
     const canAfford = playerCoins >= upgrade.cost;
     const currentLevel = player?.upgrades?.[name] ?? upgrade.level;
 
-    // Card background
     noStroke();
-    fill(40, 50, 70);
-    rect(x, y, ITEM_WIDTH, ITEM_HEIGHT, 8);
+    fill(26, 31, 40, 240);
+    rect(x, y, CARD_W, CARD_H, 7);
 
-    // Border (color based on affordability)
-    stroke(canAfford ? color(80, 130, 200) : color(100, 100, 100));
-    strokeWeight(2);
+    stroke(canAfford ? color(143, 234, 255) : color(109, 109, 109));
+    strokeWeight(1.8);
     noFill();
-    rect(x, y, ITEM_WIDTH, ITEM_HEIGHT, 8);
+    rect(x, y, CARD_W, CARD_H, 7);
 
-    // Title
     textAlign(LEFT, TOP);
-    textSize(16);
-    fill(255);
+    textSize(15);
+    fill(234, 246, 248);
     noStroke();
     text(name.toUpperCase(), x + 10, y + 8);
 
-    // Level
-    textSize(12);
-    fill(150);
-    text(`Level: ${currentLevel}`, x + 10, y + 28);
-
-    // Description
+    fill(149, 177, 182);
     textSize(11);
-    fill(180);
-    text(upgrade.description, x + 10, y + 45);
+    text(upgrade.description, x + 10, y + 29);
 
-    // Cost and affordability
-    textSize(13);
-    fill(canAfford ? color(255, 200, 100) : color(150, 150, 150));
-    text(`Cost: ${upgrade.cost}`, x + 10, y + 60);
+    fill(174, 205, 211);
+    text(`LEVEL ${currentLevel}`, x + 10, y + 50);
+    drawLevelTicks(x + 10, y + 68, currentLevel, 8);
+
+    fill(canAfford ? color(255, 223, 136) : color(132, 132, 132));
+    textSize(12);
+    text(`COST ${upgrade.cost}`, x + 10, y + 98);
+
+    textAlign(RIGHT, TOP);
+    textSize(10);
+    fill(canAfford ? color(148, 252, 165) : color(129, 129, 129));
+    text(canAfford ? "CLICK TO UPGRADE" : "INSUFFICIENT COINS", x + CARD_W - 10, y + 100);
   }
 
   function drawItemCard(itemName, item, x, y) {
@@ -175,102 +262,96 @@ export function createShopSystem(player) {
     const canAfford = playerCoins >= item.costPerUnit;
     const currentQuantity = itemName === 'missiles' ? (player?.missiles ?? 0) : (item.quantity ?? 0);
 
-    // Card background
     noStroke();
-    fill(40, 50, 70);
-    rect(x, y, ITEM_WIDTH, ITEM_HEIGHT, 8);
+    fill(27, 33, 42, 240);
+    rect(x, y, CARD_W, CARD_H, 7);
 
-    // Border (color based on affordability)
-    stroke(canAfford ? color(100, 180, 100) : color(100, 100, 100));
-    strokeWeight(2);
+    stroke(canAfford ? color(156, 235, 160) : color(109, 109, 109));
+    strokeWeight(1.8);
     noFill();
-    rect(x, y, ITEM_WIDTH, ITEM_HEIGHT, 8);
+    rect(x, y, CARD_W, CARD_H, 7);
 
-    // Title
     textAlign(LEFT, TOP);
-    textSize(16);
-    fill(255);
+    textSize(15);
+    fill(234, 246, 248);
     noStroke();
-    text(item.description, x + 10, y + 8);
+    text(item.description.toUpperCase(), x + 10, y + 8);
 
-    // Quantity
-    textSize(12);
-    fill(150);
-    text(`Owned: ${currentQuantity}`, x + 10, y + 28);
-
-    // Description
     textSize(11);
-    fill(180);
-    text("Combat resource", x + 10, y + 45);
+    fill(149, 177, 182);
+    text("Single-use guided projectile", x + 10, y + 29);
 
-    // Cost per unit and affordability
-    textSize(13);
-    fill(canAfford ? color(255, 200, 100) : color(150, 150, 150));
-    text(`Cost: ${item.costPerUnit}`, x + 10, y + 60);
+    fill(174, 205, 211);
+    text(`OWNED ${currentQuantity}`, x + 10, y + 50);
+
+    fill(canAfford ? color(255, 223, 136) : color(132, 132, 132));
+    textSize(12);
+    text(`UNIT COST ${item.costPerUnit}`, x + 10, y + 98);
+
+    textAlign(RIGHT, TOP);
+    textSize(10);
+    fill(canAfford ? color(148, 252, 165) : color(129, 129, 129));
+    text(canAfford ? "CLICK TO BUY +1" : "INSUFFICIENT COINS", x + CARD_W - 10, y + 100);
   }
 
   //--------------------------------------
   // SHOP DISPLAY
   //--------------------------------------
   function drawShopUI() {
-    // Semi-transparent overlay
     noStroke();
-    fill(0, 0, 0, 180);
+    fill(2, 8, 14, 210);
     rect(0, 0, width, height);
 
-    const cx = width / 2;
-    const baseY = height / 2 - 200;
+    const layout = getLayout();
+    const { panelX, panelY } = layout;
 
-    // Title
-    textAlign(CENTER, CENTER);
-    textSize(32);
-    fill(255, 200, 100);
+    drawTechFrame(panelX, panelY, PANEL_W, PANEL_H, "Docked Store // The Kestrel");
+
     noStroke();
-    text("SHOP", cx, baseY);
-
-    // Coin display
-    textSize(20);
-    fill(255, 255, 150);
-    text(`Coins: ${player?.coins ?? 0}`, cx, baseY + 50);
-
-    // Upgrades section
+    fill(28, 42, 54, 220);
+    rect(panelX + 30, panelY + 52, PANEL_W - 280, 30, 4);
     textAlign(LEFT, CENTER);
-    textSize(18);
-    fill(200, 220, 255);
-    text("UPGRADES", 50, baseY + 100);
+    textSize(16);
+    fill(220, 237, 242);
+    text("SYSTEMS", panelX + 42, panelY + 67);
 
-    // Upgrade cards layout
-    const upgradeY = baseY + 130;
-    let upgradeX = 50;
-    for (const [key, upgrade] of Object.entries(upgrades)) {
-      drawUpgradeCard(key, upgrade, upgradeX, upgradeY);
-      upgradeX += ITEM_WIDTH + 20;
+    noStroke();
+    fill(24, 38, 50, 220);
+    rect(panelX + 30, panelY + 203, PANEL_W - 280, 30, 4);
+    fill(220, 237, 242);
+    text("SUBSYSTEMS", panelX + 42, panelY + 218);
+
+    for (const card of layout.upgradeCards) {
+      drawUpgradeCard(card.key, upgrades[card.key], card.x, card.y);
     }
 
-    // Items section
-    textAlign(LEFT, CENTER);
-    textSize(18);
-    fill(200, 220, 255);
-    text("ITEMS", 50, baseY + 230);
-
-    // Items cards layout
-    const itemsY = baseY + 260;
-    let itemsX = 50;
-    for (const [key, item] of Object.entries(items)) {
-      drawItemCard(key, item, itemsX, itemsY);
-      itemsX += ITEM_WIDTH + 20;
+    for (const card of layout.itemCards) {
+      drawItemCard(card.key, items[card.key], card.x, card.y);
     }
 
-    // Close button
-    const closeButtonX = cx - BUTTON_W / 2;
-    const closeButtonY = height - 80;
+    const info = layout.rightPanel;
+    drawTechFrame(info.x, info.y, info.w, info.h, "Player Loadout");
+    noStroke();
+    fill(190, 228, 236);
+    textSize(13);
+    textAlign(LEFT, TOP);
+    text(`Credits: ${player?.coins ?? 0}`, info.x + 20, info.y + 56);
+    text(`Missiles: ${player?.missiles ?? 0}`, info.x + 20, info.y + 82);
+    text(`Power Lvl: ${player?.upgrades?.power ?? 1}`, info.x + 20, info.y + 108);
+    text(`Torch Lvl: ${player?.upgrades?.torch ?? 1}`, info.x + 20, info.y + 134);
+    text(`Sonar Lvl: ${player?.upgrades?.sonar ?? 1}`, info.x + 20, info.y + 160);
+
+    fill(116, 160, 171);
+    textSize(11);
+    text("Click any card to buy. Press B or close to return.", info.x + 20, info.y + 204, info.w - 40, 80);
+
     drawButton(
-      "Close (B)",
-      closeButtonX,
-      closeButtonY,
-      BUTTON_W,
-      BUTTON_H,
-      isOver(closeButtonX, closeButtonY, BUTTON_W, BUTTON_H),
+      "ACCEPT (B)",
+      layout.closeButton.x,
+      layout.closeButton.y,
+      layout.closeButton.w,
+      layout.closeButton.h,
+      isOver(layout.closeButton.x, layout.closeButton.y, layout.closeButton.w, layout.closeButton.h),
       true
     );
   }
@@ -336,39 +417,25 @@ export function createShopSystem(player) {
   function handleClick() {
     if (!shopOpen) return;
 
-    const cx = width / 2;
-    const baseY = height / 2 - 200;
-    const closeButtonX = cx - BUTTON_W / 2;
-    const closeButtonY = height - 80;
+    const layout = getLayout();
 
-    // Close button
-    if (isOver(closeButtonX, closeButtonY, BUTTON_W, BUTTON_H)) {
+    if (isOver(layout.closeButton.x, layout.closeButton.y, layout.closeButton.w, layout.closeButton.h)) {
       shopOpen = false;
       return;
     }
 
-    // Upgrade buttons
-    const upgradeY = baseY + 130;
-    let upgradeX = 50;
-
-    for (const [key, upgrade] of Object.entries(upgrades)) {
-      if (isOver(upgradeX, upgradeY, ITEM_WIDTH, ITEM_HEIGHT)) {
-        attemptUpgradePurchase(key);
+    for (const card of layout.upgradeCards) {
+      if (isOver(card.x, card.y, card.w, card.h)) {
+        attemptUpgradePurchase(card.key);
         return;
       }
-      upgradeX += ITEM_WIDTH + 20;
     }
 
-    // Item buttons
-    const itemsY = baseY + 260;
-    let itemsX = 50;
-
-    for (const [key, item] of Object.entries(items)) {
-      if (isOver(itemsX, itemsY, ITEM_WIDTH, ITEM_HEIGHT)) {
-        attemptItemPurchase(key, 1);
+    for (const card of layout.itemCards) {
+      if (isOver(card.x, card.y, card.w, card.h)) {
+        attemptItemPurchase(card.key, 1);
         return;
       }
-      itemsX += ITEM_WIDTH + 20;
     }
   }
 

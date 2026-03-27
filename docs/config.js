@@ -74,7 +74,8 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  MOVE_SPEED: 480,      // Pixels per second (clamped to /60 per frame)
+  STARTING_COINS: 10000,
+  MOVE_SPEED: 200,      // Pixels per second (clamped to /60 per frame)
   ACCELERATION: 3,      // Velocity increase per frame
   DRAG: 0.9  ,         // Higher = less friction (0.9-0.95 feels good)
   BOUNCE_DAMPING: 0.5,  // Velocity kept after bounce (0.5 = half speed)
@@ -87,7 +88,8 @@ export const PLAYER = {
 export const POWER = {
   MAX_POWER: 100,
   CURRENT_POWER: 100,
-  LOW_POWER_THRESHOLD: 0.15
+  LOW_POWER_THRESHOLD: 0.15,
+  DRAIN_RATE: 0
 };
 
 //======================
@@ -95,8 +97,9 @@ export const POWER = {
 //======================
 export const TORCH = {
   RADIUS: 100,
-  FLICKER_POWER_THRESHOLD: 0.15,
-  DRAIN_RATE: 1
+  UPGRADE_RADIUS_BONUS: 22,
+  MIN_RADIUS_WHEN_DRAINED: 50,
+  FLICKER_POWER_THRESHOLD: 0.15
 };
 
 //======================

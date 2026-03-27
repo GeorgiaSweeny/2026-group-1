@@ -3,12 +3,25 @@
  "infinite":false,
  "layers":[
         {
+         "id":4,
+         "image":"",
+         "locked":true,
+         "name":"Background",
+         "opacity":1,
+         "type":"imagelayer",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "class":"collision",
          "compression":"zlib",
-         "data":"eJxzZWRgcIXiAiAOgmJigSuS\/rMk6KOWfndGCB4O+vuBeC2JZsD0w7AeUGwGmfpPMkD07wLiGiLdgU3\/HCB7LhlhcRaqdxRAwC8iwkKKCT8mBADRRhdl",
+         "data":"eJxzZWRgcIXiAiAOgmJigSuS\/rMk6KOWfndGCB4O+vuBeC2JZsD0g7AWkK8HxDPI1H8Sqn8XENcQ6Q5s+ucA2XPJCIuzUL30BkuY6G8nMeAXEWEhxYTArkyofCki\/AUAO2AYGA==",
          "encoding":"base64",
          "height":16,
          "id":1,
-         "name":"Tile Layer 1",
+         "locked":true,
+         "name":"collision",
          "opacity":1,
          "type":"tilelayer",
          "visible":true,
@@ -16,7 +29,7 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":2,
+ "nextlayerid":6,
  "nextobjectid":1,
  "orientation":"orthogonal",
  "renderorder":"right-down",
@@ -26,6 +39,18 @@
         {
          "firstgid":1,
          "source":"..\/tilesets\/Cave textures\/CaveG.tsx"
+        }, 
+        {
+         "firstgid":577,
+         "source":"..\/tilesets\/Cave textures\/ParallaxCave1.tsx"
+        }, 
+        {
+         "firstgid":585,
+         "source":"..\/..\/assets\/backgrounds\/backgrounds.tsx"
+        }, 
+        {
+         "firstgid":586,
+         "source":"..\/tilesets\/prototype-tileset\/prototype-tileset.tsx"
         }],
  "tilewidth":32,
  "type":"map",
