@@ -469,15 +469,22 @@ As mentioned above, the structure of this project separates the container, the s
 For that reason, this diagram is intended less as a traditional “who inherits from what” class diagram, and more as a structural overview of how data flows through the game and how different systems interact during execution.
 
 This diagram is divided into four parts:
-	1.	Core loop and inputs
-This part shows how the game is driven at the highest level. It begins with p5.js event functions such as keyPressed and draw, which feed into sketch.js, the main orchestrator. sketch.js then triggers the engine, which runs the update sequence each frame.
-	2.	Data / entities
-This section represents the shared game state that the systems read from and modify. It includes the player object, room state, and global game state. Rather than owning behaviour directly, these elements mainly store the data that the systems operate on.
-	3.	Update phase / logic
-This part shows the ordered sequence of gameplay systems executed by the engine during each update cycle. Each system performs a specific responsibility, such as handling input, applying movement, resolving physics, updating resources, managing torch and sonar behaviour, processing room transitions, and updating the camera. Together, these systems implement the game logic by reading and mutating the shared state.
-	4.	Render phase
-This section shows how the current game state is turned into what the player sees on screen. Rendering-related systems use the updated data to calculate lighting, draw the world, and display menu or overlay screens such as pause and win states.
 
+1. **Core loop and inputs**
+
+   This part shows how the game is driven at the highest level. It begins with p5.js event functions such as `keyPressed` and `draw`, which feed into `sketch.js`, the main orchestrator. `sketch.js` then triggers the engine, which runs the update sequence each frame.
+
+2. **Data / entities**
+
+   This section represents the shared game state that the systems read from and modify. It includes the player object, room state, and global game state. Rather than owning behaviour directly, these elements mainly store the data that the systems operate on.
+
+3. **Update phase / logic**
+
+   This part shows the ordered sequence of gameplay systems executed by the engine during each update cycle. Each system performs a specific responsibility, such as handling input, applying movement, resolving physics, updating resources, managing torch and sonar behaviour, processing room transitions, and updating the camera. Together, these systems implement the game logic by reading and mutating the shared state.
+
+4. **Render phase**
+
+   This section shows how the current game state is turned into what the player sees on screen. Rendering-related systems use the updated data to calculate lighting, draw the world, and display menu or overlay screens such as pause and win states.
 
 ```mermaid
 
@@ -544,16 +551,11 @@ flowchart TD
     DataState -.->|Provides current state| Render
     Sketch -->|Calls draw| RenderSystems
 
-    %% STYLING
-    classDef loop fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#fff
-    classDef data fill:#14532d,stroke:#4ade80,stroke-width:2px,color:#fff
-    classDef sys fill:#581c87,stroke:#c084fc,stroke-width:2px,color:#fff
-    classDef render fill:#b45309,stroke:#fbbf24,stroke-width:2px,color:#fff
-    
-    class EngineLoop loop
-    class DataState data
-    class UpdateSystems sys
-    class RenderSystems render
+	%% SUBGRAPH BACKGROUNDS
+    style EngineLoop fill:#FFDCDC,stroke:#333,stroke-width:0px
+    style DataState fill:#FFF2EB,stroke:#333,stroke-width:0px
+    style UpdateSystems fill:#FFE8CD,stroke:#333,stroke-width:0px
+    style RenderSystems fill:#FFD6BA,stroke:#333,stroke-width:0px
 
 ```
 
