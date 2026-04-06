@@ -25,5 +25,6 @@ export class Crab extends Hitbox {
 
     //for isColliding
     this.nextPos = createVector(this.position.x, this.position.y);
+    this.previousPos = createVector(this.position.x, this.position.y);
   }
 }

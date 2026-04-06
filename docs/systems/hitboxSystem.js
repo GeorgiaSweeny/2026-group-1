@@ -33,6 +33,9 @@ export class Hitbox{
       case DEBUG_COLOR.PLAYER:
         fill(0, 0, 255, 125);
         break;
+      case DEBUG_COLOR.ENEMY:
+        fill(0, 255, 0, 125);
+        break;
     }
     rect(this.position.x - (this.w / 2), this.position.y - (this.h / 2), this.w, this.h);
   }
