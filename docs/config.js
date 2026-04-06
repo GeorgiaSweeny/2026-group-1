@@ -132,7 +132,7 @@ export const GAME = {
 // HITBOX DEBUG
 //======================
 export const DEBUG_COLOR = {
-  DRAW : true,
+  DRAW : false,
   WALL : "wall",
   PLAYER : "player",
   ENEMY : "enemy",
