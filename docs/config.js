@@ -16,6 +16,10 @@ RULES:
 ========================================
 */
 
+export const TIME = {
+  fixedDeltaTime : 1 / 60,
+}
+
 //======================
 // KEY CODES CONFIG
 //======================
@@ -145,6 +149,7 @@ export const MISSILE = {
 // GAME CONFIG
 //======================
 export const GAME = {
+  FPS : 75,
 };
 
 

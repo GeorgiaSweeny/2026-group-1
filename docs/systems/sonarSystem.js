@@ -105,9 +105,9 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
   let cooldownTimer = 0;
 
   return {
-    update(dt = 16) {
+    update(fixedDeltaTime) {
       if (cooldownTimer > 0) {
-        cooldownTimer = Math.max(0, cooldownTimer - dt);
+        cooldownTimer = Math.max(0, cooldownTimer - fixedDeltaTime);
       }
 
       if (player?.actionIntent?.emitSonar) {
@@ -138,7 +138,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
         
         const currentAlpha = wallAlpha.get(wall);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * dt));
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * fixedDeltaTime));
           if (nextAlpha <= 0) {
             wallAlpha.delete(wall);
           } else {
@@ -155,7 +155,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
         const currentAlpha = hazardAlpha.get(hazard);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * dt));
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * fixedDeltaTime));
           if (nextAlpha <= 0) {
             hazardAlpha.delete(hazard);
           } else {
@@ -172,7 +172,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
         const currentAlpha = collectableAlpha.get(collectable);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * dt));
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * fixedDeltaTime));
           if (nextAlpha <= 0) {
             collectableAlpha.delete(collectable);
           } else {
@@ -183,7 +183,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
       for (let i = pulses.length - 1; i >= 0; i--) {
         const p = pulses[i];
-        p.update(dt, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha);
+        p.update(fixedDeltaTime, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha);
 
         if (p.isFinished()) {
           pulses.splice(i, 1);
@@ -219,25 +219,43 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
       return reveals;
     },
 
-    getActivePulses() {
-      return pulses;
-    },
-
-    getSonarLights() {
-      const lights = [];
-      for (const pulse of pulses) {
-        for (const p of pulse.particles) {
-          if (p.life > 0) {
-            lights.push({
-              x: p.pos.x,
-              y: p.pos.y,
-              radius: 40,
-              intensity: p.life / RAY_LIFETIME
-            });
-          }
+    getRevealedHazards() {
+      const inputHazards = getNormalisedObjects(getHazards);
+      const reveals = [];
+      for (const hazard of inputHazards) {
+        const alpha = hazardAlpha.get(hazard);
+        if (!alpha) continue;
+        const rect = readCenterRect(hazard);
+        if (rect) {
+          reveals.push({ ...rect, alpha: Math.max(0, Math.min(255, alpha)) });
         }
       }
-      return lights;
+      return reveals;
+    },
+
+    getRevealedCollectables() {
+      const inputCollectables = getNormalisedObjects(getCollectables);
+      const reveals = [];
+      for (const item of inputCollectables) {
+        const alpha = collectableAlpha.get(item);
+        if (!alpha) continue;
+        const rect = readCenterRect(item);
+        if (rect) {
+          reveals.push({
+            ...rect,
+            alpha: Math.max(0, Math.min(255, alpha)),
+            gid: item?.gid ?? null,
+            collectableType: item?.collectableType ?? '',
+            type: item?.type ?? '',
+            resourceType: item?.resourceType ?? item?.properties?.resourceType ?? item?.properties?.type ?? ''
+          });
+        }
+      }
+      return reveals;
+    },
+
+    getActivePulses() {
+      return pulses;
     }
   };
 }
@@ -256,19 +274,19 @@ class Pulse {
     }
   }
 
-  update(dt, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha) {
+  update(fixedDeltaTime, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha) {
     for (const p of this.particles) {
       if (p.life <= 0) {
         continue;
       }
 
-      p.life -= RAY_DECAY * dt;
+      p.life -= RAY_DECAY * fixedDeltaTime;
       if (p.life <= 0) {
         continue;
       }
 
-      const nextX = p.pos.x + p.vel.x * dt;
-      const nextY = p.pos.y + p.vel.y * dt;
+      const nextX = p.pos.x + p.vel.x * fixedDeltaTime;
+      const nextY = p.pos.y + p.vel.y * fixedDeltaTime;
       let collided = false;
 
       for (const { wall, rect } of wallData) {

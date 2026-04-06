@@ -16,7 +16,7 @@ HIERARCHY:
   - resourceType: "health" (specific resource)
 
 RULES:
-- Runs in update(deltaTime)
+- Runs in update(fixedDeltaTime)
 - Only processes entities with type === "resource" or gid-resolved collectables
 - Delegates to internal handlers based on resourceType
 - Hazard drain is one shot (burst) + continuous if it stays
@@ -32,14 +32,20 @@ DESIGN GOALS:
 // RESOURCE MANAGEMENT SYSTEM
 //======================================
 
-import { isColliding } from './hitboxSystem.js';
+import { isColliding } from "./hitboxSystem.js";
 
-export function createResourceManagementSystem(player, roomSystem, getCollectables, getHazards, getDifficulty) {
+export function createResourceManagementSystem(
+  player,
+  roomSystem,
+  getCollectables,
+  getHazards,
+  getDifficulty,
+) {
   const collectedEntities = new Set();
 
   let wasOnHazard = false;
-  const HAZARD_DRAIN_RATE = 1.5;    // continuous drain
-  const HAZARD_ENTRY_PENALTY = 10;  // instant drain on first contact
+  const HAZARD_DRAIN_RATE = 1.5; // continuous drain
+  const HAZARD_ENTRY_PENALTY = 10; // instant drain on first contact
 
   //=======================================
   // COLLECTABLE TYPE RESOLUTION
@@ -92,11 +98,11 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
     //   );
     // },  
     health(player, item) {
-      const difficulty = getDifficulty?.() ?? 'normal';
-      const amount = difficulty === 'hard' ? 2 : 5;
+      const difficulty = getDifficulty?.() ?? "normal";
+      const amount = difficulty === "hard" ? 2 : 5;
       player.power.current = Math.max(
         0,
-        Math.min(player.power.current + amount, player.power.maxPower)
+        Math.min(player.power.current + amount, player.power.maxPower),
       );
     },
     coin(player, item) {
@@ -114,9 +120,11 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
 
     for (const h of hazards) {
       if (checkCollision(player, h)) {
-
         if (!wasOnHazard) {
-          player.power.current = Math.max(0, player.power.current - HAZARD_ENTRY_PENALTY);
+          player.power.current = Math.max(
+            0,
+            player.power.current - HAZARD_ENTRY_PENALTY,
+          );
         }
 
         player.power.drain(HAZARD_DRAIN_RATE, deltaTime);
@@ -155,9 +163,14 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
     //======================================
     // UPDATE — called by engine each frame
     //======================================
-    update(deltaTime) {
-      processHazards(deltaTime);
+    update(fixedDeltaTime) {
+      processHazards(fixedDeltaTime);
       processCollectables();
+    },
+
+    // Clears the collected items so they respawn on game reset
+    reset() {
+      collectedEntities.clear();
     },
 
     // filters collected items for renderSystem
@@ -165,7 +178,6 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
       return collectedEntities.has(entity);
     },
 
-    
     collectEntity(entity) {
       collectedEntities.add(entity);
     },
@@ -180,6 +192,6 @@ export function createResourceManagementSystem(player, roomSystem, getCollectabl
         if (filterResourceType) return resourceType === filterResourceType;
         return true;
       });
-    }
+    },
   };
 }

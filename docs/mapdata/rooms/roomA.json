@@ -2876,6 +2876,33 @@
    "y": 0
   },
   {
+    "draworder": "topdown",
+    "id": 10,
+    "name": "enemies",
+    "objects": [
+        {
+        "height": 14,
+        "id": 49,
+        "name": "crab",
+        "properties": [
+            { "name": "patrolDistance", "type": "int", "value": 64 },
+            { "name": "speed", "type": "float", "value": 8 }
+        ],
+        "rotation": 0,
+        "type": "enemy",
+        "visible": true,
+        "width": 20,
+        "x": 240,
+        "y": 400
+        }
+    ],
+    "opacity": 1,
+    "type": "objectgroup",
+    "visible": true,
+    "x": 0,
+    "y": 0
+},
+{
    "draworder": "topdown",
    "id": 8,
    "name": "collectables",
@@ -3178,7 +3205,7 @@
   }
  ],
  "nextlayerid": 12,
- "nextobjectid": 48,
+ "nextobjectid": 50,
  "orientation": "orthogonal",
  "renderorder": "right-down",
  "tiledversion": "1.11.2",

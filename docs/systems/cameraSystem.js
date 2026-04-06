@@ -26,6 +26,8 @@ export function createCameraSystem(player, viewportWidth, viewportHeight) {
 
   let camX = player.position.x - (viewportWidth / SCALE) / 2;
   let camY = player.position.y - (viewportHeight / SCALE) / 2;
+  let oldCamX = camX;
+  let oldCamY = camY;
 
   const LERP_SPEED = 0.08;
 
@@ -35,8 +37,14 @@ export function createCameraSystem(player, viewportWidth, viewportHeight) {
       const vh = viewportHeight / SCALE;
       const targetX = player.position.x - vw / 2;
       const targetY = player.position.y - vh / 2;
+      oldCamX = camX;
+      oldCamY = camY;
       camX += (targetX - camX) * LERP_SPEED;
       camY += (targetY - camY) * LERP_SPEED;
+    },
+
+    getOldCamPosition(){
+      return {x : oldCamX, y : oldCamY};
     },
 
     getOffset() {

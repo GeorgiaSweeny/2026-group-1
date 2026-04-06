@@ -7,7 +7,7 @@ DESCRIPTION:
 - Draws room background, platforms, player, UI.
   and ligthing
 
-- Power modifiers added by Monal
+- Power modifiers, enemy stuff added by Monal
 - Hitbox debug by Nick
 ========================================
 */
@@ -22,6 +22,7 @@ export function createRenderSystem({
    getPlatforms,
    getHazards,
    getCollectables,
+   getEnemies,
    getTriggers,
    getEntities,
    getSpawnPoints,
@@ -29,12 +30,17 @@ export function createRenderSystem({
    getTileSize,
    getBackground,
    getPlatformColor,
+   getSonarReveals,
+   getSonarHazardReveals,
+   getSonarCollectableReveals,
+   getSonarCooldown,
    assets,
    darknessLayer,
    getLightSources,
    getActivePulses,
    getRevealedWalls,
    getCameraOffset,
+   getOldCamPosition,
    getCameraScale,
    getMissiles,
    getParticles,
@@ -270,6 +276,41 @@ export function createRenderSystem({
       }
    }
 
+   //=== ENEMIES - Crab ===//
+   function drawEnemies() {
+      const enemies = getEnemies?.() ?? [];
+      if (!enemies.length) return;
+
+      for (const crab of enemies) {
+         push();
+         translate(crab.position.x, crab.position.y);
+         scale(crab.facing, 1);
+
+         // body
+         noStroke();
+         fill(200, 80, 50);
+         ellipse(0, 0, crab.w, crab.h);
+
+         // left claw
+         fill(180, 60, 40);
+         triangle(-crab.w / 2 - 6, -4, -crab.w / 2, -8, -crab.w / 2, 0);
+
+         // right claw  
+         triangle(crab.w / 2 + 6, -4, crab.w / 2, -8, crab.w / 2, 0);
+
+         // eyes
+         fill(255);
+         circle(-4, -3, 4);
+         circle(4, -3, 4);
+         fill(0);
+         circle(-4, -3, 2);
+         circle(4, -3, 2);
+
+         pop();
+      }
+   }
+
+
    //===PLAYER===//
    function drawPlayer() {
       push();
@@ -352,15 +393,15 @@ export function createRenderSystem({
 
    //===SONAR PULSES===//
    function drawSonarPulses() {
-      const activePulses = getActivePulses?.() ?? [];
-      if (!activePulses.length) return;
+      const pulses = getActivePulses?.() ?? [];
+      if (!pulses.length) return;
 
       push();
-      blendMode(ADD);
-      for (const pulse of activePulses) {
-         if (typeof pulse.show === 'function') {
-            pulse.show();
-         }
+      if (typeof blendMode === 'function' && typeof ADD !== 'undefined') {
+         blendMode(ADD);
+      }
+      for (const pulse of pulses) {
+         pulse?.show?.();
       }
       pop();
    }
@@ -370,9 +411,23 @@ export function createRenderSystem({
       const walls = getRevealedWalls?.() ?? [];
       for (const wall of walls) {
          if (wall.alpha > 1) {
+            // Dark background rect
             noStroke();
-            fill(90, 110, 130, wall.alpha);
+            fill(20, 25, 35, wall.alpha);
             rect(wall.x, wall.y, wall.w, wall.h, 3);
+
+            // Rocky texture overlay
+            fill(40, 50, 65, wall.alpha);
+            const rockPoints = Array.isArray(wall.rockPoints) ? wall.rockPoints : null;
+            if (rockPoints && rockPoints.length > 1) {
+               beginShape();
+               for (const pt of rockPoints) {
+                  vertex(pt.px, pt.py);
+               }
+               endShape(CLOSE);
+            } else {
+               rect(wall.x, wall.y, wall.w, wall.h, 3);
+            }
          }
       }
    }
@@ -387,9 +442,12 @@ export function createRenderSystem({
 
       for (const light of lightSources) {
          const { x, y, radius, intensity = 1, kind } = light;
+         if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(radius)) continue;
+         if (!Number.isFinite(intensity)) continue;
          const screenX = (x - cam.x) * camScale;
          const screenY = (y - cam.y) * camScale;
          const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius)) continue;
          const gradient = ctx.createRadialGradient(
             screenX, screenY, scaledRadius * 0.1,
             screenX, screenY, scaledRadius
@@ -453,6 +511,39 @@ export function createRenderSystem({
       // Replaced the old power text with new ui // Archie
 
       // pop();
+      fill(255);
+      noStroke();
+      text(`Power: ${Math.round(player.power.current)}`, 20, 30);
+
+      const sonarCooldown = getSonarCooldown?.() ?? 0;
+      if (Number.isFinite(sonarCooldown) && sonarCooldown > 0) {
+         fill('#d61b1b');
+         text(`Sonar: cooling`, 20, 55);
+      } else {
+         fill('#64ff64');
+         text(`Sonar: ready (K)`, 20, 55);
+      }
+   }
+
+//======================================
+// DRAW SONAR
+//======================================
+   function drawSonarReveals() {
+      if (player?.torch?.isOn) return;
+      const reveals = getSonarReveals?.() ?? [];
+      if (!reveals.length) return;
+
+      rectMode(CORNER);
+      for (const r of reveals) {
+         const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
+         noStroke();
+         fill(90, 110, 130, alpha);
+         rect(r.x, r.y, r.w, r.h);
+
+         noFill();
+         rect(r.x, r.y, r.w, r.h);
+      }
+      rectMode(CORNER);
    }
 
    function drawSonarHazardReveals() {
@@ -505,29 +596,41 @@ export function createRenderSystem({
       }
    }
 
+// calculate rendering positions for higher fps
+function renderInterpolate(oldState, newState, alpha){
+   const from = Number.isFinite(oldState) ? oldState : 0;
+   const to = Number.isFinite(newState) ? newState : from;
+   const a = Number.isFinite(alpha) ? alpha : 1;
+   return from + (to - from) * a;
+}
+
 //======================================
 // DRAW EVERYTHING
 //======================================
       return {
-         draw(deltaTime) {
-            elapsedTime += deltaTime;
+         draw(fixedDeltaTime = 0, alpha = 1) {
+            elapsedTime += fixedDeltaTime;
             const lightSources = getLightSources?.() ?? [];
             const cam = getCameraOffset?.() ?? { x: 0, y: 0 };
+            const oldCam = getOldCamPosition?.() ?? cam;
             const camScale = getCameraScale?.() ?? 1;
+            const ax = Number.isFinite(alpha) ? alpha : 1;
 
-            // --- Screen space: background fills viewport ---
+            // --- Screen space: background fills viewport --- //
             drawBackground();
 
-            // --- World space (scaled + translated by camera) ---
+            // --- World space (scaled + translated by camera) --- //
             push();
             scale(camScale);
-            translate(-cam.x, -cam.y);
+            translate(renderInterpolate(-oldCam.x, -cam.x, ax), renderInterpolate(-oldCam.y, -cam.y, ax));
 
+            // Comment out prototype visuals from render
             drawPlatforms();
             drawHazards();
+            drawEnemies();
             drawCollectables();
             drawTriggers();
-            drawEntities();
+          //  drawEntities(); - will need interpolation
             drawSpawnPoints();
             drawSonarWalls();
             drawParticles();
@@ -539,12 +642,22 @@ export function createRenderSystem({
 
             pop();
 
-            // --- Screen space (fixed to viewport) ---
-            drawLighting(lightSources, cam, camScale);
-            drawUI();
-         }
-      };
-   }
+            // --- Screen space (fixed to viewport) --- //
+         drawLighting(lightSources, cam, camScale);
+
+         // --- World space overlays (drawn above lighting) --- //
+         push();
+         scale(camScale);
+         translate(renderInterpolate(-oldCam.x, -cam.x, ax), renderInterpolate(-oldCam.y, -cam.y, ax));
+         drawSonarReveals();
+         drawSonarHazardReveals();
+         drawSonarCollectableReveals();
+         pop();
+
+         drawUI();
+      }
+   };
+}
 //======================================
 // END
 //======================================
