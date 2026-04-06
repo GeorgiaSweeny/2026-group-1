@@ -23,7 +23,7 @@ import { createSonarSystem } from "./systems/sonarSystem.js";
 import { createRoomSystem } from "./systems/roomSystem.js";
 import { createPauseMenuSystem } from "./systems/pauseMenuSystem.js";
 import { createCameraSystem } from "./systems/cameraSystem.js";
-import { CANVAS, DISPLAY, PLAYER, POWER, TORCH } from "./config.js";
+import { CAMERA, CANVAS, DISPLAY, PLAYER, POWER, TORCH } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
@@ -366,6 +366,7 @@ function setup() {
   playerSystem = createPlayerSystem(player);
   physicsSystem = createPhysicsSystem(player, () => roomSystem.getRoomState());
   cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
+  cameraSystem.setScale(CAMERA.DEFAULT_SCALE);
   // Snap camera to player's initial position
   cameraSystem.snapTo(player.position.x, player.position.y);
   torchSystem = createTorchSystem(player.torch, player, {
@@ -686,10 +687,10 @@ function applyDisplayScale() {
     return;
   }
 
-  // Production mode: fill viewport without distortion (uniform scale, may crop).
+  // Production mode: fit entire canvas in viewport without distortion (no crop).
   const scaleX = viewportW / width;
   const scaleY = viewportH / height;
-  const s = Math.max(scaleX, scaleY);
+  const s = Math.min(scaleX, scaleY);
   canvasEl.style.width = Math.max(1, Math.floor(width * s)) + "px";
   canvasEl.style.height = Math.max(1, Math.floor(height * s)) + "px";
 }

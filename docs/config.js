@@ -47,10 +47,18 @@ clean scaling for modern resolutions like 640x360 or 1920x1080
 Base Resolution: Use 640x360 as a base resolution for 16:9
 then scale up, rather than designing in native 1080p*/
 export const CANVAS = {
-  WIDTH: 800,
-  HEIGHT: 800,
+  WIDTH: 1920,
+  HEIGHT: 1080,
 
   TILE_SIZE: 16
+};
+
+//======================
+// CAMERA CONFIG
+//======================
+export const CAMERA = {
+  // < 1.0 zooms out, > 1.0 zooms in
+  DEFAULT_SCALE: 0.9,
 };
 
 //======================

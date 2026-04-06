@@ -305,7 +305,7 @@ export function createShopSystem(player) {
     const layout = getLayout();
     const { panelX, panelY } = layout;
 
-    drawTechFrame(panelX, panelY, PANEL_W, PANEL_H, "Docked Store // The Kestrel");
+    drawTechFrame(panelX, panelY, PANEL_W, PANEL_H, "SHOP");
 
     noStroke();
     fill(28, 42, 54, 220);

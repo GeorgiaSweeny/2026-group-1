@@ -416,40 +416,43 @@ export function createRenderSystem({
 
    //===UI===//
    function drawUI() {
-      push();
-      blendMode(BLEND);
+      // push();
+      // blendMode(BLEND);
 
-      const barX = 10;
-      const barY = 10;
-      const barW = 120;
-      const barH = 14;
-      const pct = constrain(player.power.getPercent(), 0, 1);
+      // const barX = 10;
+      // const barY = 10;
+      // const barW = 120;
+      // const barH = 14;
+      // const pct = constrain(player.power.getPercent(), 0, 1);
 
-      // Background
-      noStroke();
-      fill(40, 40, 40, 200);
-      rect(barX, barY, barW, barH, 3);
+      // // Background
+      // noStroke();
+      // fill(40, 40, 40, 200);
+      // rect(barX, barY, barW, barH, 3);
 
-      // Fill — green to red
-      const r = lerp(220, 50, pct);
-      const g = lerp(60, 200, pct);
-      fill(r, g, 60);
-      rect(barX, barY, barW * pct, barH, 3);
+      // // Fill — green to red
+      // const r = lerp(220, 50, pct);
+      // const g = lerp(60, 200, pct);
+      // fill(r, g, 60);
+      // rect(barX, barY, barW * pct, barH, 3);
 
       // Border
-      noFill();
-      stroke(200);
-      strokeWeight(1);
-      rect(barX, barY, barW, barH, 3);
+      // noFill();
+      // stroke(200);
+      // strokeWeight(1);
+      // rect(barX, barY, barW, barH, 3);
 
       // Label
-      noStroke();
-      fill(255);
-      textSize(10);
-      textAlign(LEFT, TOP);
-      text(`Power: ${Math.round(player.power.current)}`, barX + 4, barY + 2);
+      // noStroke();
+      // fill(255);
+      // textSize(10);
+      // textAlign(LEFT, TOP);
+      // text(`Power: ${Math.round(player.power.current)}`, barX + 4, barY + 2);
+      
+      
+      // Replaced the old power text with new ui // Archie
 
-      pop();
+      // pop();
    }
 
    function drawSonarHazardReveals() {
