@@ -92,8 +92,20 @@ export function isColliding(hitbox1, hitbox2){
 }
 
 export function resolveWallCollision(entity, wall){
-    if(wall.zones[0]){entity.nextPos.y = (wall.position.y - (wall.h / 2)) - (entity.h / 2) - 1}
-    if(wall.zones[1]){entity.nextPos.x = (wall.position.x + (wall.w / 2)) + (entity.w / 2) + 1}
-    if(wall.zones[2]){entity.nextPos.y = (wall.position.y + (wall.h / 2)) + (entity.h / 2) + 1}
-    if(wall.zones[3]){entity.nextPos.x = (wall.position.x - (wall.w / 2)) - (entity.w / 2) - 1}
+    if(wall.zones[0]){
+      entity.nextPos.y = (wall.position.y - (wall.h / 2)) - (entity.h / 2) - 1;
+      entity.velocity.y = 0;
+    }
+    if(wall.zones[1]){
+      entity.nextPos.x = (wall.position.x + (wall.w / 2)) + (entity.w / 2) + 1;
+      entity.velocity.x = 0;
+    }
+    if(wall.zones[2]){
+      entity.nextPos.y = (wall.position.y + (wall.h / 2)) + (entity.h / 2) + 1;
+      entity.velocity.y = 0;
+    }
+    if(wall.zones[3]){
+      entity.nextPos.x = (wall.position.x - (wall.w / 2)) - (entity.w / 2) - 1;
+      entity.velocity.x = 0;
+    }
 }
