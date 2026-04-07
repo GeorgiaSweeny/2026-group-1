@@ -33,6 +33,9 @@ export class Hitbox{
       case DEBUG_COLOR.PLAYER:
         fill(0, 0, 255, 125);
         break;
+      case DEBUG_COLOR.ENEMY:
+        fill(0, 255, 0, 125);
+        break;
     }
     rect(this.position.x - (this.w / 2), this.position.y - (this.h / 2), this.w, this.h);
   }
@@ -89,8 +92,20 @@ export function isColliding(hitbox1, hitbox2){
 }
 
 export function resolveWallCollision(entity, wall){
-    if(wall.zones[0]){entity.nextPos.y = (wall.position.y - (wall.h / 2)) - (entity.h / 2) - 1}
-    if(wall.zones[1]){entity.nextPos.x = (wall.position.x + (wall.w / 2)) + (entity.w / 2) + 1}
-    if(wall.zones[2]){entity.nextPos.y = (wall.position.y + (wall.h / 2)) + (entity.h / 2) + 1}
-    if(wall.zones[3]){entity.nextPos.x = (wall.position.x - (wall.w / 2)) - (entity.w / 2) - 1}
+    if(wall.zones[0]){
+      entity.nextPos.y = (wall.position.y - (wall.h / 2)) - (entity.h / 2) - 1;
+      entity.velocity.y = 0;
+    }
+    if(wall.zones[1]){
+      entity.nextPos.x = (wall.position.x + (wall.w / 2)) + (entity.w / 2) + 1;
+      entity.velocity.x = 0;
+    }
+    if(wall.zones[2]){
+      entity.nextPos.y = (wall.position.y + (wall.h / 2)) + (entity.h / 2) + 1;
+      entity.velocity.y = 0;
+    }
+    if(wall.zones[3]){
+      entity.nextPos.x = (wall.position.x - (wall.w / 2)) - (entity.w / 2) - 1;
+      entity.velocity.x = 0;
+    }
 }
