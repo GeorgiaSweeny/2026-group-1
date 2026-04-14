@@ -47,6 +47,7 @@ export function createRenderSystem({
    let elapsedTime = 0;
    const oscillationSpeed = 2; // Hz
    const oscillationAmount = 10; // pixels
+   const DISABLE_DARKNESS_LAYER = true;
 
 //======================================
 // DRAW GAME
@@ -398,6 +399,7 @@ export function createRenderSystem({
 
    //===LIGHTING===//
    function drawLighting(lightSources = [], cam = { x: 0, y: 0 }, camScale = 1) {
+      if (DISABLE_DARKNESS_LAYER) return;
       darknessLayer.clear();
       darknessLayer.background(0);
 
