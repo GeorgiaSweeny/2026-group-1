@@ -15,7 +15,7 @@
                  "opacity":1,
                  "rotation":0,
                  "type":"",
-                 "visible":false,
+                 "visible":true,
                  "width":800,
                  "x":0,
                  "y":800
@@ -90,18 +90,6 @@
          "type":"tilelayer",
          "visible":true,
          "width":50,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "class":"object",
-         "draworder":"topdown",
-         "id":12,
-         "name":"boundary",
-         "objects":[],
-         "opacity":0,
-         "type":"objectgroup",
-         "visible":true,
          "x":0,
          "y":0
         }, 
@@ -461,7 +449,7 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }, 
@@ -495,7 +483,7 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }, 
@@ -571,7 +559,7 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }, 
@@ -702,7 +690,7 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }, 
@@ -790,7 +778,7 @@
                 }],
          "opacity":1,
          "type":"objectgroup",
-         "visible":true,
+         "visible":false,
          "x":0,
          "y":0
         }, 
@@ -805,8 +793,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":13,
- "nextobjectid":50,
+ "nextlayerid":14,
+ "nextobjectid":52,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.12.0",
