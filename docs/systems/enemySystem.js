@@ -31,6 +31,8 @@ export function createEnemySystem(player, getEnemies) {
     if (crab.pendingDestroy) return; // Skip destroyed crabs
 
     const step = crab.speed * fixedDeltaTime;
+    crab.previousPos.x = crab.position.x;
+    crab.previousPos.y = crab.position.y; 
     crab.position.x += crab.direction * step;
 
     if (crab.position.x > crab.spawnX + crab.patrolDistance) {

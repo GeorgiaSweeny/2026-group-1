@@ -147,4 +147,5 @@ export const DEBUG_COLOR = {
   DRAW : false,
   WALL : "wall",
   PLAYER : "player",
+  ENEMY : "enemy",
 }

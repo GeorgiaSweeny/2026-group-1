@@ -282,13 +282,14 @@ export function createRenderSystem({
    }
 
    //=== ENEMIES - Crab ===//
-   function drawEnemies() {
+   function drawEnemies(alpha) {
       const enemies = getEnemies?.() ?? [];
       if (!enemies.length) return;
 
       for (const crab of enemies) {
          push();
-         translate(crab.position.x, crab.position.y);
+         translate(renderInterpolate(crab.previousPos.x, crab.position.x, alpha), renderInterpolate(crab.previousPos.y, crab.position.y, alpha));
+         
          scale(crab.facing, 1);
 
          // body
@@ -565,6 +566,11 @@ export function createRenderSystem({
             walls[i].debugDrawHitbox(DEBUG_COLOR.WALL);
          }
          player.debugDrawHitbox(DEBUG_COLOR.PLAYER);
+         const enemies = getEnemies?.() ?? [];
+         if (!enemies.length) return;
+         for (const crab of enemies) {
+            crab.debugDrawHitbox(DEBUG_COLOR.ENEMY);
+         }
       }
    }
 
@@ -595,13 +601,13 @@ function renderInterpolate(oldState, newState, alpha){
             // Comment out prototype visuals from render
             drawPlatforms();
             drawHazards();
-            drawEnemies();
+            drawEnemies(alpha);
             drawCollectables();
             drawTriggers();
-          //  drawEntities(); - will need interpolation
+            drawEntities(); //- will need interpolation
             drawSpawnPoints();
-          //  drawSonarWalls(); - might need interpolation
-          //  drawSonarPulses(); - might need interpolation
+            drawSonarWalls(); //- might need interpolation
+            drawSonarPulses(); //- might need interpolation
             drawBubbles();
             drawPlayer(alpha);
             drawMissiles();

@@ -448,8 +448,6 @@ The **Engine + Systems + Input Bridge + Render Flow** diagram shows the **per-fr
 - The **ordered system updates** ensuring consistent behaviour, including movement, collisions, power/resource changes, sonar pulses, lighting calculations, and camera movement.
 - **Render separation**, which keeps frame-dependent visual output isolated from game logic.
 
-
-
 ### The architecture supports:
 
 - **Incremental development** — new systems like sonar or advanced enemy AI can be added without refactoring existing modules.
@@ -464,7 +462,102 @@ The **Engine + Systems + Input Bridge + Render Flow** diagram shows the **per-fr
 
 The diagrams collectively **visualise the structure and runtime behaviour**, showing both **static responsibilities** and **dynamic per-frame interactions**. This provides clarity for team collaboration, future feature integration, and assessment of the game’s technical design.
 
-*(wordcount for section aprox 450)*
+### 3.3 Class diagram
+
+As mentioned above, the structure of this project separates the container, the shared data/state, and the logic into different files. A traditional UML class diagram is useful for showing the static structure of software, such as classes, inheritance, and relationships. However, that kind of diagram does not represent this project particularly well, because the project is organised more around systems, shared state, and execution flow than around object-oriented inheritance.
+
+For that reason, this diagram is intended less as a traditional “who inherits from what” class diagram, and more as a structural overview of how data flows through the game and how different systems interact during execution.
+
+This diagram is divided into four parts:
+
+1. **Core loop and inputs**
+
+   This part shows how the game is driven at the highest level. It begins with p5.js event functions such as `keyPressed` and `draw`, which feed into `sketch.js`, the main orchestrator. `sketch.js` then triggers the engine, which runs the update sequence each frame.
+
+2. **Data / entities**
+
+   This section represents the shared game state that the systems read from and modify. It includes the player object, room state, and global game state. Rather than owning behaviour directly, these elements mainly store the data that the systems operate on.
+
+3. **Update phase / logic**
+
+   This part shows the ordered sequence of gameplay systems executed by the engine during each update cycle. Each system performs a specific responsibility, such as handling input, applying movement, resolving physics, updating resources, managing torch and sonar behaviour, processing room transitions, and updating the camera. Together, these systems implement the game logic by reading and mutating the shared state.
+
+4. **Render phase**
+
+   This section shows how the current game state is turned into what the player sees on screen. Rendering-related systems use the updated data to calculate lighting, draw the world, and display menu or overlay screens such as pause and win states.
+
+```mermaid
+
+flowchart TD
+    %% 1. CORE LOOP & INPUTS
+    subgraph EngineLoop [1. Main Game Loop]
+        direction TB
+        P5Events([p5.js Events: keyPressed, draw])
+        Engine{engine.js}
+        Sketch((sketch.js Orchestrator))
+        
+        P5Events -->|Triggers| Sketch
+        Sketch -->|Calls update| Engine
+    end
+
+    %% 2. DATA / ENTITIES
+    subgraph DataState [2. Entities & Shared Data]
+        direction LR
+        Player[(Player Object<br/>Pos, Vel, Intent, Power)]
+        RoomData[(Room State<br/>Walls, Items, Exits)]
+        GameState((gameState))
+    end
+
+    %% 3. UPDATE LOGIC (Executed in sequence by Engine)
+    subgraph UpdateSystems [3. Update Phase - Logic & Math]
+        direction TB
+        Input[inputSystem]
+        PlayerSys[playerSystem]
+        Physics[physicsSystem]
+        Resource[resourceSystem]
+        Torch[torchSystem]
+        Sonar[sonarSystem]
+        RoomSys[roomSystem]
+        Camera[cameraSystem]
+
+        Input -->|Sets Intent| PlayerSys
+        PlayerSys -->|Calculates Velocity| Physics
+        Physics -->|Resolves Walls| Resource
+        Resource -->|Drains Power or Heals| Torch
+        Torch -->|Checks Power limits| Sonar
+        Sonar -->|Creates Pulses| RoomSys
+        RoomSys -->|Triggers Exits| Camera
+    end
+
+    %% 4. RENDER PHASE
+    subgraph RenderSystems [4. Render Phase - Screen Drawing]
+        direction TB
+        Lighting[lightingSystem]
+        Render[renderSystem]
+        Menus[Menu / Pause / Win Screens]
+
+        Lighting -->|Provides Light Sources| Render
+        Render -->|Draws World| Menus
+    end
+
+    %% CROSS-LAYER CONNECTIONS
+    Engine -->|Iterates Systems| UpdateSystems
+    UpdateSystems -->|Reads & Mutates| DataState
+    
+    %% Specific Data Dependencies for Rendering
+    Player -.->|Pos, Power, Torch| Lighting
+    Sonar -.->|Revealed Walls, Lights| Lighting
+    Camera -.->|Offsets & Scale| Render
+    DataState -.->|Provides current state| Render
+    Sketch -->|Calls draw| RenderSystems
+
+	%% SUBGRAPH BACKGROUNDS
+    style EngineLoop fill:#FFDCDC,stroke:#333,stroke-width:0px
+    style DataState fill:#FFF2EB,stroke:#333,stroke-width:0px
+    style UpdateSystems fill:#FFE8CD,stroke:#333,stroke-width:0px
+    style RenderSystems fill:#FFD6BA,stroke:#333,stroke-width:0px
+
+```
 
 ---
 ## Week 7 - User & Heuristic Evaluation
