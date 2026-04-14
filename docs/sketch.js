@@ -33,6 +33,7 @@ import { createParticleSystem } from "./systems/particleSystem.js";
 import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 
+
 let accumulator = 0;
 let alpha;
 
@@ -454,6 +455,8 @@ function setup() {
 
   shopSystem = createShopSystem(player);
 
+  shopSystem = createShopSystem(player);
+
   engine = new Engine();
   engine.register(inputSystem);
   engine.register(playerSystem);
@@ -621,6 +624,8 @@ function draw() {
     return;
   }
 
+  accumulator += deltaTime / 1000;
+
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
@@ -681,6 +686,16 @@ function mousePressed() {
 
   if (gameState === "SETTINGS") {
     pauseMenuSystem?.onMousePressed();
+    return;
+  }
+
+  if (shopSystem?.isShopOpen()) {
+    shopSystem?.onMousePressed();
+    return;
+  }
+
+  if (shopSystem?.isShopOpen()) {
+    shopSystem?.onMousePressed();
     return;
   }
 }
