@@ -393,9 +393,9 @@ export function createRoomSystem({
     });
   }
 
-  function updateRoomLogic(fixedDeltaTime) {
+  function updateRoomLogic() {
     for (const entity of entities) {
-      entity.update?.(fixedDeltaTime);
+      entity.update?.();
     }
   }
 
@@ -454,10 +454,10 @@ export function createRoomSystem({
   }
 
   return {
-    update(fixedDeltaTime) {
+    update() {
       if (!currentRoom) return;
-      exitCoolDownSeconds = Math.max(0, exitCoolDownSeconds - (fixedDeltaTime ?? 0));
-      updateRoomLogic(fixedDeltaTime);
+      exitCoolDownSeconds = Math.max(0, exitCoolDownSeconds);
+      updateRoomLogic();
       applyExitTransitions();
     },
 
