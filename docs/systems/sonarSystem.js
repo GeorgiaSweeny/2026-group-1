@@ -53,12 +53,12 @@ engine.register(sonarSystem);
 import { SONAR } from '../config.js';
 
 const RAY_COUNT = 360;
-const RAY_SPEED = 0.22 * 1000;
-const RAY_DECAY = 0.22;
-const RAY_LIFETIME = 255;
+const RAY_SPEED = 0.22;
+const RAY_DECAY = 0.1;
+const RAY_LIFETIME = 600;
 
 const REVEAL_BONUS = 70;
-const REVEAL_FADE_PER_MS = 0.2;
+const REVEAL_FADE_PER_MS = 0.9;
 
 function getNormalisedWalls(getWallsFinal) {
   const input = getWallsFinal?.() || [];

@@ -38,7 +38,8 @@ export const INPUT = {
   
   // ACTION KEYS - functions take strings
   TOGGLE_TORCH_KEY: ['L', 'l'],
-  SONAR_KEY: ['E', 'e']
+  SONAR_KEY: ['E', 'e'],
+  FIRE_MISSILE_KEY: ['space', ' ']
 };
 
 //======================
@@ -50,10 +51,18 @@ clean scaling for modern resolutions like 640x360 or 1920x1080
 Base Resolution: Use 640x360 as a base resolution for 16:9
 then scale up, rather than designing in native 1080p*/
 export const CANVAS = {
-  WIDTH: 800,
-  HEIGHT: 800,
+  WIDTH: 1920,
+  HEIGHT: 1080,
 
   TILE_SIZE: 16
+};
+
+//======================
+// CAMERA CONFIG
+//======================
+export const CAMERA = {
+  // < 1.0 zooms out, > 1.0 zooms in
+  DEFAULT_SCALE: 0.9,
 };
 
 //======================
@@ -77,9 +86,12 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  MAX_SPEED : 200,
-  ACCELERATION: 10,
-  FRICTION : 0.1
+  STARTING_COINS: 10000,
+  MOVE_SPEED: 200,      // Pixels per second (clamped to /60 per frame)
+  ACCELERATION: 3,      // Velocity increase per frame
+  DRAG: 0.9  ,         // Higher = less friction (0.9-0.95 feels good)
+  BOUNCE_DAMPING: 0.5,  // Velocity kept after bounce (0.5 = half speed)
+  MIN_VELOCITY: 0.1,    // Stop if slower than this
 };
 
 //======================
@@ -88,8 +100,8 @@ export const PLAYER = {
 export const POWER = {
   MAX_POWER: 100,
   CURRENT_POWER: 100,
-  LOW_POWER_THRESHOLD: 0.15
-  
+  LOW_POWER_THRESHOLD: 0.15,
+  DRAIN_RATE: 0
 };
 
 //======================
@@ -97,8 +109,9 @@ export const POWER = {
 //======================
 export const TORCH = {
   RADIUS: 100,
-  FLICKER_POWER_THRESHOLD: 0.15,
-  DRAIN_RATE: 1
+  UPGRADE_RADIUS_BONUS: 22,
+  MIN_RADIUS_WHEN_DRAINED: 50,
+  FLICKER_POWER_THRESHOLD: 0.15
 };
 
 //======================
@@ -117,7 +130,19 @@ export const LIGHTING = {
 export const SONAR = {
   // Cooldown in seconds for readability; derived ms used by sonarSystem
   COOLDOWN: 3,
-  COOLDOWN_MS: 3
+  COOLDOWN_MS: 3000
+};
+
+//======================
+// MISSILE CONFIG
+//======================
+export const MISSILE = {
+  WIDTH: 8,
+  HEIGHT: 8,
+  SPEED: 2,
+  MAX_DISTANCE: 2000,
+  TARGET_RADIUS: 150,
+  MAX_CONCURRENT: 5
 };
 
 //======================
