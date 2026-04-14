@@ -440,9 +440,20 @@
                  "gid":79,
                  "height":16,
                  "id":25,
-                 "name":"",
+                 "name":"crab",
+                 "properties":[
+                        {
+                         "name":"patrolDisatnce",
+                         "type":"int",
+                         "value":5
+                        }, 
+                        {
+                         "name":"speed",
+                         "type":"float",
+                         "value":0.8
+                        }],
                  "rotation":0,
-                 "type":"",
+                 "type":"enemy",
                  "visible":true,
                  "width":16,
                  "x":1168,
@@ -452,9 +463,15 @@
                  "gid":79,
                  "height":16,
                  "id":26,
-                 "name":"",
+                 "name":"crab",
+                 "properties":[
+                        {
+                         "name":"patrolDistance",
+                         "type":"int",
+                         "value":5
+                        }],
                  "rotation":0,
-                 "type":"",
+                 "type":"enemies",
                  "visible":true,
                  "width":16,
                  "x":464,

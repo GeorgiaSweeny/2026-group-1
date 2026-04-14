@@ -217,7 +217,7 @@
                         {
                          "name":"targetRoom",
                          "type":"string",
-                         "value":"spikeMaze"
+                         "value":""
                         }, 
                         {
                          "name":"targetSpawn",
