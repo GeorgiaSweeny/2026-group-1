@@ -108,12 +108,19 @@ function normalizeRelativePath(basePath, relativePath) {
   return baseParts.join("/");
 }
 
+function resolveTilesetSourcePath(source) {
+  if (!source) return null;
+  const cleanSource = String(source).replace(/\\/g, "/");
+  const basePath = cleanSource.startsWith("tilesets/") ? "mapdata" : "mapdata/rooms";
+  return normalizeRelativePath(basePath, cleanSource);
+}
+
 function tilesetSourceToImagePath(source) {
   if (!source) return null;
   // backgrounds.tsx is an image collection (no single .png atlas file to load).
   if (String(source).toLowerCase().endsWith("backgrounds.tsx")) return null;
-  const pngSource = source.replace(/\.tsx$/i, ".png");
-  return normalizeRelativePath("mapdata/rooms", pngSource);
+  const tsxPath = resolveTilesetSourcePath(source);
+  return tsxPath ? tsxPath.replace(/\.tsx$/i, ".png") : null;
 }
 
 function parseTsxTileProperties(xmlText) {
@@ -279,10 +286,7 @@ function preload() {
   const tilePropsBySourcePath = {};
   for (const room of Object.values(roomData)) {
     for (const tileset of room?.tilesets ?? []) {
-      const sourcePath = normalizeRelativePath(
-        "mapdata/rooms",
-        tileset?.source ?? "",
-      );
+      const sourcePath = resolveTilesetSourcePath(tileset?.source ?? "");
       if (!sourcePath.toLowerCase().endsWith(".tsx")) continue;
       if (tilePropsBySourcePath[sourcePath]) continue;
 
@@ -295,10 +299,7 @@ function preload() {
 
   for (const room of Object.values(roomData)) {
     for (const tileset of room?.tilesets ?? []) {
-      const sourcePath = normalizeRelativePath(
-        "mapdata/rooms",
-        tileset?.source ?? "",
-      );
+      const sourcePath = resolveTilesetSourcePath(tileset?.source ?? "");
       tileset.tilePropertiesById = tilePropsBySourcePath[sourcePath] ?? {};
     }
   }
