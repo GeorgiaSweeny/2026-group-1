@@ -2,9 +2,15 @@
 ========================================
 MAIN (SKETCH CANVAS)
 ========================================
-VERSION: 2.5
+VERSION: 4
 SYSTEM: Main / p5.js Canvas
-AUTHOR: Georgia Sweeny
+AUTHOR: Georgia Sweeny (intial setup)
+
+DESCRIPTION:
+- uses p5.js library to power game...
+- runs JS system modules - wired up by team members
+- contains fixed deltatime logic for update
+  cycle (Nick)
 ========================================
 */
 
