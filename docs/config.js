@@ -128,8 +128,8 @@ export const LIGHTING = {
 //======================
 export const SONAR = {
   // Cooldown in seconds for readability; derived ms used by sonarSystem
-  COOLDOWN: 3,
-  COOLDOWN_MS: 3
+  COOLDOWN: 1,
+  COOLDOWN_MS: 1
 };
 
 //======================
