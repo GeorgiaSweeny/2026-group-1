@@ -653,8 +653,6 @@ function renderInterpolate(oldState, newState, alpha){
          drawSonarHazardReveals();
          drawSonarCollectableReveals();
          pop();
-
-         drawUI();
       }
    };
 }
