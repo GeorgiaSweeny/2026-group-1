@@ -56,8 +56,9 @@ let winScreenSystem;
 const WIN_STATE = "WIN";
 
 let assets = {};
-const INITIAL_ROOM_ID = "roomA";
-const ROOM_IDS = ["roomA", "roomB"];
+const INITIAL_ROOM_ID = "startArea";
+const ROOM_IDS = ["startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns", 
+                  "theDrop", "endlessAbyss", "theBiolume", "jellyfishAtrium", "theSurface"];
 const roomData = {};
 const FIT_CANVAS_TO_ROOM = false;
 let useDevResolution = false;
@@ -354,7 +355,7 @@ function setup() {
       gameState = WIN_STATE;
     },
   });
-  roomSystem.goToRoom(initialRoom, { spawnId: "default" });
+  roomSystem.goToRoom(INITIAL_ROOM_ID, { spawnId: "default" });
   syncCanvasToCurrentRoom();
   const playerStart = roomSystem.getPlayerStart();
   if (playerStart) {
