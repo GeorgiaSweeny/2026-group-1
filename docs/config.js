@@ -62,7 +62,7 @@ export const CANVAS = {
 //======================
 export const CAMERA = {
   // < 1.0 zooms out, > 1.0 zooms in
-  DEFAULT_SCALE: 0.9,
+  DEFAULT_SCALE: 1.0,
 };
 
 //======================

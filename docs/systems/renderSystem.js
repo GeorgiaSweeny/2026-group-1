@@ -68,7 +68,7 @@ export function createRenderSystem({
 
    function tilesetSourceToImagePath(source) {
       if (!source) return null;
-      return normalizeRelativePath('data/rooms', source).replace(/\.tsx$/i, '.png');
+      return normalizeRelativePath('mapdata/rooms', source).replace(/\.tsx$/i, '.png');
    }
 
    function getTilesetForGid(gid, tilesets = []) {
@@ -282,22 +282,29 @@ export function createRenderSystem({
       if (!enemies.length) return;
 
       for (const crab of enemies) {
+         const currX = Number.isFinite(crab?.position?.x) ? crab.position.x : (Number(crab?.x) || 0);
+         const currY = Number.isFinite(crab?.position?.y) ? crab.position.y : (Number(crab?.y) || 0);
+         const prevX = Number.isFinite(crab?.previousPos?.x) ? crab.previousPos.x : currX;
+         const prevY = Number.isFinite(crab?.previousPos?.y) ? crab.previousPos.y : currY;
+         const crabW = Number(crab?.w ?? crab?.width ?? 20) || 20;
+         const crabH = Number(crab?.h ?? crab?.height ?? 14) || 14;
+         const facing = Number.isFinite(crab?.facing) && crab.facing !== 0 ? crab.facing : 1;
+
          push();
-         translate(renderInterpolate(crab.previousPos.x, crab.position.x, alpha), renderInterpolate(crab.previousPos.y, crab.position.y, alpha));
-         
-         scale(crab.facing, 1);
+         translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
+         scale(facing, 1);
 
          // body
          noStroke();
          fill(200, 80, 50);
-         ellipse(0, 0, crab.w, crab.h);
+         ellipse(0, 0, crabW, crabH);
 
          // left claw
          fill(180, 60, 40);
-         triangle(-crab.w / 2 - 6, -4, -crab.w / 2, -8, -crab.w / 2, 0);
+         triangle(-crabW / 2 - 6, -4, -crabW / 2, -8, -crabW / 2, 0);
 
          // right claw  
-         triangle(crab.w / 2 + 6, -4, crab.w / 2, -8, crab.w / 2, 0);
+         triangle(crabW / 2 + 6, -4, crabW / 2, -8, crabW / 2, 0);
 
          // eyes
          fill(255);
