@@ -53,12 +53,12 @@ engine.register(sonarSystem);
 import { SONAR } from '../config.js';
 
 const RAY_COUNT = 360;
-const RAY_SPEED = 0.22;
-const RAY_DECAY = 0.1;
-const RAY_LIFETIME = 600;
+const RAY_SPEED = 2;
+const RAY_DECAY = 2;
+const RAY_LIFETIME = 255;
 
 const REVEAL_BONUS = 70;
-const REVEAL_FADE_PER_MS = 0.9;
+const REVEAL_FADE_PER_MS = 2;
 
 function getNormalisedWalls(getWallsFinal) {
   const input = getWallsFinal?.() || [];
@@ -105,11 +105,11 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
   let cooldownTimer = 0;
 
   return {
-    update(fixedDeltaTime) {
+    update() {
       if (cooldownTimer > 0) {
-        cooldownTimer = Math.max(0, cooldownTimer - fixedDeltaTime);
+        cooldownTimer = Math.max(0, cooldownTimer - 0.01);
       }
-
+  
       if (player?.actionIntent?.emitSonar) {
         if (cooldownTimer <= 0) {
           const px = typeof player.getX === 'function' ? player.getX() : player.x;
@@ -121,6 +121,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
           }
         }
         player.actionIntent.emitSonar = false;
+
       }
 
       const inputWalls = getNormalisedWalls(getWalls);
@@ -138,7 +139,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
         
         const currentAlpha = wallAlpha.get(wall);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * fixedDeltaTime));
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS));
           if (nextAlpha <= 0) {
             wallAlpha.delete(wall);
           } else {
@@ -155,7 +156,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
         const currentAlpha = hazardAlpha.get(hazard);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * fixedDeltaTime));
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS));
           if (nextAlpha <= 0) {
             hazardAlpha.delete(hazard);
           } else {
@@ -172,7 +173,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
         const currentAlpha = collectableAlpha.get(collectable);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS * fixedDeltaTime));
+          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS));
           if (nextAlpha <= 0) {
             collectableAlpha.delete(collectable);
           } else {
@@ -183,7 +184,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
       for (let i = pulses.length - 1; i >= 0; i--) {
         const p = pulses[i];
-        p.update(fixedDeltaTime, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha);
+        p.update(wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha);
 
         if (p.isFinished()) {
           pulses.splice(i, 1);
@@ -199,7 +200,8 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
       if (cooldownTimer <= 0) {
         return 0;
       }
-      return cooldownTimer / (SONAR.COOLDOWN_MS || 1);
+      print(cooldownTimer);
+      return cooldownTimer / (SONAR.COOLDOWN_MS);
     },
 
     getRevealedWalls() {
@@ -274,19 +276,19 @@ class Pulse {
     }
   }
 
-  update(fixedDeltaTime, wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha) {
+  update(wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha) {
     for (const p of this.particles) {
       if (p.life <= 0) {
         continue;
       }
 
-      p.life -= RAY_DECAY * fixedDeltaTime;
+      p.life -= RAY_DECAY;
       if (p.life <= 0) {
         continue;
       }
 
-      const nextX = p.pos.x + p.vel.x * fixedDeltaTime;
-      const nextY = p.pos.y + p.vel.y * fixedDeltaTime;
+      const nextX = p.pos.x + p.vel.x;
+      const nextY = p.pos.y + p.vel.y;
       let collided = false;
 
       for (const { wall, rect } of wallData) {
