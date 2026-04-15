@@ -29,15 +29,19 @@ import { createSonarSystem } from "./systems/sonarSystem.js";
 import { createRoomSystem } from "./systems/roomSystem.js";
 import { createPauseMenuSystem } from "./systems/pauseMenuSystem.js";
 import { createCameraSystem } from "./systems/cameraSystem.js";
-import { CANVAS, DISPLAY, PLAYER, TORCH, TIME, GAME } from "./config.js";
+import { CAMERA, CANVAS, DISPLAY, PLAYER, POWER, TORCH, TIME, GAME } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
+import { createShopSystem } from "./systems/shopSystem.js";
+import { createMissileSystem } from "./systems/missileSystem.js";
+import { createParticleSystem } from "./systems/particleSystem.js";
 import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 
+
 let accumulator = 0;
-let alpha;
+let alpha = 0;
 
 let engine;
 let darknessLayer;
@@ -54,6 +58,9 @@ let roomSystem;
 let resourceManagementSystem;
 let enemySystem;
 let pauseMenuSystem;
+let shopSystem;
+let missileSystem;
+let particleSystem;
 let cameraSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
@@ -106,7 +113,7 @@ function tilesetSourceToImagePath(source) {
   // backgrounds.tsx is an image collection (no single .png atlas file to load).
   if (String(source).toLowerCase().endsWith("backgrounds.tsx")) return null;
   const pngSource = source.replace(/\.tsx$/i, ".png");
-  return normalizeRelativePath("data/rooms", pngSource);
+  return normalizeRelativePath("mapdata/rooms", pngSource);
 }
 
 function parseTsxTileProperties(xmlText) {
@@ -266,14 +273,14 @@ function syncCanvasToCurrentRoom() {
 
 function preload() {
   for (const roomId of ROOM_IDS) {
-    roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
+    roomData[roomId] = loadJSON(`mapdata/rooms/${roomId}.json`);
   }
 
   const tilePropsBySourcePath = {};
   for (const room of Object.values(roomData)) {
     for (const tileset of room?.tilesets ?? []) {
       const sourcePath = normalizeRelativePath(
-        "data/rooms",
+        "mapdata/rooms",
         tileset?.source ?? "",
       );
       if (!sourcePath.toLowerCase().endsWith(".tsx")) continue;
@@ -289,7 +296,7 @@ function preload() {
   for (const room of Object.values(roomData)) {
     for (const tileset of room?.tilesets ?? []) {
       const sourcePath = normalizeRelativePath(
-        "data/rooms",
+        "mapdata/rooms",
         tileset?.source ?? "",
       );
       tileset.tilePropertiesById = tilePropsBySourcePath[sourcePath] ?? {};
@@ -375,10 +382,11 @@ function setup() {
   playerSystem = createPlayerSystem(player);
   physicsSystem = createPhysicsSystem(player, () => roomSystem.getRoomState());
   cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
+  cameraSystem.setScale(CAMERA.DEFAULT_SCALE);
   // Snap camera to player's initial position
   cameraSystem.snapTo(player.position.x, player.position.y);
   torchSystem = createTorchSystem(player.torch, player, {
-    drainRate: TORCH.DRAIN_RATE,
+    drainRate: POWER.DRAIN_RATE,
     getDifficulty: () =>
       pauseMenuSystem ? pauseMenuSystem.getDifficulty() : "normal",
   });
@@ -389,6 +397,11 @@ function setup() {
     () => roomSystem.getHazards(),
     () => roomSystem.getCollectables(),
   );
+ 
+
+  missileSystem = createMissileSystem(player);
+
+  particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 
   lightingSystem = createLightingSystem(
     player,
@@ -436,6 +449,8 @@ function setup() {
     getCameraOffset: () => cameraSystem.getOffset(),
     getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
+    getMissiles: () => missileSystem.getMissiles(),
+    getParticles: () => particleSystem.getParticles(),
   });
 
   pauseMenuSystem = createPauseMenuSystem({
@@ -446,17 +461,132 @@ function setup() {
     },
   });
 
+  shopSystem = createShopSystem(player);
+
+  shopSystem = createShopSystem(player);
+
   engine = new Engine();
   engine.register(inputSystem);
   engine.register(playerSystem);
   engine.register(physicsSystem);
   engine.register(sonarSystem);
+  engine.register(missileSystem);
+  engine.register(particleSystem);
   engine.register(cameraSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
   engine.register(enemySystem);
   engine.register(pauseMenuSystem);
+  engine.register(shopSystem);
+}
+
+function drawSegmentedMeter(x, y, w, h, ratio, segments, activeColor, inactiveColor) {
+  const safeRatio = Math.max(0, Math.min(1, ratio ?? 0));
+  const segmentGap = 3;
+  const segmentWidth = (w - segmentGap * (segments - 1)) / segments;
+  const litCount = Math.round(safeRatio * segments);
+
+  for (let i = 0; i < segments; i++) {
+    const sx = x + i * (segmentWidth + segmentGap);
+    noStroke();
+    fill(i < litCount ? activeColor : inactiveColor);
+    rect(sx, y, segmentWidth, h, 1.5);
+  }
+}
+
+function drawHudPanel() {
+  const coinCount = player?.coins ?? 0;
+  const missileCount = player?.missiles ?? 0;
+  const powerRatio = player?.power?.getPercent?.() ?? 0;
+  const torchLevel = Math.max(1, player?.upgrades?.torch ?? 1);
+  const sonarLevel = Math.max(1, player?.upgrades?.sonar ?? 1);
+  const torchRadius = Math.round(player?.torch?.radius ?? TORCH.RADIUS);
+
+  const panelX = 20;
+  const panelY = 18;
+  const panelW = 360;
+  const panelH = 148;
+
+  push();
+  noStroke();
+  fill(4, 14, 20, 210);
+  rect(panelX, panelY, panelW, panelH, 10);
+
+  stroke(123, 223, 223, 200);
+  strokeWeight(2);
+  noFill();
+  rect(panelX, panelY, panelW, panelH, 10);
+
+  noStroke();
+  fill(17, 34, 44, 240);
+  rect(panelX + 10, panelY + 10, panelW - 20, 24, 4);
+  fill(220, 237, 242);
+  textAlign(LEFT, CENTER);
+  textSize(14);
+  text("STATUS // EXPLORER UNIT", panelX + 16, panelY + 22);
+
+  fill(198, 255, 170);
+  textAlign(RIGHT, CENTER);
+  text(`$ ${coinCount}`, panelX + panelW - 16, panelY + 22);
+
+  textAlign(LEFT, CENTER);
+  fill(154, 197, 197);
+  textSize(11);
+  text("POWER", panelX + 16, panelY + 48);
+  drawSegmentedMeter(
+    panelX + 76,
+    panelY + 42,
+    176,
+    12,
+    powerRatio,
+    16,
+    color(111, 248, 124),
+    color(55, 83, 62, 180),
+  );
+  fill(222, 255, 222);
+  textAlign(RIGHT, CENTER);
+  text(`${Math.round(powerRatio * 100)}%`, panelX + 252, panelY + 48);
+
+  const missileBoxX = panelX + 265;
+  const missileBoxY = panelY + 38;
+  noStroke();
+  fill(22, 28, 37, 230);
+  rect(missileBoxX, missileBoxY, 104, 46, 5);
+  stroke(126, 213, 213, 160);
+  strokeWeight(1.6);
+  noFill();
+  rect(missileBoxX, missileBoxY, 104, 46, 5);
+
+  noStroke();
+  fill(173, 205, 211);
+  textAlign(LEFT, TOP);
+  textSize(10);
+  text("MISSILES", missileBoxX + 8, missileBoxY + 6);
+  fill(missileCount > 0 ? color(255, 216, 120) : color(200, 100, 100));
+  textSize(20);
+  textAlign(LEFT, TOP);
+  text(String(missileCount), missileBoxX + 8, missileBoxY + 18);
+
+  const lowerRowY = panelY + 98;
+  fill(154, 197, 197);
+  textAlign(LEFT, CENTER);
+  textSize(11);
+  text("TORCH", panelX + 16, lowerRowY);
+  fill(220, 237, 242);
+  textSize(12);
+  text(`L${torchLevel}  ${torchRadius}px`, panelX + 76, lowerRowY);
+
+  fill(154, 197, 197);
+  text("SONAR", panelX + 176, lowerRowY);
+  fill(220, 237, 242);
+  text(`L${sonarLevel}`, panelX + 226, lowerRowY);
+
+  fill(106, 144, 152);
+  textSize(10);
+  textAlign(LEFT, CENTER);
+  text("B SHOP   E SONAR   L TORCH   SPACE FIRE", panelX + 16, panelY + panelH - 14);
+  pop();
 }
 
 function draw() {
@@ -495,6 +625,13 @@ function draw() {
     lastEnsuredRoom = currentRoom;
   }
 
+  // Shop overlay (blocks all input/gameplay)
+  if (shopSystem && shopSystem.isShopOpen()) {
+    renderSystem?.draw?.(0);
+    shopSystem.draw();
+    return;
+  }
+
   accumulator += deltaTime / 1000;
 
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
@@ -511,43 +648,67 @@ function draw() {
   }
 }
 
+// TODO: input handling in inputsystem
 function keyPressed() {
-  if (keyCode === 27) {
-    // ESC
-    pauseMenuSystem?.togglePause();
-    return;
-  }
-  if (pauseMenuSystem?.isPaused()) return;
   inputSystem?.onKeyPressed?.(key, keyCode);
+
+  // Always process pause toggle (ESC)
+  if (player?.actionIntent?.togglePause) {
+    pauseMenuSystem?.togglePause();
+    player.actionIntent.togglePause = false;
+  }
+
+  // Always process shop toggle (B)
+  if (player?.actionIntent?.toggleShop) {
+    shopSystem?.toggleShop();
+    player.actionIntent.toggleShop = false;
+  }
+
+  // Only process other actions if not paused
+  if (pauseMenuSystem?.isPaused()) return;
 }
 
 function mousePressed() {
-  // 1. check win screen
+  // Shop overlay blocks all clicks
+  if (shopSystem?.isShopOpen()) {
+    shopSystem?.onMousePressed();
+    return;
+  }
+
   if (gameState === WIN_STATE) {
     const selection = winScreenSystem.checkClick(mouseX, mouseY);
     if (selection === "MENU") {
       resetGameToStart();
       gameState = "MENU";
     }
-    // return;
+    return;
   }
-  // 2. Check Start Menu
-  else if (gameState === "MENU") {
+
+  if (gameState === "MENU") {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
     if (selection === "EASY" || selection === "HARD") {
-      applyDifficultyConfig(selection);
-      gameState = "PLAYING";
+      startGame(selection);
     } else if (selection === "SETTINGS") {
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
     }
-    // return;
+    return;
   }
-  // 3. check settings
-  else if (gameState === "SETTINGS") {
+
+  if (gameState === "SETTINGS") {
     pauseMenuSystem?.onMousePressed();
-    // return;
+    return;
+  }
+
+  if (shopSystem?.isShopOpen()) {
+    shopSystem?.onMousePressed();
+    return;
+  }
+
+  if (shopSystem?.isShopOpen()) {
+    shopSystem?.onMousePressed();
+    return;
   }
 }
 
@@ -558,6 +719,17 @@ function applyDifficultyConfig(selection) {
     pauseMenuSystem.setDifficulty(diffLevel);
     console.log(`Game started on ${diffLevel} difficulty.`);
   }
+}
+
+function startGame(selection) {
+  applyDifficultyConfig(selection);
+  gameState = "PLAYING";
+
+  // Ensure no overlay remains active after starting from menu.
+  if (pauseMenuSystem?.isPaused?.()) {
+    pauseMenuSystem.togglePause();
+  }
+  shopSystem?.closeShop?.();
 }
 
 function mouseDragged() {
@@ -575,18 +747,28 @@ function applyDisplayScale() {
   const canvasEl = document.querySelector("canvas");
   if (!canvasEl) return;
 
+  const viewportW = window.innerWidth || DISPLAY.WIDTH;
+  const viewportH = window.innerHeight || DISPLAY.HEIGHT;
+
   if (useDevResolution) {
-    // Dev mode: native resolution, no CSS scaling
-    canvasEl.style.width = "";
-    canvasEl.style.height = "";
-  } else {
-    // Production mode: scale canvas to fit 1920x1080
-    const scaleX = DISPLAY.WIDTH / width;
-    const scaleY = DISPLAY.HEIGHT / height;
-    const s = Math.min(scaleX, scaleY);
-    canvasEl.style.width = width * s + "px";
-    canvasEl.style.height = height * s + "px";
+    const scaleX = viewportW / width;
+    const scaleY = viewportH / height;
+    const s = Math.min(1, Math.min(scaleX, scaleY));
+    canvasEl.style.width = Math.max(1, Math.floor(width * s)) + "px";
+    canvasEl.style.height = Math.max(1, Math.floor(height * s)) + "px";
+    return;
   }
+
+  // Production mode: fit entire canvas in viewport without distortion (no crop).
+  const scaleX = viewportW / width;
+  const scaleY = viewportH / height;
+  const s = Math.min(scaleX, scaleY);
+  canvasEl.style.width = Math.max(1, Math.floor(width * s)) + "px";
+  canvasEl.style.height = Math.max(1, Math.floor(height * s)) + "px";
+}
+
+function windowResized() {
+  applyDisplayScale();
 }
 
 function resetGameToStart() {
@@ -595,12 +777,14 @@ function resetGameToStart() {
 
   // 2. Snap the player's physical coordinates to the spawn point
   const playerStart = roomSystem.getPlayerStart();
-  if (playerStart) {
+  if (player && playerStart) {
     player.setCurrentPosition(playerStart.x, playerStart.y);
   }
 
   // 3. Snap the camera back to the start
-  cameraSystem.snapTo(playerStart.x, playerStart.y);
+  if (cameraSystem && playerStart) {
+    cameraSystem.snapTo(playerStart.x, playerStart.y);
+  }
 
   // 4. Reset Player stats
   if (player.power) {
@@ -626,3 +810,5 @@ window.keyPressed = keyPressed;
 window.mousePressed = mousePressed;
 window.mouseDragged = mouseDragged;
 window.mouseReleased = mouseReleased;
+window.windowResized = windowResized;
+
