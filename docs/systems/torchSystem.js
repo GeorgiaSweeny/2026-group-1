@@ -16,7 +16,7 @@ RULES:
 ========================================
 DESIGN GOALS:
 - Keep torch logic modular and separate from rendering
-- Ensure frame-rate independent updates
+- Ensure frame-rate independent updates using fixedDeltaTime
 - Maintain clear boundaries between systems
 ========================================
 RESPONSIBILITIES:
@@ -28,7 +28,7 @@ RESPONSIBILITIES:
 DEPENDENCIES:
 - torch object (instance of Torch)
 - player object with a power system
-- Config object for drain rate (POWER.DRAIN_RATE)
+- Config object for drain rate (TORCH.DRAIN_RATE)
 
 USAGE:
 import { createTorchSystem } from './torchSystem.js';
@@ -37,6 +37,7 @@ engine.register(torchSystem);
 ========================================
 NOTES:
 - Torch visibility flickers when power is low (handled in Torch class)
+- Torch system relies on fixedDeltaTime for frame-rate independence
 - Torch does not know the internal details of PowerSystem
 ========================================
 TODO / LIMITATIONS:
@@ -50,21 +51,15 @@ TODO / LIMITATIONS:
 //======================
 // TORCH SYSTEM
 //======================
-import { POWER, TORCH } from '../config.js';
+import { TORCH } from '../config.js';
 
-export function createTorchSystem(torch, player, { drainRate = POWER.DRAIN_RATE, getDifficulty = () => 'normal' } = {}) {
-  const baseRadius = TORCH.RADIUS;
-  const upgradeBonusPerLevel = TORCH.UPGRADE_RADIUS_BONUS ?? 20;
-  const reducedRadius = TORCH.MIN_RADIUS_WHEN_DRAINED ?? 50;
-
-  function getUpgradedRadius() {
-    const torchLevel = Math.max(1, player?.upgrades?.torch ?? 1);
-    return baseRadius + (torchLevel - 1) * upgradeBonusPerLevel;
-  }
+export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE, getDifficulty = () => 'normal' } = {}) {
+  const fullRadius = TORCH.RADIUS;
+  const reducedRadius = 50;
 
   return {
     //---UPDATE---//
-    update() {
+    update(fixedDeltaTime) {
       // Hard difficulty: force torch off, reduce radius
       if (getDifficulty() === 'hard') {
         if (torch.isOn) torch.isOn = false;
@@ -74,7 +69,7 @@ export function createTorchSystem(torch, player, { drainRate = POWER.DRAIN_RATE,
       }
 
       // Update internal flicker timer
-      torch.update();
+      torch.update(fixedDeltaTime);
 
       // Handle player intent to toggle torch
       if (player.actionIntent?.toggleTorch) {
@@ -84,7 +79,7 @@ export function createTorchSystem(torch, player, { drainRate = POWER.DRAIN_RATE,
 
       // Drain player power if torch is active
       if (torch.isOn) {
-        player.power.drain(drainRate);
+        player.power.drain(drainRate, fixedDeltaTime);
 
         // Turn off torch if power depleted
         if (player.power.isEmpty()) torch.isOn = false;
@@ -94,7 +89,7 @@ export function createTorchSystem(torch, player, { drainRate = POWER.DRAIN_RATE,
       if (player.power.isEmpty()) {
         torch.radius = reducedRadius;
       } else {
-        torch.radius = getUpgradedRadius();
+        torch.radius = fullRadius;
       }
     }
   };

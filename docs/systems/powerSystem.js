@@ -21,12 +21,12 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Track current and max power values
-- Drain power
+- Drain power using fixedDeltaTime
 - Provide checks for empty or low power
 - Return percentage of remaining power for UI or system logic
 
 DEPENDENCIES:
-- physics engine update loop
+- fixedDeltaTime provided by engine update loop
 - Optional: entity object if interacting with components (e.g., torch)
 - constrain() helper for value clamping
 
@@ -37,7 +37,7 @@ const powerSystem = createPowerSystem(player);
 engine.register(powerSystem);
 ========================================
 Notes:
-- Power drain formula: current -= rate, deltaTime not neccessary
+- Power drain formula: current -= rate * (fixedDeltaTime / 1000)
 - All interactions with power should use the provided methods
 ========================================
 TODO / LIMITATIONS:
@@ -59,8 +59,8 @@ export class PowerSystem {
     this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
   }
 
-  drain(rate) {
-    this.current -= rate;
+  drain(rate, fixedDeltaTime) {
+    this.current -= rate * (fixedDeltaTime / 1000);
     this.current = Math.max(0, Math.min(this.current, this.maxPower));
   }
   
@@ -88,9 +88,9 @@ export function createPowerSystem(entity, config = POWER) {
     power,
     
     //---UPDATE HOOK---//
-    update(drainRate = 0) {
+    update(fixedDeltaTime, drainRate = 0) {
       if (drainRate > 0) {
-        power.drain(drainRate);
+        power.drain(drainRate, fixedDeltaTime);
         // auto-handle power-empty state if needed
         if (power.isEmpty() && entity.torch) {
           entity.torch.isOn = false;
