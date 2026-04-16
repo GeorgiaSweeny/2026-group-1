@@ -44,10 +44,6 @@ export function createRenderSystem({
    getCameraScale,
 
 }) {
-   let elapsedTime = 0;
-   const oscillationSpeed = 2; // Hz
-   const oscillationAmount = 10; // pixels
-
 //======================================
 // DRAW GAME
 //======================================
@@ -318,7 +314,6 @@ export function createRenderSystem({
    function drawPlayer(alpha) {
       push();
       translate(renderInterpolate(player.previousPos.x, player.position.x, alpha), renderInterpolate(player.previousPos.y, player.position.y, alpha));
-      //translate(player.position.x, player.position.y);
       scale(player.facing, 1);
 
       // Periscope
@@ -401,7 +396,6 @@ export function createRenderSystem({
 
    //===LIGHTING===//
    function drawLighting(lightSources = [], cam = { x: 0, y: 0 }, camScale = 1) {
-      darknessLayer.clear();
       darknessLayer.background(0);
 
       const ctx = darknessLayer.drawingContext;
@@ -466,11 +460,7 @@ export function createRenderSystem({
          noStroke();
          fill(90, 110, 130, alpha);
          rect(r.x, r.y, r.w, r.h);
-
-         noFill();
-         rect(r.x, r.y, r.w, r.h);
       }
-      rectMode(CORNER);
    }
 
    function drawSonarHazardReveals() {
@@ -485,7 +475,6 @@ export function createRenderSystem({
          fill(220, 70, 70, alpha);
          rect(r.x, r.y, r.w, r.h);
       }
-      rectMode(CORNER);
    }
 
    function drawSonarCollectableReveals() {
@@ -537,8 +526,7 @@ function renderInterpolate(oldState, newState, alpha){
 // DRAW EVERYTHING
 //======================================
       return {
-         draw(fixedDeltaTime, alpha) {
-            elapsedTime += fixedDeltaTime;
+         draw(alpha) {
             const lightSources = getLightSources?.() ?? [];
             const cam = getCameraOffset?.() ?? { x: 0, y: 0 };
             const oldCam = getOldCamPosition?.() ?? {x: 0, y: 0};
