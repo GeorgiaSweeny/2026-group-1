@@ -44,11 +44,6 @@ export function createRenderSystem({
    getCameraScale,
 
 }) {
-   let elapsedTime = 0;
-   const oscillationSpeed = 2; // Hz
-   const oscillationAmount = 10; // pixels
-   const DISABLE_DARKNESS_LAYER = true;
-
 //======================================
 // DRAW GAME
 //======================================
@@ -66,9 +61,9 @@ export function createRenderSystem({
       return baseParts.join('/');
    }
 
-   function tilesetSourceToImagePath(source) {
+   function tilesetSourceToImagePath(source, mapDir = 'data/rooms') {
       if (!source) return null;
-      return normalizeRelativePath('data/rooms', source).replace(/\.tsx$/i, '.png');
+      return normalizeRelativePath(mapDir, source).replace(/\.tsx$/i, '.png');
    }
 
    function getTilesetForGid(gid, tilesets = []) {
@@ -116,9 +111,12 @@ export function createRenderSystem({
          return false;
       }
 
-      const imagePath = tilesetSourceToImagePath(tileset.source);
+      const imagePath = tileset.resolvedImagePath ?? tilesetSourceToImagePath(tileset.source);
       const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
-      if (!tilesetImage) return false;
+      if (!tilesetImage) {
+         console.warn(`[renderSystem] Missing tileset image for path: "${imagePath}" (source: "${tileset.source}")`);
+         return false;
+      }
 
       const rect = getObjectRect(obj);
       if (!rect) return false;
@@ -316,7 +314,6 @@ export function createRenderSystem({
    function drawPlayer(alpha) {
       push();
       translate(renderInterpolate(player.previousPos.x, player.position.x, alpha), renderInterpolate(player.previousPos.y, player.position.y, alpha));
-      //translate(player.position.x, player.position.y);
       scale(player.facing, 1);
 
       // Periscope
@@ -399,8 +396,6 @@ export function createRenderSystem({
 
    //===LIGHTING===//
    function drawLighting(lightSources = [], cam = { x: 0, y: 0 }, camScale = 1) {
-      if (DISABLE_DARKNESS_LAYER) return;
-      darknessLayer.clear();
       darknessLayer.background(0);
 
       const ctx = darknessLayer.drawingContext;
@@ -411,17 +406,29 @@ export function createRenderSystem({
          const screenX = (x - cam.x) * camScale;
          const screenY = (y - cam.y) * camScale;
          const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         // prevents crash when using PLAYER.WIDTH in config
+         if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius) || scaledRadius <= 0) continue;
          const gradient = ctx.createRadialGradient(
             screenX, screenY, scaledRadius * 0.1,
             screenX, screenY, scaledRadius
          );
          if (kind === 'ambient') {
             gradient.addColorStop(0, 'rgba(255,255,255,0.55)');
-            gradient.addColorStop(0.6, 'rgba(255,255,255,0.18)');
+            gradient.addColorStop(0.25, 'rgba(255,255,255,0.3)');
+            gradient.addColorStop(0.5, 'rgba(255,255,255,0.15)');
+            gradient.addColorStop(0.65, 'rgba(255,255,255,0.1)');
+            gradient.addColorStop(0.9, 'rgba(255,255,255,0.05)');
             gradient.addColorStop(1, 'rgba(0,0,0,0)');
          } else {
+            //torch light
             gradient.addColorStop(0, 'rgba(255,255,255,1)');
-            gradient.addColorStop(0.25, 'rgba(255,255,255,0.85)');
+            gradient.addColorStop(0.005, 'rgba(255,255,255,8)');
+            gradient.addColorStop(0.01, 'rgba(255,255,255,7)');
+            gradient.addColorStop(0.1, 'rgba(255,255,255,0.65)');
+            gradient.addColorStop(0.25, 'rgba(255,255,255,0.4)');
+            gradient.addColorStop(0.45, 'rgba(255,255,255,0.35)');
+            gradient.addColorStop(0.7, 'rgba(255,255,255,0.1)');
+            gradient.addColorStop(0.85, 'rgba(255,255,255,0.05)');
             gradient.addColorStop(1, 'rgba(0,0,0,0)');
          }
 
@@ -465,11 +472,7 @@ export function createRenderSystem({
          noStroke();
          fill(90, 110, 130, alpha);
          rect(r.x, r.y, r.w, r.h);
-
-         noFill();
-         rect(r.x, r.y, r.w, r.h);
       }
-      rectMode(CORNER);
    }
 
    function drawSonarHazardReveals() {
@@ -484,7 +487,6 @@ export function createRenderSystem({
          fill(220, 70, 70, alpha);
          rect(r.x, r.y, r.w, r.h);
       }
-      rectMode(CORNER);
    }
 
    function drawSonarCollectableReveals() {
@@ -536,8 +538,7 @@ function renderInterpolate(oldState, newState, alpha){
 // DRAW EVERYTHING
 //======================================
       return {
-         draw(fixedDeltaTime, alpha) {
-            elapsedTime += fixedDeltaTime;
+         draw(alpha) {
             const lightSources = getLightSources?.() ?? [];
             const cam = getCameraOffset?.() ?? { x: 0, y: 0 };
             const oldCam = getOldCamPosition?.() ?? {x: 0, y: 0};
