@@ -106,7 +106,7 @@ export const TORCH = {
 //======================
 export const LIGHTING = {
   PLAYER_AMBIENT: {
-    RADIUS: PLAYER.WIDTH * 2,
+    RADIUS: PLAYER.WIDTH * 2 + 4,
     BRIGHTNESS: 0.2
   }
 };
