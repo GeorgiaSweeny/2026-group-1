@@ -654,7 +654,6 @@ function renderInterpolate(oldState, newState, alpha){
             drawSpawnPoints();
             drawSonarWalls();
             drawParticles();
-            drawSonarPulses();
             drawBubbles();
             drawMissiles();
             drawPlayer();
@@ -669,6 +668,7 @@ function renderInterpolate(oldState, newState, alpha){
          push();
          scale(camScale);
          translate(renderInterpolate(-oldCam.x, -cam.x, ax), renderInterpolate(-oldCam.y, -cam.y, ax));
+         drawSonarPulses();
          drawSonarReveals();
          drawSonarHazardReveals();
          drawSonarCollectableReveals();

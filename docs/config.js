@@ -87,8 +87,8 @@ export const PLAYER = {
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
   STARTING_COINS: 10000,
-  MOVE_SPEED: 200,      // Pixels per second (clamped to /60 per frame)
-  ACCELERATION: 3,      // Velocity increase per frame
+  MOVE_SPEED: 260,      // Pixels per second (clamped to /60 per frame)
+  ACCELERATION: 4,      // Velocity increase per frame
   DRAG: 0.9  ,         // Higher = less friction (0.9-0.95 feels good)
   BOUNCE_DAMPING: 0.5,  // Velocity kept after bounce (0.5 = half speed)
   MIN_VELOCITY: 0.1,    // Stop if slower than this
