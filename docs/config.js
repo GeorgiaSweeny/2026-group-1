@@ -132,8 +132,8 @@ export const GAME = {
 // COMBAT CONFIG
 //======================
 export const COMBAT = {
-  KNOCKBACK_STRENGTH: 400, // in pixels/sec — applied as velocity toward the player
-  KNOCKBACK_LIFT: 100, // Upward bias added to the knockback to produce a bounce feel
+  KNOCKBACK_STRENGTH: 100, // in pixels/sec — applied as velocity toward the player
+  KNOCKBACK_LIFT: 25, // Upward bias added to the knockback to produce a bounce feel
   IFRAME_DURATION_MS: 800, // Minimum ms between consecutive hits; prevents rapid repeated damage
 
   // (optional default for centralised damage via PlayerHitResponse util)
