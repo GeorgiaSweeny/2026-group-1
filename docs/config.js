@@ -129,6 +129,18 @@ export const GAME = {
 
 
 //======================
+// COMBAT CONFIG
+//======================
+export const COMBAT = {
+  KNOCKBACK_STRENGTH: 400, // in pixels/sec — applied as velocity toward the player
+  KNOCKBACK_LIFT: 100, // Upward bias added to the knockback to produce a bounce feel
+  IFRAME_DURATION_MS: 800, // Minimum ms between consecutive hits; prevents rapid repeated damage
+
+  // (optional default for centralised damage via PlayerHitResponse util)
+  HIT_DAMAGE: 8, //(not used: power deducted is defined per enemy and in resource mangement)
+};
+
+//======================
 // HITBOX DEBUG
 //======================
 export const DEBUG_COLOR = {
