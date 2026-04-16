@@ -72,8 +72,11 @@ export function handlePlayerHit(player, source, config, fixedDeltaTime) {
       - config.KNOCKBACK_LIFT * fixedDeltaTime;
 
    // --- Record hit timestamp --- //
-   // Stored on the player so other systems can also inspect the i-frame state.
+   // lastHitTime gates the i-frame window.
+   // damageFlashTime is read by the render system to drive the visual flash;
+   // kept separate so flash duration and i-frame duration can be tuned independently.
    player.lastHitTime = now;
+   player.damageFlashTime = now;
 }
 
 //======================================
