@@ -114,6 +114,7 @@ export function createParticleSystem(player, getCollisionData) {
         if (spawnPoint) {
           particles.push(createParticle(spawnPoint.x, spawnPoint.y));
           spawnTimer = 0;
+          console.log(`[particles] spawned at (${Math.round(spawnPoint.x)}, ${Math.round(spawnPoint.y)}), total: ${particles.length}`);
         }
       }
 

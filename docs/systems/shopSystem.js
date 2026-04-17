@@ -417,15 +417,19 @@ export function createShopSystem(player) {
   function handleClick() {
     if (!shopOpen) return;
 
+    console.log(`[shop] click detected at mouseX=${mouseX}, mouseY=${mouseY}, coins=${player?.coins ?? 0}`);
+
     const layout = getLayout();
 
     if (isOver(layout.closeButton.x, layout.closeButton.y, layout.closeButton.w, layout.closeButton.h)) {
+      console.log('[shop] close button clicked');
       shopOpen = false;
       return;
     }
 
     for (const card of layout.upgradeCards) {
       if (isOver(card.x, card.y, card.w, card.h)) {
+        console.log(`[shop] upgrade card clicked: ${card.key}`);
         attemptUpgradePurchase(card.key);
         return;
       }
@@ -433,10 +437,13 @@ export function createShopSystem(player) {
 
     for (const card of layout.itemCards) {
       if (isOver(card.x, card.y, card.w, card.h)) {
+        console.log(`[shop] item card clicked: ${card.key}`);
         attemptItemPurchase(card.key, 1);
         return;
       }
     }
+
+    console.log('[shop] click did not hit any button');
   }
 
   //--------------------------------------

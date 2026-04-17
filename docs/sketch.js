@@ -33,6 +33,9 @@ import { CANVAS, DISPLAY, PLAYER, TORCH, TIME, GAME } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
+import { createShopSystem } from "./systems/shopSystem.js";
+import { createMissileSystem } from "./systems/missileSystem.js";
+import { createParticleSystem } from "./systems/particleSystem.js";
 import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 
@@ -54,6 +57,9 @@ let roomSystem;
 let resourceManagementSystem;
 let enemySystem;
 let pauseMenuSystem;
+let shopSystem;
+let missileSystem;
+let particleSystem;
 let cameraSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
@@ -396,6 +402,10 @@ function setup() {
     () => roomSystem.getCollectables(),
   );
 
+  missileSystem = createMissileSystem(player);
+
+  particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
+
   lightingSystem = createLightingSystem(
     player,
     () => sonarSystem?.getSonarLights?.() ?? [],
@@ -443,6 +453,8 @@ function setup() {
     getCameraOffset: () => cameraSystem.getOffset(),
     getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
+    getMissiles: () => missileSystem.getMissiles(),
+    getParticles: () => particleSystem.getParticles(),
   });
 
   pauseMenuSystem = createPauseMenuSystem({
@@ -453,17 +465,22 @@ function setup() {
     },
   });
 
+  shopSystem = createShopSystem(player);
+
   engine = new Engine();
   engine.register(inputSystem);
   engine.register(playerSystem);
   engine.register(physicsSystem);
   engine.register(sonarSystem);
+  engine.register(missileSystem);
+  engine.register(particleSystem);
   engine.register(cameraSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
   engine.register(enemySystem);
   engine.register(pauseMenuSystem);
+  engine.register(shopSystem);
 }
 
 function draw() {
@@ -502,6 +519,13 @@ function draw() {
     lastEnsuredRoom = currentRoom;
   }
 
+  // Shop overlay (blocks all input/gameplay)
+  if (shopSystem && shopSystem.isShopOpen()) {
+    renderSystem?.draw?.(0);
+    shopSystem.draw();
+    return;
+  }
+
   accumulator += deltaTime / 1000;
 
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
@@ -518,28 +542,43 @@ function draw() {
   }
 }
 
+// TODO: input handling in inputsystem
 function keyPressed() {
-  if (keyCode === 27) {
-    // ESC
-    pauseMenuSystem?.togglePause();
-    return;
-  }
-  if (pauseMenuSystem?.isPaused()) return;
   inputSystem?.onKeyPressed?.(key, keyCode);
+
+  // Always process pause toggle (ESC)
+  if (player?.actionIntent?.togglePause) {
+    pauseMenuSystem?.togglePause();
+    player.actionIntent.togglePause = false;
+  }
+
+  // Always process shop toggle (B)
+  if (player?.actionIntent?.toggleShop) {
+    shopSystem?.toggleShop();
+    player.actionIntent.toggleShop = false;
+  }
+
+  // Only process other actions if not paused
+  if (pauseMenuSystem?.isPaused()) return;
 }
 
 function mousePressed() {
-  // 1. check win screen
+  // Shop overlay blocks all clicks
+  if (shopSystem?.isShopOpen()) {
+    shopSystem?.onMousePressed();
+    return;
+  }
+
   if (gameState === WIN_STATE) {
     const selection = winScreenSystem.checkClick(mouseX, mouseY);
     if (selection === "MENU") {
       resetGameToStart();
       gameState = "MENU";
     }
-    // return;
+    return;
   }
-  // 2. Check Start Menu
-  else if (gameState === "MENU") {
+
+  if (gameState === "MENU") {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
     if (selection === "EASY" || selection === "HARD") {
@@ -549,12 +588,12 @@ function mousePressed() {
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
     }
-    // return;
+    return;
   }
-  // 3. check settings
-  else if (gameState === "SETTINGS") {
+
+  if (gameState === "SETTINGS") {
     pauseMenuSystem?.onMousePressed();
-    // return;
+    return;
   }
 }
 

@@ -42,6 +42,8 @@ export function createRenderSystem({
    getCameraOffset,
    getOldCamPosition,
    getCameraScale,
+   getMissiles,
+   getParticles,
 }) {
 
 //======================================
@@ -568,6 +570,33 @@ export function createRenderSystem({
       }
    }
 
+   //===PARTICLES===//
+   function drawParticles() {
+      const particles = getParticles?.() ?? [];
+      if (!particles.length) return;
+      noStroke();
+      for (const p of particles) {
+         const a = Math.max(0, Math.min(255, p.life ?? 255));
+         if (p.type === 'dust') {
+            fill(180, 160, 130, a * 0.6);
+         } else {
+            fill(140, 200, 230, a * 0.5);
+         }
+         circle(p.x, p.y, p.size * 2);
+      }
+   }
+
+   //===MISSILES===//
+   function drawMissiles() {
+      const missiles = getMissiles?.() ?? [];
+      if (!missiles.length) return;
+      noStroke();
+      fill(255, 200, 50);
+      for (const m of missiles) {
+         ellipse(m.x, m.y, 8, 4);
+      }
+   }
+
 // calculate rendering positions for higher fps
 function renderInterpolate(oldState, newState, alpha){
    return (oldState + (newState - oldState) * alpha);
@@ -601,6 +630,8 @@ function renderInterpolate(oldState, newState, alpha){
             drawSpawnPoints();
             drawSonarWalls();
             drawBubbles();
+            drawParticles();
+            drawMissiles();
             drawPlayer(alpha);
             debugHitbox(DEBUG_COLOR.DRAW);
 

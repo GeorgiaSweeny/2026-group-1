@@ -67,8 +67,15 @@ export function createInputSystem(player) {
   player.moveIntent.down = keyIsDown(downKey) || keyIsDown(INPUT.DOWN_ARROW_KEY);
     },
 
-    onKeyPressed(key) {
+    onKeyPressed(key, keyCode) {
       const keyLower = typeof key === 'string' ? key.toLowerCase() : '';
+
+      if (keyCode === 27) {
+        player.actionIntent.togglePause = true;
+      }
+      if (keyCode === 66) {
+        player.actionIntent.toggleShop = true;
+      }
 
       if (INPUT.TOGGLE_TORCH_KEY.includes(key) || keyLower === 'l') {
         player.actionIntent.toggleTorch = true;
@@ -76,6 +83,10 @@ export function createInputSystem(player) {
 
       if (INPUT.SONAR_KEY.includes(key) || keyLower === 'e') {
         player.actionIntent.emitSonar = true;
+      }
+
+      if (INPUT.FIRE_MISSILE_KEY.includes(key) || keyLower === ' ') {
+        player.actionIntent.fireMissile = true;
       }
     }
   };
