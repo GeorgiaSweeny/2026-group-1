@@ -33,6 +33,8 @@ DESIGN GOALS:
 //======================================
 
 import { isColliding } from "./hitboxSystem.js";
+import { handlePlayerHit } from "../utils/playerHitResponse.js";
+import { COMBAT } from "../config.js";
 
 export function createResourceManagementSystem(
   player,
@@ -40,6 +42,7 @@ export function createResourceManagementSystem(
   getCollectables,
   getHazards,
   getDifficulty,
+  getEnemies,
 ) {
   const collectedEntities = new Set();
 
@@ -122,6 +125,11 @@ export function createResourceManagementSystem(
 
         player.power.drain(HAZARD_DRAIN_RATE, deltaTime);
 
+        /* Knockback + hit damage, gated by i-frames so it fires at most once
+           per IFRAME_DURATION_MS window even during sustained hazard contact.
+        */
+        handlePlayerHit(player, h, COMBAT, fixedDeltaTime);
+
         wasOnHazard = true;
         player.isOnHazard = true;
         return;
@@ -131,6 +139,23 @@ export function createResourceManagementSystem(
     // Not on any hazard this frame
     wasOnHazard = false;
     player.isOnHazard = false;
+  }
+
+  //======================================
+  // ENEMY CONTACT — knockback + hit damage
+  // Detects player overlap with every enemy and calls the generic hit handler.
+  // Power drain while touching is still handled by enemySystem independently.
+  //======================================
+  function processEnemyContacts(fixedDeltaTime) {
+    const enemies = getEnemies ? getEnemies() : [];
+    for (const enemy of enemies) {
+      // isColliding expects hitbox1.position and hitbox2.nextPos.
+      // Crabs (Hitbox subclass) have both; player.nextPos == player.position
+      // after physicsSystem has committed the frame.
+      if (isColliding(enemy, player)) {
+        handlePlayerHit(player, enemy, COMBAT, fixedDeltaTime);
+      }
+    }
   }
 
   //======================================
@@ -159,6 +184,7 @@ export function createResourceManagementSystem(
     update(fixedDeltaTime) {
       processHazards(fixedDeltaTime);
       processCollectables();
+      processEnemyContacts(fixedDeltaTime);
     },
 
     // Clears the collected items so they respawn on game reset

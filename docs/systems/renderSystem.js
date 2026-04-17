@@ -12,7 +12,7 @@ DESCRIPTION:
 ========================================
 */
 
-import { DEBUG_COLOR } from "../config.js";
+import { DEBUG_COLOR, COMBAT } from "../config.js";
 
 //======================================
 // RENDER SYSTEM
@@ -338,6 +338,32 @@ export function createRenderSystem({
       fill(100, 220, 255);
       circle(player.w * 0.2, 0, player.w * 0.4);
 
+      // Damage flash — semi-transparent white & red overlay drawn on top of the sprite.
+      // Reads damageFlashTime set by playerHitResponse when a hit is confirmed.
+      // Damage flash — white then red overlay
+      if (player.damageFlashTime != null) {
+         const elapsed = millis() - player.damageFlashTime;
+         const duration = COMBAT.DAMAGE_FLASH_DURATION_MS;
+
+         if (elapsed < duration) {
+            noStroke();
+
+            const whitePhase = duration * 0.25;
+
+            if (elapsed < whitePhase) {
+               // Phase 1: white flash
+               fill(255, 255, 255, 180);
+            } else {
+               // Phase 2: red fade out
+               const t = (elapsed - whitePhase) / whitePhase; // 0 → 1
+               const alpha = 150 * (1 - t);
+               fill(255, 50, 50, alpha);
+            }
+
+            ellipse(0, 0, player.w * 1.4, player.h * 1.1);
+         }
+      }
+
       pop();
    }
 
@@ -413,22 +439,27 @@ export function createRenderSystem({
             screenX, screenY, scaledRadius
          );
          if (kind === 'ambient') {
-            gradient.addColorStop(0, 'rgba(255,255,255,0.55)');
-            gradient.addColorStop(0.25, 'rgba(255,255,255,0.3)');
-            gradient.addColorStop(0.5, 'rgba(255,255,255,0.15)');
-            gradient.addColorStop(0.65, 'rgba(255,255,255,0.1)');
-            gradient.addColorStop(0.9, 'rgba(255,255,255,0.05)');
+            gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(0.15, 'rgba(255,255,255,0.45)');
+            gradient.addColorStop(0.25, 'rgba(255,255,255,0.25)');
+            gradient.addColorStop(0.55, 'rgba(255,255,255,0.15)');
+            gradient.addColorStop(0.7, 'rgba(255,255,255,0.1)');
+            gradient.addColorStop(0.8, 'rgba(255,255,255,0.05)');
             gradient.addColorStop(1, 'rgba(0,0,0,0)');
          } else {
             //torch light
             gradient.addColorStop(0, 'rgba(255,255,255,1)');
-            gradient.addColorStop(0.005, 'rgba(255,255,255,8)');
-            gradient.addColorStop(0.01, 'rgba(255,255,255,7)');
-            gradient.addColorStop(0.1, 'rgba(255,255,255,0.65)');
-            gradient.addColorStop(0.25, 'rgba(255,255,255,0.4)');
-            gradient.addColorStop(0.45, 'rgba(255,255,255,0.35)');
-            gradient.addColorStop(0.7, 'rgba(255,255,255,0.1)');
-            gradient.addColorStop(0.85, 'rgba(255,255,255,0.05)');
+            gradient.addColorStop(0.05, 'rgba(255,255,255,0.95)');
+            gradient.addColorStop(0.15, 'rgba(255,255,255,0.9)');
+            gradient.addColorStop(0.25, 'rgba(255,255,255,0.95)');
+            gradient.addColorStop(0.3, 'rgba(255,255,255,0.7)');
+            gradient.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(0.55, 'rgba(255,255,255,0.5)');
+            gradient.addColorStop(0.65, 'rgba(255,255,255,0.55)');
+            gradient.addColorStop(0.75, 'rgba(255,255,255,0.4)');
+            gradient.addColorStop(0.8, 'rgba(255,255,255,0.2)');
+            gradient.addColorStop(0.85, 'rgba(255,255,255,0.1)');
+            gradient.addColorStop(0.95, 'rgba(255,255,255,0.05)');
             gradient.addColorStop(1, 'rgba(0,0,0,0)');
          }
 
