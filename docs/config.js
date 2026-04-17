@@ -156,8 +156,12 @@ export const GAME = {
 // COMBAT CONFIG
 //======================
 export const COMBAT = {
-  KNOCKBACK_STRENGTH: 100, // in pixels/sec — applied as velocity toward the player
-  KNOCKBACK_LIFT: 25, // Upward bias added to the knockback to produce a bounce feel
+  // Knockback is applied as: normDir * KNOCKBACK_STRENGTH * fixedDeltaTime (px/frame).
+  // Must satisfy: KNOCKBACK_STRENGTH/60 * DRAG > ACCELERATION so the hit pushes the player
+  // away even when they are pressing back toward the hazard.
+  // PLAYER.ACCELERATION = 4, PLAYER.DRAG = 0.9 → minimum threshold = 4/0.9*60 ≈ 267.
+  KNOCKBACK_STRENGTH: 400,
+  KNOCKBACK_LIFT: 100,
   IFRAME_DURATION_MS: 800, // Minimum ms between consecutive hits; prevents rapid repeated damage
 
   // (optional: default for centralised damage via PlayerHitResponse util)
