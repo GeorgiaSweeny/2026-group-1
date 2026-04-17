@@ -107,12 +107,12 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  STARTING_COINS: 10000,
-  MOVE_SPEED: 260,      // Pixels per second (clamped to /60 per frame)
-  ACCELERATION: 4,      // Velocity increase per frame
-  DRAG: 0.9  ,         // Higher = less friction (0.9-0.95 feels good)
-  BOUNCE_DAMPING: 0.5,  // Velocity kept after bounce (0.5 = half speed)
-  MIN_VELOCITY: 0.1,    // Stop if slower than this
+  STARTING_COINS: 10000,  // 10000 for testing
+  MOVE_SPEED: 260,        // Pixels per second (clamped to /60 per frame)
+  ACCELERATION: 4,        // Velocity increase per frame
+  DRAG: 0.9  ,            // Higher = less friction (0.9-0.95 feels good)
+  BOUNCE_DAMPING: 0.5,    // Velocity kept after bounce (0.5 = half speed)
+  MIN_VELOCITY: 0.1,      // Stop if slower than this
 };
 
 //======================
@@ -157,7 +157,7 @@ export const TORCH = {
 //======================
 export const LIGHTING = {
   PLAYER_AMBIENT: {
-    RADIUS: PLAYER.WIDTH * 2.5,
+    RADIUS: PLAYER.WIDTH * 2.5, // looks best, doesnt make easy
     BRIGHTNESS: 0.2
   }
 };
@@ -187,10 +187,12 @@ export const MISSILE = {
 // COMBAT CONFIG
 //======================
 export const COMBAT = {
-  // Knockback is applied as: normDir * KNOCKBACK_STRENGTH * fixedDeltaTime (px/frame).
-  // Must satisfy: KNOCKBACK_STRENGTH/60 * DRAG > ACCELERATION so the hit pushes the player
-  // away even when they are pressing back toward the hazard.
-  // PLAYER.ACCELERATION = 4, PLAYER.DRAG = 0.9 → minimum threshold = 4/0.9*60 ≈ 267.
+  /*
+   Knockback is applied as: normDir * KNOCKBACK_STRENGTH * fixedDeltaTime (px/frame).
+   Must satisfy: KNOCKBACK_STRENGTH/60 * DRAG > ACCELERATION so the hit pushes the player
+   away even when they are pressing back toward the hazard.
+   PLAYER.ACCELERATION = 4, PLAYER.DRAG = 0.9 → minimum threshold = 4/0.9*60 ≈ 267.
+  */
   KNOCKBACK_STRENGTH: 400,
   KNOCKBACK_LIFT: 100,
   IFRAME_DURATION_MS: 800, // Minimum ms between consecutive hits; prevents rapid repeated damage
@@ -200,6 +202,13 @@ export const COMBAT = {
 
   // (optional: default for centralised damage via PlayerHitResponse util)
   HIT_DAMAGE: 10, // (not in use!) all damage set to this default
+};
+
+//======================
+// CONTROLS CONFIG
+//======================
+export const CONTROLS = {
+  DEFAULT_MODE: 'wasd', // 'wasd' | 'arrows'
 };
 
 //======================

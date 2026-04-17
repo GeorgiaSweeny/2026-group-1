@@ -30,7 +30,7 @@ import { createSonarSystem } from "./systems/sonarSystem.js";
 import { createRoomSystem } from "./systems/roomSystem.js";
 import { createPauseMenuSystem } from "./systems/pauseMenuSystem.js";
 import { createCameraSystem } from "./systems/cameraSystem.js";
-import { CANVAS, PLAYER, TIME, GAME, INPUT } from "./config.js";
+import { CANVAS, PLAYER, TIME, GAME, INPUT, CONTROLS } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
@@ -465,6 +465,8 @@ function setup() {
       useDevResolution = isDev;
       applyDisplayScale();
     },
+    onControlModeChange: (mode) => inputSystem.setControlMode(mode),
+    initialControlMode: CONTROLS.DEFAULT_MODE,
   });
 
   shopSystem = createShopSystem(player);
@@ -602,6 +604,12 @@ function mousePressed() {
 
   if (gameState === "SETTINGS") {
     pauseMenuSystem?.onMousePressed();
+    return;
+  }
+
+  // Forward clicks to pause menu while game is paused mid-play
+  if (pauseMenuSystem?.isPaused()) {
+    pauseMenuSystem.onMousePressed();
     return;
   }
 }
