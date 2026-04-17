@@ -50,62 +50,63 @@ TODO / LIMITATIONS:
 //======================================
 // POWER CLASS
 //======================================
-import { POWER } from '../config.js';
+import { POWER, TORCH } from '../config.js';
 
 export class PowerSystem {
-  constructor(config = POWER) {
-    this.maxPower = config.MAX_POWER;
-    this.current = config.CURRENT_POWER;
-    this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
-  }
+   constructor(config = POWER) {
+      this.maxPower = config.MAX_POWER;
+      this.current = config.CURRENT_POWER;
+      this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
+      this.drainRate = config.DRAIN_RATE
+   }
 
-  drain(rate, fixedDeltaTime) {
-    this.current -= rate * (fixedDeltaTime / 1000);
-    this.current = Math.max(0, Math.min(this.current, this.maxPower));
-  }
-  
-  isEmpty() {
-    return this.current <= 0;
-  }
+   drain(rate = this.drainRate, fixedDeltaTime) {
+      this.current -= rate * (fixedDeltaTime);
+      this.current = Math.max(0, Math.min(this.current, this.maxPower));
+   }
 
-  isLow(threshold = this.lowPowerThreshold) {
-    return this.current <= this.maxPower * threshold;
-  }
+   isEmpty() {
+      return this.current <= 0;
+   }
 
-  getPercent() {
-    return this.current / this.maxPower;
-  }
+   isLow(threshold = this.lowPowerThreshold) {
+      return this.current <= this.maxPower * threshold;
+   }
+
+   getPercent() {
+      return this.current / this.maxPower;
+   }
 }
 //======================================
 // POWER SYSTEM
 //======================================
 
 export function createPowerSystem(entity, config = POWER) {
-  const power = new PowerSystem(config);
-  
-  // returning object literals → commas between entries
-  return {
-    power,
-    
-    //---UPDATE HOOK---//
-    update(fixedDeltaTime, drainRate = 0) {
-      if (drainRate > 0) {
-        power.drain(drainRate, fixedDeltaTime);
-        // auto-handle power-empty state if needed
-        if (power.isEmpty() && entity.torch) {
-          entity.torch.isOn = false;
-        }
+   const power = new PowerSystem(config);
+
+   // returning object literals → commas between entries
+   return {
+      power,
+
+      //---UPDATE HOOK---//
+      update(fixedDeltaTime) {
+         let rate = power.drainRate;
+
+         // increase drain if torch is on
+         if (entity.torch?.isOn) {
+            rate *= TORCH.DRAIN_RATE; // power rate is * by torch drain rate (torch drain rate must be > 1)
+         }
+
+         power.drain(rate, fixedDeltaTime);
+
+         // auto turn off torch if power is empty
+         if (power.isEmpty() && entity.torch) {
+            entity.torch.isOn = false;
+
+         }
       }
-    },
-    
-    //---DRAW HOOK---//
-    draw() {
-      /* (optional: for UI representation)
-         Could draw a power bar or other UI element here or
-         call a separate drawPowerMeter(entity, power) helper */
-    }
-  };
-}
+   }
+};
 //======================================
 // END
 //======================================

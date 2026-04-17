@@ -54,45 +54,51 @@ TODO / LIMITATIONS:
 import { TORCH } from '../config.js';
 
 export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE, getDifficulty = () => 'normal' } = {}) {
-  const fullRadius = TORCH.RADIUS;
-  const reducedRadius = 50;
+   const baseRadius = TORCH.RADIUS;
+   const upgradeBonusPerLevel = TORCH.UPGRADE_RADIUS_BONUS ?? 20;
+   const reducedRadius = TORCH.MIN_RADIUS_WHEN_DRAINED ?? 50;
 
-  return {
-    //---UPDATE---//
-    update(fixedDeltaTime) {
-      // Hard difficulty: force torch off, reduce radius
-      if (getDifficulty() === 'hard') {
-        if (torch.isOn) torch.isOn = false;
-        player.toggleTorchIntent = false;
-        torch.radius = reducedRadius;
-        return;
+   function getUpgradedRadius() {
+      const torchLevel = Math.max(1, player?.upgrades?.torch ?? 1);
+      return baseRadius + (torchLevel - 1) * upgradeBonusPerLevel;
+   }
+
+   return {
+      //---UPDATE---//
+      update(fixedDeltaTime) {
+         // Hard difficulty: force torch off, reduce radius
+         if (getDifficulty() === 'hard') {
+            if (torch.isOn) torch.isOn = false;
+            player.toggleTorchIntent = false;
+            torch.radius = reducedRadius;
+            return;
+         }
+
+         // Update internal flicker timer
+         torch.update(fixedDeltaTime);
+
+         // Handle player intent to toggle torch
+         if (player.actionIntent?.toggleTorch) {
+            torch.tryToggle(!player.power.isEmpty());
+            player.actionIntent.toggleTorch = false;
+         }
+
+         // Drain player power if torch is active
+         if (torch.isOn) {
+            player.power.drain(drainRate, fixedDeltaTime);
+
+            // Turn off torch if power depleted
+            if (player.power.isEmpty()) torch.isOn = false;
+
+            // Update radius based on level & power state
+            if (player.power.isEmpty()) {
+               torch.radius = reducedRadius;
+            } else {
+               torch.radius = getUpgradedRadius();
+            }
+         }
       }
-
-      // Update internal flicker timer
-      torch.update(fixedDeltaTime);
-
-      // Handle player intent to toggle torch
-      if (player.actionIntent?.toggleTorch) {
-        torch.tryToggle(!player.power.isEmpty());
-        player.actionIntent.toggleTorch = false;
-      }
-
-      // Drain player power if torch is active
-      if (torch.isOn) {
-        player.power.drain(drainRate, fixedDeltaTime);
-
-        // Turn off torch if power depleted
-        if (player.power.isEmpty()) torch.isOn = false;
-      }
-
-      // Update radius based on power state
-      if (player.power.isEmpty()) {
-        torch.radius = reducedRadius;
-      } else {
-        torch.radius = fullRadius;
-      }
-    }
-  };
+   };
 }
 //======================================
 // END

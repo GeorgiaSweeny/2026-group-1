@@ -62,7 +62,10 @@ export const CANVAS = {
 //======================
 export const CAMERA = {
   // < 1.0 zooms out, > 1.0 zooms in
-  DEFAULT_SCALE: 1.0,
+  DEFAULT_SCALE: 3.0,  /* DEFAULT_SCALE: 3 - fits game to window size, game never cutt off due to
+                                             window size being not in fullscreen (scales with window)
+                        */
+                       
 };
 
 //======================
@@ -100,7 +103,8 @@ export const PLAYER = {
 export const POWER = {
   MAX_POWER: 100,
   CURRENT_POWER: 100,
-  LOW_POWER_THRESHOLD: 0.15
+  LOW_POWER_THRESHOLD: 0.15,
+  DRAIN_RATE: 1
   
 };
 
@@ -109,8 +113,10 @@ export const POWER = {
 //======================
 export const TORCH = {
   RADIUS: 100,
+  UPGRADE_RADIUS_BONUS: 22,
+  MIN_RADIUS_WHEN_DRAINED: 50,
   FLICKER_POWER_THRESHOLD: 0.15,
-  DRAIN_RATE: 1
+  DRAIN_RATE: 1.5 // power drain rate is multipled by torch when on
 };
 
 //======================

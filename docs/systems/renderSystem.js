@@ -485,17 +485,22 @@ export function createRenderSystem({
 
    //===UI===//
    function drawUI() {
+      const margin = 40;
+
+      textSize(32);
+      textAlign(LEFT, TOP);
+
       fill(255);
       noStroke();
-      text(`Power: ${Math.round(player.power.current)}`, 20, 30);
+      text(`Power: ${Math.round(player.power.current)}`, margin, margin);
 
       const sonarCooldown = getSonarCooldown?.() ?? 0;
       if (Number.isFinite(sonarCooldown) && sonarCooldown > 0) {
          fill('#d61b1b');
-         text(`Sonar: cooling`, 20, 55);
+         text(`Sonar: cooling`, margin, margin + 40);
       } else {
          fill('#64ff64');
-         text(`Sonar: ready (K)`, 20, 55);
+         text(`Sonar: ready (E)`, margin, margin + 40);
       }
    }
 
@@ -628,7 +633,7 @@ function renderInterpolate(oldState, newState, alpha){
             drawTriggers();
             drawEntities(); //- will need interpolation
             drawSpawnPoints();
-            drawSonarWalls();
+            drawSonarWalls(); // COMMENT OUT TO REMOVE VISUALS WHEN TORCH ON
             drawBubbles();
             drawParticles();
             drawMissiles();
@@ -649,8 +654,12 @@ function renderInterpolate(oldState, newState, alpha){
          drawSonarHazardReveals();
          drawSonarCollectableReveals();
          pop();
-
+         
+         // --- World Space UI overlays (drawn above everything) --- //
+         push();
+         resetMatrix(); // Returns drawing to default screen space (cancels camera transform)
          drawUI();
+         pop();
       }
    };
 }
