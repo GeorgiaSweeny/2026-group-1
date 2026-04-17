@@ -70,24 +70,11 @@ export function createInputSystem(player) {
     onKeyPressed(key, keyCode) {
       const keyLower = typeof key === 'string' ? key.toLowerCase() : '';
 
-      if (keyCode === 27) {
-        player.actionIntent.togglePause = true;
-      }
-      if (keyCode === 66) {
-        player.actionIntent.toggleShop = true;
-      }
-
-      if (INPUT.TOGGLE_TORCH_KEY.includes(key) || keyLower === 'l') {
-        player.actionIntent.toggleTorch = true;
-      }
-
-      if (INPUT.SONAR_KEY.includes(key) || keyLower === 'e') {
-        player.actionIntent.emitSonar = true;
-      }
-
-      if (INPUT.FIRE_MISSILE_KEY.includes(key) || keyLower === ' ') {
-        player.actionIntent.fireMissile = true;
-      }
+      if (keyCode === INPUT.TOGGLE_PAUSE_KEY)      player.actionIntent.togglePause = true;
+      if (keyCode === INPUT.TOGGLE_SHOP_KEY)       player.actionIntent.toggleShop = true;
+      if (keyLower === INPUT.TOGGLE_TORCH_KEY)     player.actionIntent.toggleTorch = true;
+      if (keyLower === INPUT.SONAR_KEY)            player.actionIntent.emitSonar = true;
+      if (keyLower === INPUT.FIRE_MISSILE_KEY)     player.actionIntent.fireMissile = true;
     }
   };
 }

@@ -53,7 +53,7 @@ TODO / LIMITATIONS:
 //======================
 import { TORCH } from '../config.js';
 
-export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE, getDifficulty = () => 'normal' } = {}) {
+export function createTorchSystem(torch, player, { getDifficulty = () => 'normal' } = {}) {
    const baseRadius = TORCH.RADIUS;
    const upgradeBonusPerLevel = TORCH.UPGRADE_RADIUS_BONUS ?? 20;
    const reducedRadius = TORCH.MIN_RADIUS_WHEN_DRAINED ?? 50;
@@ -83,15 +83,10 @@ export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE,
             player.actionIntent.toggleTorch = false;
          }
 
-         // Drain player power if torch is active
+         // Update radius based on power state (drain is handled by powerSystem)
          if (torch.isOn) {
-            player.power.drain(drainRate, fixedDeltaTime);
-
-            // Turn off torch if power depleted
-            if (player.power.isEmpty()) torch.isOn = false;
-
-            // Update radius based on level & power state
             if (player.power.isEmpty()) {
+               torch.isOn = false;
                torch.radius = reducedRadius;
             } else {
                torch.radius = getUpgradedRadius();

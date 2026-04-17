@@ -23,13 +23,14 @@ import { createInputSystem } from "./systems/inputSystem.js";
 import { createPlayerSystem } from "./systems/playerSystem.js";
 import { createPhysicsSystem } from "./systems/physicsSystem.js";
 import { createTorchSystem } from "./systems/torchSystem.js";
+import { createPowerSystem } from "./systems/powerSystem.js";
 import { createRenderSystem } from "./systems/renderSystem.js";
 import { createLightingSystem } from "./systems/lightingSystem.js";
 import { createSonarSystem } from "./systems/sonarSystem.js";
 import { createRoomSystem } from "./systems/roomSystem.js";
 import { createPauseMenuSystem } from "./systems/pauseMenuSystem.js";
 import { createCameraSystem } from "./systems/cameraSystem.js";
-import { CANVAS, DISPLAY, PLAYER, TORCH, TIME, GAME } from "./config.js";
+import { CANVAS, PLAYER, TIME, GAME, INPUT } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
@@ -49,6 +50,7 @@ let player;
 let inputSystem;
 let playerSystem;
 let physicsSystem;
+let powerSystem;
 let torchSystem;
 let sonarSystem;
 let renderSystem;
@@ -389,8 +391,8 @@ function setup() {
   cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
   // Snap camera to player's initial position
   cameraSystem.snapTo(player.position.x, player.position.y);
+  powerSystem = createPowerSystem(player);
   torchSystem = createTorchSystem(player.torch, player, {
-    drainRate: TORCH.DRAIN_RATE,
     getDifficulty: () =>
       pauseMenuSystem ? pauseMenuSystem.getDifficulty() : "normal",
   });
@@ -475,6 +477,7 @@ function setup() {
   engine.register(missileSystem);
   engine.register(particleSystem);
   engine.register(cameraSystem);
+  engine.register(powerSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
@@ -544,6 +547,12 @@ function draw() {
 
 // TODO: input handling in inputsystem
 function keyPressed() {
+  // Fullscreen toggle — works from any game state
+  if (keyCode === INPUT.TOGGLE_FULLSCREEN_KEY) {
+    fullscreen(!fullscreen());
+    return;
+  }
+
   inputSystem?.onKeyPressed?.(key, keyCode);
 
   // Always process pause toggle (ESC)
@@ -621,17 +630,29 @@ function applyDisplayScale() {
   const canvasEl = document.querySelector("canvas");
   if (!canvasEl) return;
 
+  // Keep body clean: no scrollbars, black letterbox bars
+  document.body.style.margin = "0";
+  document.body.style.overflow = "hidden";
+  document.body.style.background = "#000";
+
   if (useDevResolution) {
-    // Dev mode: native resolution, no CSS scaling
+    // Dev mode: show canvas at its native pixel size, no CSS scaling
     canvasEl.style.width = "";
     canvasEl.style.height = "";
+    canvasEl.style.position = "";
+    canvasEl.style.left = "";
+    canvasEl.style.top = "";
   } else {
-    // Production mode: scale canvas to fit 1920x1080
-    const scaleX = DISPLAY.WIDTH / width;
-    const scaleY = DISPLAY.HEIGHT / height;
-    const s = Math.min(scaleX, scaleY);
-    canvasEl.style.width = width * s + "px";
-    canvasEl.style.height = height * s + "px";
+    // Scale canvas to fit the current window while preserving 16:9
+    const s = Math.min(window.innerWidth / width, window.innerHeight / height);
+    const displayW = Math.floor(width * s);
+    const displayH = Math.floor(height * s);
+    canvasEl.style.width = displayW + "px";
+    canvasEl.style.height = displayH + "px";
+    // Center the canvas (letterbox black bars come from body background)
+    canvasEl.style.position = "absolute";
+    canvasEl.style.left = Math.floor((window.innerWidth - displayW) / 2) + "px";
+    canvasEl.style.top = Math.floor((window.innerHeight - displayH) / 2) + "px";
   }
 }
 
@@ -665,6 +686,10 @@ function resetGameToStart() {
   }
 }
 
+function windowResized() {
+  applyDisplayScale();
+}
+
 window.preload = preload;
 window.setup = setup;
 window.draw = draw;
@@ -672,3 +697,4 @@ window.keyPressed = keyPressed;
 window.mousePressed = mousePressed;
 window.mouseDragged = mouseDragged;
 window.mouseReleased = mouseReleased;
+window.windowResized = windowResized;

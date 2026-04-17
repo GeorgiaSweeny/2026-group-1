@@ -16,30 +16,44 @@ RULES:
 ========================================
 */
 
+//======================
+// TIME CONFIG
+//======================
+// engine and systems use seconds, same clock
 export const TIME = {
   fixedDeltaTime : 1 / 60,
 }
 
 //======================
+// GAME CONFIG
+//======================
+export const GAME = {
+  FPS : 75,
+};
+
+//======================
 // KEY CODES CONFIG
 //======================
 export const INPUT = {
-  // MOVEMENT KEYS - function takes ascii
-  // WASD ASCII
+  // MOVEMENT KEYS (keyCode — used with keyIsDown)
   W_KEY: 87,
   A_KEY: 65,
   S_KEY: 83,
   D_KEY: 68,
-  // ARROW ASCII - can also use special keyCodes
   UP_ARROW_KEY: 38,
   DOWN_ARROW_KEY: 40,
-  LEFT_ARROW_KEY:  37,
+  LEFT_ARROW_KEY: 37,
   RIGHT_ARROW_KEY: 39,
-  
-  // ACTION KEYS - functions take strings
-  TOGGLE_TORCH_KEY: ['L', 'l'],
-  SONAR_KEY: ['E', 'e'],
-  FIRE_MISSILE_KEY: ['space', ' ']
+
+  // ACTION KEYS (lowercase string — matched against key.toLowerCase())
+  TOGGLE_TORCH_KEY: 'l',
+  SONAR_KEY: 'e',
+  FIRE_MISSILE_KEY: ' ',
+
+  // UI KEYS (keyCode — matched against keyCode)
+  TOGGLE_PAUSE_KEY: 27,       // Escape
+  TOGGLE_SHOP_KEY: 66,        // B
+  TOGGLE_FULLSCREEN_KEY: 70,  // F
 };
 
 //======================
@@ -62,10 +76,14 @@ export const CANVAS = {
 //======================
 export const CAMERA = {
   // < 1.0 zooms out, > 1.0 zooms in
-  DEFAULT_SCALE: 3.0,  /* DEFAULT_SCALE: 3 - fits game to window size, game never cutt off due to
-                                             window size being not in fullscreen (scales with window)
-                        */
-                       
+  DEFAULT_SCALE: 2.0,
+  /*
+   DEFAULT_SCALE: 3   (visible area: 640x360)   - very zoomed in
+   DEFAULT_SCALE: 2.5 (visible area: 768x432)
+   DEFAULT_SCALE: 2   (visible area: 960x540)   - balanced, world feels large, player not too small
+   DEFAULT_SCALE: 1.5 (visible area: 1280x720)
+   DEFAULT_SCALE: 1   (visible area: 1920x1080) - fully zoomed out, player feels small
+*/                   
 };
 
 //======================
@@ -104,7 +122,22 @@ export const POWER = {
   MAX_POWER: 100,
   CURRENT_POWER: 100,
   LOW_POWER_THRESHOLD: 0.15,
-  DRAIN_RATE: 1
+  DRAIN_RATE: 0.5              
+  /* 
+   (Tested Options)
+      DRAIN_RATE: 1             
+      (100 power = 100s| 1 power = 1s) - very fast
+      DRAIN_RATE: 0.6667 ~[2/3] 
+      (100 power = 150s| 1 power = 1.5s) - fast
+      DRAIN_RATE: 0.5           
+      (100 power = 200s| 1 power = 2s) - feels most balanced
+      DRAIN_RATE: 0.25          
+      (100 power = 400s| 1 power = 4s) - very slow
+   
+   (Total drain calculation)
+      Torch OFF	1 × 60fps × (1/60) = 1/sec	100s	1.0s
+      Torch ON	1 × 1.5 × 60fps × (1/60) = 1.5/sec	~66.7s	~0.67s
+*/
   
 };
 
@@ -124,7 +157,7 @@ export const TORCH = {
 //======================
 export const LIGHTING = {
   PLAYER_AMBIENT: {
-    RADIUS: PLAYER.WIDTH * 2 + 4,
+    RADIUS: PLAYER.WIDTH * 2.5,
     BRIGHTNESS: 0.2
   }
 };
@@ -151,14 +184,6 @@ export const MISSILE = {
 };
 
 //======================
-// GAME CONFIG
-//======================
-export const GAME = {
-  FPS : 75,
-};
-
-
-//======================
 // COMBAT CONFIG
 //======================
 export const COMBAT = {
@@ -170,11 +195,11 @@ export const COMBAT = {
   KNOCKBACK_LIFT: 100,
   IFRAME_DURATION_MS: 800, // Minimum ms between consecutive hits; prevents rapid repeated damage
 
-  // (optional: default for centralised damage via PlayerHitResponse util)
-  HIT_DAMAGE: 10, //(not used: power deducted is defined per enemy and in resource mangement)
-
   // How long (ms) the red damage flash is visible — independent of i-frame duration
   DAMAGE_FLASH_DURATION_MS: 300,
+
+  // (optional: default for centralised damage via PlayerHitResponse util)
+  HIT_DAMAGE: 10, // (not in use!) all damage set to this default
 };
 
 //======================

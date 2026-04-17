@@ -82,9 +82,13 @@ export class PowerSystem {
 //======================================
 
 export function createPowerSystem(entity, config = POWER) {
-   const power = new PowerSystem(config);
+   // Use the power instance already on the entity (Player sets this.power in constructor).
+   // Fallback: create one if the entity has none.
+   if (!entity.power) {
+      entity.power = new PowerSystem(config);
+   }
+   const power = entity.power;
 
-   // returning object literals → commas between entries
    return {
       power,
 
@@ -92,17 +96,14 @@ export function createPowerSystem(entity, config = POWER) {
       update(fixedDeltaTime) {
          let rate = power.drainRate;
 
-         // increase drain if torch is on
          if (entity.torch?.isOn) {
-            rate *= TORCH.DRAIN_RATE; // power rate is * by torch drain rate (torch drain rate must be > 1)
+            rate *= TORCH.DRAIN_RATE;
          }
 
          power.drain(rate, fixedDeltaTime);
 
-         // auto turn off torch if power is empty
          if (power.isEmpty() && entity.torch) {
             entity.torch.isOn = false;
-
          }
       }
    }
