@@ -2,7 +2,7 @@
 =========================================
 VERSION: 3.3
 SYSTEM: RESOURCE MANAGEMENT SYSTEM
-AUTHOR: Monal Gupta, Archie Brown
+AUTHOR: Monal Gupta
 DESCRIPTION:
 - Handles player's resources and interactions with resource entities in the room.
 - Collectables: one-shot collection with type-based handlers
@@ -33,6 +33,8 @@ DESIGN GOALS:
 //======================================
 
 import { isColliding } from "./hitboxSystem.js";
+import { handlePlayerHit } from "../utils/playerHitResponse.js";
+import { COMBAT } from "../config.js";
 
 export function createResourceManagementSystem(
   player,
@@ -40,6 +42,7 @@ export function createResourceManagementSystem(
   getCollectables,
   getHazards,
   getDifficulty,
+  getEnemies,
 ) {
   const collectedEntities = new Set();
 
@@ -68,8 +71,8 @@ export function createResourceManagementSystem(
     if (!best) return null;
 
     const localTileId = gid - best.firstgid;
-    if (localTileId === 20) return 'coin';
-    if (localTileId === 41 || localTileId === 53) return 'health';
+    if (localTileId === 20) return "power";
+    if (localTileId === 41 || localTileId === 53) return "health";
     return null;
   }
 
@@ -86,17 +89,14 @@ export function createResourceManagementSystem(
   // Moved game logic from sketch.js to here
   //======================================
   const handlers = {
-
-    // Comment out whilst working on coins (replaced power with health for now)
-
-    // power(player, item) {
-    //   const difficulty = getDifficulty?.() ?? 'normal';
-    //   const amount = difficulty === 'hard' ? 5 : 10;
-    //   player.power.current = Math.max(
-    //     0,
-    //     Math.min(player.power.current + amount, player.power.maxPower)
-    //   );
-    // },  
+    power(player, item) {
+      const difficulty = getDifficulty?.() ?? "normal";
+      const amount = difficulty === "hard" ? 5 : 10;
+      player.power.current = Math.max(
+        0,
+        Math.min(player.power.current + amount, player.power.maxPower),
+      );
+    },
     health(player, item) {
       const difficulty = getDifficulty?.() ?? "normal";
       const amount = difficulty === "hard" ? 2 : 5;
@@ -105,17 +105,13 @@ export function createResourceManagementSystem(
         Math.min(player.power.current + amount, player.power.maxPower),
       );
     },
-    coin(player, item) {
-      player.coins += 100;
-    }
   };
 
   //======================================
   // HAZARD OVERLAP + DRAIN
   //  penalty on first contact, then continuous drain while on hazard
   //======================================
-  // TODO: move this to a different system to do with player entity interactions
-  function processHazards(deltaTime) {
+  function processHazards(fixedDeltaTime) {
     const hazards = getHazards ? getHazards() : [];
 
     for (const h of hazards) {
@@ -129,6 +125,11 @@ export function createResourceManagementSystem(
 
         player.power.drain(HAZARD_DRAIN_RATE, deltaTime);
 
+        /* Knockback + hit damage, gated by i-frames so it fires at most once
+           per IFRAME_DURATION_MS window even during sustained hazard contact.
+        */
+        handlePlayerHit(player, h, COMBAT, fixedDeltaTime);
+
         wasOnHazard = true;
         player.isOnHazard = true;
         return;
@@ -138,6 +139,23 @@ export function createResourceManagementSystem(
     // Not on any hazard this frame
     wasOnHazard = false;
     player.isOnHazard = false;
+  }
+
+  //======================================
+  // ENEMY CONTACT — knockback + hit damage
+  // Detects player overlap with every enemy and calls the generic hit handler.
+  // Power drain while touching is still handled by enemySystem independently.
+  //======================================
+  function processEnemyContacts(fixedDeltaTime) {
+    const enemies = getEnemies ? getEnemies() : [];
+    for (const enemy of enemies) {
+      // isColliding expects hitbox1.position and hitbox2.nextPos.
+      // Crabs (Hitbox subclass) have both; player.nextPos == player.position
+      // after physicsSystem has committed the frame.
+      if (isColliding(enemy, player)) {
+        handlePlayerHit(player, enemy, COMBAT, fixedDeltaTime);
+      }
+    }
   }
 
   //======================================
@@ -166,6 +184,7 @@ export function createResourceManagementSystem(
     update(fixedDeltaTime) {
       processHazards(fixedDeltaTime);
       processCollectables();
+      processEnemyContacts(fixedDeltaTime);
     },
 
     // Clears the collected items so they respawn on game reset

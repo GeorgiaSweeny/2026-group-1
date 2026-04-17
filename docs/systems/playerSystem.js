@@ -48,12 +48,12 @@ import { PLAYER } from '../config.js';
 
 export function createPlayerSystem(player) {
   return {
-    update(deltaTime) {
-      // Apply drag
+    update(fixedDeltaTime) {
+      // Apply drag each frame
       player.velocity.x *= PLAYER.DRAG;
       player.velocity.y *= PLAYER.DRAG;
 
-      // Apply acceleration based on intent
+      // Apply acceleration based on movement intent
       if (player.moveIntent.right) {
         player.velocity.x += PLAYER.ACCELERATION;
         player.facing = 1;
@@ -69,13 +69,13 @@ export function createPlayerSystem(player) {
         player.velocity.y += PLAYER.ACCELERATION;
       }
 
-      // Clamp velocity
+      // Clamp velocity to max speed (MOVE_SPEED is px/sec, clamped per frame)
       const maxSpeed = PLAYER.MOVE_SPEED / 60;
       player.velocity.x = constrain(player.velocity.x, -maxSpeed, maxSpeed);
       player.velocity.y = constrain(player.velocity.y, -maxSpeed, maxSpeed);
 
       // Bubble trail — spawn behind submarine when moving
-      const dt = Math.max(0, deltaTime ?? 16);
+      const dt = Math.max(0, fixedDeltaTime * 1000 ?? 16);
       const isMoving = Math.abs(player.velocity.x) > 0.1 || Math.abs(player.velocity.y) > 0.1;
       if (isMoving && Math.random() < 0.4) {
         const backX = player.position.x - player.facing * player.w * 0.8;

@@ -12,7 +12,7 @@ DESCRIPTION:
 ========================================
 */
 
-import { DEBUG_COLOR } from "../config.js";
+import { DEBUG_COLOR, COMBAT } from "../config.js";
 
 //======================================
 // RENDER SYSTEM
@@ -42,12 +42,7 @@ export function createRenderSystem({
    getCameraOffset,
    getOldCamPosition,
    getCameraScale,
-   getMissiles,
-   getParticles,
 }) {
-   let elapsedTime = 0;
-   const oscillationSpeed = 2; // Hz
-   const oscillationAmount = 10; // pixels
 
 //======================================
 // DRAW GAME
@@ -66,16 +61,9 @@ export function createRenderSystem({
       return baseParts.join('/');
    }
 
-   function resolveTilesetSourcePath(source) {
+   function tilesetSourceToImagePath(source, mapDir = 'data/rooms') {
       if (!source) return null;
-      const cleanSource = String(source).replace(/\\/g, '/');
-      const basePath = cleanSource.startsWith('tilesets/') ? 'mapdata' : 'mapdata/rooms';
-      return normalizeRelativePath(basePath, cleanSource);
-   }
-
-   function tilesetSourceToImagePath(source) {
-      const tsxPath = resolveTilesetSourcePath(source);
-      return tsxPath ? tsxPath.replace(/\.tsx$/i, '.png') : null;
+      return normalizeRelativePath(mapDir, source).replace(/\.tsx$/i, '.png');
    }
 
    function getTilesetForGid(gid, tilesets = []) {
@@ -123,9 +111,12 @@ export function createRenderSystem({
          return false;
       }
 
-      const imagePath = tilesetSourceToImagePath(tileset.source);
+      const imagePath = tileset.resolvedImagePath ?? tilesetSourceToImagePath(tileset.source);
       const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
-      if (!tilesetImage) return false;
+      if (!tilesetImage) {
+         console.warn(`[renderSystem] Missing tileset image for path: "${imagePath}" (source: "${tileset.source}")`);
+         return false;
+      }
 
       const rect = getObjectRect(obj);
       if (!rect) return false;
@@ -327,9 +318,9 @@ export function createRenderSystem({
 
 
    //===PLAYER===//
-   function drawPlayer() {
+   function drawPlayer(alpha) {
       push();
-      translate(player.position.x, player.position.y);
+      translate(renderInterpolate(player.previousPos.x, player.position.x, alpha), renderInterpolate(player.previousPos.y, player.position.y, alpha));
       scale(player.facing, 1);
 
       // Periscope
@@ -354,6 +345,32 @@ export function createRenderSystem({
       fill(100, 220, 255);
       circle(player.w * 0.2, 0, player.w * 0.4);
 
+      // Damage flash — semi-transparent white & red overlay drawn on top of the sprite.
+      // Reads damageFlashTime set by playerHitResponse when a hit is confirmed.
+      // Damage flash — white then red overlay
+      if (player.damageFlashTime != null) {
+         const elapsed = millis() - player.damageFlashTime;
+         const duration = COMBAT.DAMAGE_FLASH_DURATION_MS;
+
+         if (elapsed < duration) {
+            noStroke();
+
+            const whitePhase = duration * 0.25;
+
+            if (elapsed < whitePhase) {
+               // Phase 1: white flash
+               fill(255, 255, 255, 180);
+            } else {
+               // Phase 2: red fade out
+               const t = (elapsed - whitePhase) / whitePhase; // 0 → 1
+               const alpha = 150 * (1 - t);
+               fill(255, 50, 50, alpha);
+            }
+
+            ellipse(0, 0, player.w * 1.4, player.h * 1.1);
+         }
+      }
+
       pop();
    }
 
@@ -365,43 +382,6 @@ export function createRenderSystem({
          if (b.life > 0) {
             fill(150, 220, 255, b.life);
             circle(b.x, b.y, b.size);
-         }
-      }
-   }
-
-   //===MISSILES===//
-   function drawMissiles() {
-      const missiles = getMissiles?.() ?? [];
-      if (!missiles.length) return;
-
-      noStroke();
-      for (const missile of missiles) {
-         // Draw missile as a small orange/yellow projectile
-         fill(255, 165, 0, 220);
-         circle(missile.x, missile.y, 6);
-
-         // Draw a trailing glow
-         fill(255, 200, 100, 100);
-         circle(missile.x, missile.y, 10);
-      }
-   }
-
-   //===PARTICLES===//
-   function drawParticles() {
-      const allParticles = getParticles?.() ?? [];
-      if (!allParticles.length) return;
-
-      noStroke();
-      for (const particle of allParticles) {
-         const alpha = Math.max(0, (particle.life / particle.maxLife) * 200);
-         
-         if (particle.type === 'dust') {
-            fill(150, 140, 120, alpha);
-            circle(particle.x, particle.y, particle.size * 1.5);
-         } else {
-            // float particles - ethereal blue/white
-            fill(180, 200, 255, alpha * 0.6);
-            circle(particle.x, particle.y, particle.size);
          }
       }
    }
@@ -457,23 +437,37 @@ export function createRenderSystem({
 
       for (const light of lightSources) {
          const { x, y, radius, intensity = 1, kind } = light;
-         if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(radius)) continue;
-         if (!Number.isFinite(intensity)) continue;
          const screenX = (x - cam.x) * camScale;
          const screenY = (y - cam.y) * camScale;
          const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
-         if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius)) continue;
+         // prevents crash when using PLAYER.WIDTH in config
+         if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius) || scaledRadius <= 0) continue;
          const gradient = ctx.createRadialGradient(
             screenX, screenY, scaledRadius * 0.1,
             screenX, screenY, scaledRadius
          );
          if (kind === 'ambient') {
-            gradient.addColorStop(0, 'rgba(255,255,255,0.55)');
-            gradient.addColorStop(0.6, 'rgba(255,255,255,0.18)');
+            gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(0.15, 'rgba(255,255,255,0.45)');
+            gradient.addColorStop(0.25, 'rgba(255,255,255,0.25)');
+            gradient.addColorStop(0.55, 'rgba(255,255,255,0.15)');
+            gradient.addColorStop(0.7, 'rgba(255,255,255,0.1)');
+            gradient.addColorStop(0.8, 'rgba(255,255,255,0.05)');
             gradient.addColorStop(1, 'rgba(0,0,0,0)');
          } else {
+            //torch light
             gradient.addColorStop(0, 'rgba(255,255,255,1)');
-            gradient.addColorStop(0.25, 'rgba(255,255,255,0.85)');
+            gradient.addColorStop(0.05, 'rgba(255,255,255,0.95)');
+            gradient.addColorStop(0.15, 'rgba(255,255,255,0.9)');
+            gradient.addColorStop(0.25, 'rgba(255,255,255,0.95)');
+            gradient.addColorStop(0.3, 'rgba(255,255,255,0.7)');
+            gradient.addColorStop(0.5, 'rgba(255,255,255,0.8)');
+            gradient.addColorStop(0.55, 'rgba(255,255,255,0.5)');
+            gradient.addColorStop(0.65, 'rgba(255,255,255,0.55)');
+            gradient.addColorStop(0.75, 'rgba(255,255,255,0.4)');
+            gradient.addColorStop(0.8, 'rgba(255,255,255,0.2)');
+            gradient.addColorStop(0.85, 'rgba(255,255,255,0.1)');
+            gradient.addColorStop(0.95, 'rgba(255,255,255,0.05)');
             gradient.addColorStop(1, 'rgba(0,0,0,0)');
          }
 
@@ -489,43 +483,6 @@ export function createRenderSystem({
 
    //===UI===//
    function drawUI() {
-      // push();
-      // blendMode(BLEND);
-
-      // const barX = 10;
-      // const barY = 10;
-      // const barW = 120;
-      // const barH = 14;
-      // const pct = constrain(player.power.getPercent(), 0, 1);
-
-      // // Background
-      // noStroke();
-      // fill(40, 40, 40, 200);
-      // rect(barX, barY, barW, barH, 3);
-
-      // // Fill — green to red
-      // const r = lerp(220, 50, pct);
-      // const g = lerp(60, 200, pct);
-      // fill(r, g, 60);
-      // rect(barX, barY, barW * pct, barH, 3);
-
-      // Border
-      // noFill();
-      // stroke(200);
-      // strokeWeight(1);
-      // rect(barX, barY, barW, barH, 3);
-
-      // Label
-      // noStroke();
-      // fill(255);
-      // textSize(10);
-      // textAlign(LEFT, TOP);
-      // text(`Power: ${Math.round(player.power.current)}`, barX + 4, barY + 2);
-      
-      
-      // Replaced the old power text with new ui // Archie
-
-      // pop();
       fill(255);
       noStroke();
       text(`Power: ${Math.round(player.power.current)}`, 20, 30);
@@ -554,11 +511,7 @@ export function createRenderSystem({
          noStroke();
          fill(90, 110, 130, alpha);
          rect(r.x, r.y, r.w, r.h);
-
-         noFill();
-         rect(r.x, r.y, r.w, r.h);
       }
-      rectMode(CORNER);
    }
 
    function drawSonarHazardReveals() {
@@ -573,7 +526,6 @@ export function createRenderSystem({
          fill(220, 70, 70, alpha);
          rect(r.x, r.y, r.w, r.h);
       }
-      rectMode(CORNER);
    }
 
    function drawSonarCollectableReveals() {
@@ -618,23 +570,18 @@ export function createRenderSystem({
 
 // calculate rendering positions for higher fps
 function renderInterpolate(oldState, newState, alpha){
-   const from = Number.isFinite(oldState) ? oldState : 0;
-   const to = Number.isFinite(newState) ? newState : from;
-   const a = Number.isFinite(alpha) ? alpha : 1;
-   return from + (to - from) * a;
+   return (oldState + (newState - oldState) * alpha);
 }
 
 //======================================
 // DRAW EVERYTHING
 //======================================
       return {
-         draw(fixedDeltaTime = 0, alpha = 1) {
-            elapsedTime += fixedDeltaTime;
+         draw(alpha) {
             const lightSources = getLightSources?.() ?? [];
             const cam = getCameraOffset?.() ?? { x: 0, y: 0 };
-            const oldCam = getOldCamPosition?.() ?? cam;
+            const oldCam = getOldCamPosition?.() ?? {x: 0, y: 0};
             const camScale = getCameraScale?.() ?? 1;
-            const ax = Number.isFinite(alpha) ? alpha : 1;
 
             // --- Screen space: background fills viewport --- //
             drawBackground();
@@ -642,7 +589,7 @@ function renderInterpolate(oldState, newState, alpha){
             // --- World space (scaled + translated by camera) --- //
             push();
             scale(camScale);
-            translate(renderInterpolate(-oldCam.x, -cam.x, ax), renderInterpolate(-oldCam.y, -cam.y, ax));
+            translate(renderInterpolate(-oldCam.x, -cam.x, alpha), renderInterpolate(-oldCam.y, -cam.y, alpha));
 
             // Comment out prototype visuals from render
             drawPlatforms();
@@ -653,10 +600,8 @@ function renderInterpolate(oldState, newState, alpha){
             drawEntities(); //- will need interpolation
             drawSpawnPoints();
             drawSonarWalls();
-            drawParticles();
             drawBubbles();
-            drawMissiles();
-            drawPlayer();
+            drawPlayer(alpha);
             debugHitbox(DEBUG_COLOR.DRAW);
 
             pop();
@@ -667,12 +612,14 @@ function renderInterpolate(oldState, newState, alpha){
          // --- World space overlays (drawn above lighting) --- //
          push();
          scale(camScale);
-         translate(renderInterpolate(-oldCam.x, -cam.x, ax), renderInterpolate(-oldCam.y, -cam.y, ax));
+         translate(renderInterpolate(-oldCam.x, -cam.x, alpha), renderInterpolate(-oldCam.y, -cam.y, alpha));
          drawSonarPulses();
          drawSonarReveals();
          drawSonarHazardReveals();
          drawSonarCollectableReveals();
          pop();
+
+         drawUI();
       }
    };
 }

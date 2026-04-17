@@ -38,8 +38,7 @@ export const INPUT = {
   
   // ACTION KEYS - functions take strings
   TOGGLE_TORCH_KEY: ['L', 'l'],
-  SONAR_KEY: ['E', 'e'],
-  FIRE_MISSILE_KEY: ['space', ' ']
+  SONAR_KEY: ['E', 'e']
 };
 
 //======================
@@ -100,8 +99,8 @@ export const PLAYER = {
 export const POWER = {
   MAX_POWER: 100,
   CURRENT_POWER: 100,
-  LOW_POWER_THRESHOLD: 0.15,
-  DRAIN_RATE: 0
+  LOW_POWER_THRESHOLD: 0.15
+  
 };
 
 //======================
@@ -109,9 +108,8 @@ export const POWER = {
 //======================
 export const TORCH = {
   RADIUS: 100,
-  UPGRADE_RADIUS_BONUS: 22,
-  MIN_RADIUS_WHEN_DRAINED: 50,
-  FLICKER_POWER_THRESHOLD: 0.15
+  FLICKER_POWER_THRESHOLD: 0.15,
+  DRAIN_RATE: 1
 };
 
 //======================
@@ -119,8 +117,8 @@ export const TORCH = {
 //======================
 export const LIGHTING = {
   PLAYER_AMBIENT: {
-    radius: 30,
-    brightness: 0.2
+    RADIUS: PLAYER.WIDTH * 2 + 4,
+    BRIGHTNESS: 0.2
   }
 };
 
@@ -128,21 +126,9 @@ export const LIGHTING = {
 // SONAR CONFIG
 //======================
 export const SONAR = {
-  // Normalized cooldown units consumed by sonarSystem.
+  // Cooldown in seconds for readability; derived ms used by sonarSystem
   COOLDOWN: 1,
   COOLDOWN_MS: 1
-};
-
-//======================
-// MISSILE CONFIG
-//======================
-export const MISSILE = {
-  WIDTH: 8,
-  HEIGHT: 8,
-  SPEED: 2,
-  MAX_DISTANCE: 2000,
-  TARGET_RADIUS: 150,
-  MAX_CONCURRENT: 5
 };
 
 //======================
@@ -152,6 +138,21 @@ export const GAME = {
   FPS : 75,
 };
 
+
+//======================
+// COMBAT CONFIG
+//======================
+export const COMBAT = {
+  KNOCKBACK_STRENGTH: 100, // in pixels/sec — applied as velocity toward the player
+  KNOCKBACK_LIFT: 25, // Upward bias added to the knockback to produce a bounce feel
+  IFRAME_DURATION_MS: 800, // Minimum ms between consecutive hits; prevents rapid repeated damage
+
+  // (optional: default for centralised damage via PlayerHitResponse util)
+  HIT_DAMAGE: 10, //(not used: power deducted is defined per enemy and in resource mangement)
+
+  // How long (ms) the red damage flash is visible — independent of i-frame duration
+  DAMAGE_FLASH_DURATION_MS: 300,
+};
 
 //======================
 // HITBOX DEBUG
