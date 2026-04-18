@@ -336,8 +336,9 @@ export function createPauseMenuSystem({
       const backY = debugY + 55;
       if (isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H)) {
         if (returnToMainMenu) {
-          paused = false; // Close the overlay
-          returnToMainMenu = false; // Reset flag
+          paused = false;
+          currentPage = "main";
+          returnToMainMenu = false;
         } else {
           currentPage = "main"; // Normal pause menu behavior
         }
@@ -408,7 +409,8 @@ export function createPauseMenuSystem({
 
     togglePause() {
       paused = !paused;
-      if (!paused) currentPage = "main";
+      currentPage = "main";
+      returnToMainMenu = false;
     },
 
     onMousePressed() {

@@ -39,6 +39,7 @@ import { createMissileSystem } from "./systems/missileSystem.js";
 import { createParticleSystem } from "./systems/particleSystem.js";
 import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
+import { createGameOverSystem } from "./systems/gameOverSystem.js";
 
 let accumulator = 0;
 let alpha;
@@ -65,9 +66,12 @@ let particleSystem;
 let cameraSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
+let settingsReturnState = "MENU"; // state to restore when settings overlay closes
 let menuSystem;
 let winScreenSystem;
+let gameOverSystem;
 const WIN_STATE = "WIN";
+const GAME_OVER_STATE = "GAME_OVER";
 
 let assets = {};
 const INITIAL_ROOM_ID = "startArea";
@@ -351,6 +355,7 @@ function setup() {
 
   menuSystem = createMenuSystem();
   winScreenSystem = createWinScreenSystem();
+  gameOverSystem = createGameOverSystem();
 
   player = new Player(PLAYER);
 
@@ -494,12 +499,9 @@ function draw() {
     menuSystem.draw(null);
     return;
   } else if (gameState === "SETTINGS") {
-    // Use pauseMenuSystem to render the settings
     pauseMenuSystem.draw();
-
-    // If the back button closed it, return to the start menu
     if (!pauseMenuSystem.isPaused()) {
-      gameState = "MENU";
+      gameState = settingsReturnState;
     }
     return;
   }
@@ -515,6 +517,12 @@ function draw() {
     // textSize(48);
     // text("You Win!", width / 2, height / 2);
     // pop();
+    return;
+  }
+
+  if (gameState === GAME_OVER_STATE) {
+    renderSystem?.draw?.(0);
+    gameOverSystem.draw();
     return;
   }
 
@@ -541,6 +549,9 @@ function draw() {
     while (accumulator >= TIME.fixedDeltaTime) {
       engine.update();
       accumulator -= TIME.fixedDeltaTime;
+    }
+    if (player.power?.isEmpty()) {
+      gameState = GAME_OVER_STATE;
     }
     alpha = accumulator / TIME.fixedDeltaTime;
     renderSystem.draw(alpha);
@@ -589,6 +600,22 @@ function mousePressed() {
     return;
   }
 
+  if (gameState === GAME_OVER_STATE) {
+    const selection = gameOverSystem.checkClick(mouseX, mouseY);
+    if (selection === "YES") {
+      resetGameToStart();
+      gameState = "PLAYING";
+    } else if (selection === "NO") {
+      resetGameToStart();
+      gameState = "MENU";
+    } else if (selection === "SETTINGS") {
+      settingsReturnState = GAME_OVER_STATE;
+      gameState = "SETTINGS";
+      pauseMenuSystem.openSettingsMenu(true);
+    }
+    return;
+  }
+
   if (gameState === "MENU") {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
@@ -596,6 +623,7 @@ function mousePressed() {
       applyDifficultyConfig(selection);
       gameState = "PLAYING";
     } else if (selection === "SETTINGS") {
+      settingsReturnState = "MENU";
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
     }
@@ -679,13 +707,21 @@ function resetGameToStart() {
 
   // 4. Reset Player stats
   if (player.power) {
-    player.power.current = player.power.max || 100;
+    player.power.current = player.power.maxPower;
   }
   if (player.torch) {
     player.torch.isOn = false;
   }
 
-  // 5. Reset Collectables (requires a reset method in resourceManagementSystem)
+  // 5. Reset upgrades, inventory, and coins
+  player.upgrades = { power: 1, torch: 1, sonar: 1 };
+  player.missiles = 0;
+  player.coins = PLAYER.STARTING_COINS;
+
+  // 6. Reset shop internal state (costs, levels, open state)
+  shopSystem?.reset();
+
+  // 7. Reset Collectables (requires a reset method in resourceManagementSystem)
   if (
     resourceManagementSystem &&
     typeof resourceManagementSystem.reset === "function"

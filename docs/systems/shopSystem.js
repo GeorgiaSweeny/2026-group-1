@@ -70,22 +70,24 @@ TODO / LIMITATIONS:
 export function createShopSystem(player) {
   let shopOpen = false;
 
+  const INITIAL_UPGRADE_COSTS = { power: 50, torch: 40, sonar: 60 };
+
   // Upgrade levels (now synced with player)
   const upgrades = {
-    power: { 
-      level: player?.upgrades?.power ?? 1, 
-      cost: 50, 
-      description: "Increase max power capacity",   
+    power: {
+      level: player?.upgrades?.power ?? 1,
+      cost: INITIAL_UPGRADE_COSTS.power,
+      description: "Increase max power capacity",
     },
-    torch: { 
-      level: player?.upgrades?.torch ?? 1, 
-      cost: 40, 
-      description: "Expand torch radius" 
+    torch: {
+      level: player?.upgrades?.torch ?? 1,
+      cost: INITIAL_UPGRADE_COSTS.torch,
+      description: "Expand torch radius"
     },
-    sonar: { 
-      level: player?.upgrades?.sonar ?? 1, 
-      cost: 60, 
-      description: "Increase sonar range" 
+    sonar: {
+      level: player?.upgrades?.sonar ?? 1,
+      cost: INITIAL_UPGRADE_COSTS.sonar,
+      description: "Increase sonar range"
     },
   };
 
@@ -483,6 +485,15 @@ export function createShopSystem(player) {
     onMousePressed() {
       if (!shopOpen) return;
       handleClick();
+    },
+
+    reset() {
+      shopOpen = false;
+      for (const name of Object.keys(upgrades)) {
+        upgrades[name].level = 1;
+        upgrades[name].cost  = INITIAL_UPGRADE_COSTS[name];
+      }
+      items.missiles.quantity = 0;
     },
 
     // DATA QUERIES
