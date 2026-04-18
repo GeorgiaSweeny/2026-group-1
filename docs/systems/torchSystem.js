@@ -16,7 +16,7 @@ RULES:
 ========================================
 DESIGN GOALS:
 - Keep torch logic modular and separate from rendering
-- Ensure frame-rate independent updates using fixedDeltaTime
+- Ensure frame-rate independent updates using TIME.fixedDeltaTime
 - Maintain clear boundaries between systems
 ========================================
 RESPONSIBILITIES:
@@ -37,7 +37,7 @@ engine.register(torchSystem);
 ========================================
 NOTES:
 - Torch visibility flickers when power is low (handled in Torch class)
-- Torch system relies on fixedDeltaTime for frame-rate independence
+- Torch system relies on TIME.fixedDeltaTime (config constant) for frame-rate independence
 - Torch does not know the internal details of PowerSystem
 ========================================
 TODO / LIMITATIONS:
@@ -53,46 +53,47 @@ TODO / LIMITATIONS:
 //======================
 import { TORCH } from '../config.js';
 
-export function createTorchSystem(torch, player, { drainRate = TORCH.DRAIN_RATE, getDifficulty = () => 'normal' } = {}) {
-  const fullRadius = TORCH.RADIUS;
-  const reducedRadius = 50;
+export function createTorchSystem(torch, player, { getDifficulty = () => 'normal' } = {}) {
+   const baseRadius = TORCH.RADIUS;
+   const upgradeBonusPerLevel = TORCH.UPGRADE_RADIUS_BONUS ?? 20;
+   const reducedRadius = TORCH.MIN_RADIUS_WHEN_DRAINED ?? 50;
 
-  return {
-    //---UPDATE---//
-    update(fixedDeltaTime) {
-      // Hard difficulty: force torch off, reduce radius
-      if (getDifficulty() === 'hard') {
-        if (torch.isOn) torch.isOn = false;
-        player.toggleTorchIntent = false;
-        torch.radius = reducedRadius;
-        return;
+   function getUpgradedRadius() {
+      const torchLevel = Math.max(1, player?.upgrades?.torch ?? 1);
+      return baseRadius + (torchLevel - 1) * upgradeBonusPerLevel;
+   }
+
+   return {
+      //---UPDATE---//
+      update() {
+         // Hard difficulty: force torch off, reduce radius
+         if (getDifficulty() === 'hard') {
+            if (torch.isOn) torch.isOn = false;
+            player.toggleTorchIntent = false;
+            torch.radius = reducedRadius;
+            return;
+         }
+
+         // Update internal flicker timer
+         torch.update();
+
+         // Handle player intent to toggle torch
+         if (player.actionIntent?.toggleTorch) {
+            torch.tryToggle(!player.power.isEmpty());
+            player.actionIntent.toggleTorch = false;
+         }
+
+         // Update radius based on power state (drain is handled by powerSystem)
+         if (torch.isOn) {
+            if (player.power.isEmpty()) {
+               torch.isOn = false;
+               //torch.radius = reducedRadius;
+            } else {
+               torch.radius = getUpgradedRadius();
+            }
+         }
       }
-
-      // Update internal flicker timer
-      torch.update(fixedDeltaTime);
-
-      // Handle player intent to toggle torch
-      if (player.actionIntent?.toggleTorch) {
-        torch.tryToggle(!player.power.isEmpty());
-        player.actionIntent.toggleTorch = false;
-      }
-
-      // Drain player power if torch is active
-      if (torch.isOn) {
-        player.power.drain(drainRate, fixedDeltaTime);
-
-        // Turn off torch if power depleted
-        if (player.power.isEmpty()) torch.isOn = false;
-      }
-
-      // Update radius based on power state
-      if (player.power.isEmpty()) {
-        torch.radius = reducedRadius;
-      } else {
-        torch.radius = fullRadius;
-      }
-    }
-  };
+   };
 }
 //======================================
 // END

@@ -19,9 +19,24 @@ RULES:
 // PAUSE MENU SYSTEM
 //======================================
 
+import { CONTROLS } from '../config.js';
+
+// Converts a raw binding value to a short human-readable label.
+function keyLabel(binding) {
+  if (binding === ' ') return 'Space';
+  if (typeof binding === 'string') return binding.toUpperCase();
+  const names = {
+    27: 'ESC', 37: '←', 38: '↑', 39: '→', 40: '↓',
+    65: 'A', 66: 'B', 68: 'D', 83: 'S', 87: 'W',
+  };
+  return names[binding] ?? `#${binding}`;
+}
+
 export function createPauseMenuSystem({
   onDifficultyChange,
   onResolutionChange,
+  onControlModeChange,
+  initialControlMode = 'wasd',
 } = {}) {
   let paused = false;
   let currentPage = "main"; // 'main' | 'settings' | 'debug'
@@ -33,6 +48,9 @@ export function createPauseMenuSystem({
   let volume = 80; // 0–100
   let showFPS = false;
   let screenShake = true;
+
+  // Control mode: 'wasd' | 'arrows'
+  let controlMode = initialControlMode;
 
   // Debug settings
   let devResolution = false; // false = 1920x1080, true = dev (640x360)
@@ -181,8 +199,28 @@ export function createPauseMenuSystem({
     drawToggle("Show FPS", showFPS, leftX, baseY + 110);
     drawToggle("Screen Shake", screenShake, leftX, baseY + 150);
 
+    // Control mode toggle
+    const controlLabel = `Movement: ${controlMode === 'wasd' ? 'WASD' : 'Arrow Keys'}`;
+    drawToggle(controlLabel, controlMode === 'arrows', leftX, baseY + 190);
+
+    // Binding reference — shows all keys for the active mode
+    const map = CONTROLS.MODES[controlMode] ?? CONTROLS.MODES[CONTROLS.DEFAULT_MODE];
+    const moveStr = [map.MOVE_UP, map.MOVE_LEFT, map.MOVE_DOWN, map.MOVE_RIGHT].map(keyLabel).join('');
+    textAlign(LEFT, TOP);
+    textSize(11);
+    fill(140);
+    noStroke();
+    text(
+      `Move: ${moveStr}   Torch: ${keyLabel(map.TOGGLE_TORCH)}   Sonar: ${keyLabel(map.SONAR)}   Fire: ${keyLabel(map.FIRE_MISSILE)}`,
+      leftX, baseY + 207,
+    );
+    text(
+      `Pause: ${keyLabel(map.TOGGLE_PAUSE)}   Shop: ${keyLabel(map.TOGGLE_SHOP)}`,
+      leftX, baseY + 221,
+    );
+
     // Debug button
-    const debugY = baseY + 200;
+    const debugY = baseY + 260;
     drawButton(
       "Debug",
       cx - BUTTON_W / 2,
@@ -270,19 +308,26 @@ export function createPauseMenuSystem({
       const baseY = height / 2 - 100;
       const leftX = cx - 120;
 
+      const togglesX = leftX + 160;
+
       // Show FPS toggle hit area
-      const fpsToggleX = leftX + 160;
-      if (isOver(fpsToggleX, baseY + 110 - 12, 48, 24)) {
+      if (isOver(togglesX, baseY + 110 - 12, 48, 24)) {
         showFPS = !showFPS;
       }
 
       // Screen Shake toggle hit area
-      if (isOver(fpsToggleX, baseY + 150 - 12, 48, 24)) {
+      if (isOver(togglesX, baseY + 150 - 12, 48, 24)) {
         screenShake = !screenShake;
       }
 
+      // Control mode toggle hit area
+      if (isOver(togglesX, baseY + 190 - 12, 48, 24)) {
+        controlMode = controlMode === 'wasd' ? 'arrows' : 'wasd';
+        onControlModeChange?.(controlMode);
+      }
+
       // Debug button
-      const debugY = baseY + 200;
+      const debugY = baseY + 260;
       if (isOver(cx - BUTTON_W / 2, debugY, BUTTON_W, BUTTON_H)) {
         currentPage = "debug";
       }
@@ -291,8 +336,9 @@ export function createPauseMenuSystem({
       const backY = debugY + 55;
       if (isOver(cx - BUTTON_W / 2, backY, BUTTON_W, BUTTON_H)) {
         if (returnToMainMenu) {
-          paused = false; // Close the overlay
-          returnToMainMenu = false; // Reset flag
+          paused = false;
+          currentPage = "main";
+          returnToMainMenu = false;
         } else {
           currentPage = "main"; // Normal pause menu behavior
         }
@@ -358,12 +404,13 @@ export function createPauseMenuSystem({
     },
 
     getSettings() {
-      return { volume, showFPS, screenShake, devResolution };
+      return { volume, showFPS, screenShake, devResolution, controlMode };
     },
 
     togglePause() {
       paused = !paused;
-      if (!paused) currentPage = "main";
+      currentPage = "main";
+      returnToMainMenu = false;
     },
 
     onMousePressed() {

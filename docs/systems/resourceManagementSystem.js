@@ -16,7 +16,7 @@ HIERARCHY:
   - resourceType: "health" (specific resource)
 
 RULES:
-- Runs in update(fixedDeltaTime)
+- Runs in update()
 - Only processes entities with type === "resource" or gid-resolved collectables
 - Delegates to internal handlers based on resourceType
 - Hazard drain is one shot (burst) + continuous if it stays
@@ -111,7 +111,7 @@ export function createResourceManagementSystem(
   // HAZARD OVERLAP + DRAIN
   //  penalty on first contact, then continuous drain while on hazard
   //======================================
-  function processHazards(fixedDeltaTime) {
+  function processHazards() {
     const hazards = getHazards ? getHazards() : [];
 
     for (const h of hazards) {
@@ -123,12 +123,12 @@ export function createResourceManagementSystem(
           );
         }
 
-        player.power.drain(HAZARD_DRAIN_RATE, deltaTime);
+        player.power.drain(HAZARD_DRAIN_RATE);
 
         /* Knockback + hit damage, gated by i-frames so it fires at most once
            per IFRAME_DURATION_MS window even during sustained hazard contact.
         */
-        handlePlayerHit(player, h, COMBAT, fixedDeltaTime);
+        handlePlayerHit(player, h, COMBAT);
 
         wasOnHazard = true;
         player.isOnHazard = true;
@@ -146,14 +146,14 @@ export function createResourceManagementSystem(
   // Detects player overlap with every enemy and calls the generic hit handler.
   // Power drain while touching is still handled by enemySystem independently.
   //======================================
-  function processEnemyContacts(fixedDeltaTime) {
+  function processEnemyContacts() {
     const enemies = getEnemies ? getEnemies() : [];
     for (const enemy of enemies) {
       // isColliding expects hitbox1.position and hitbox2.nextPos.
       // Crabs (Hitbox subclass) have both; player.nextPos == player.position
       // after physicsSystem has committed the frame.
       if (isColliding(enemy, player)) {
-        handlePlayerHit(player, enemy, COMBAT, fixedDeltaTime);
+        handlePlayerHit(player, enemy, COMBAT);
       }
     }
   }
@@ -181,10 +181,10 @@ export function createResourceManagementSystem(
     //======================================
     // UPDATE — called by engine each frame
     //======================================
-    update(fixedDeltaTime) {
-      processHazards(fixedDeltaTime);
+    update() {
+      processHazards();
       processCollectables();
-      processEnemyContacts(fixedDeltaTime);
+      processEnemyContacts();
     },
 
     // Clears the collected items so they respawn on game reset

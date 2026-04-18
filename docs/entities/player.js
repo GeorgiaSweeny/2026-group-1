@@ -75,6 +75,10 @@ export class Player extends Hitbox{
 
       this.bubbles = [];
 
+      this.coins = usingConfigObject ? (xOrConfig.STARTING_COINS ?? 0) : 0;
+      this.missiles = 0;
+      this.upgrades = { power: 1, torch: 1, sonar: 1 };
+
       this.moveIntent = {
          left: false,
          right: false,
@@ -84,6 +88,9 @@ export class Player extends Hitbox{
       this.actionIntent = {
          toggleTorch: false,
          emitSonar: false,
+         fireMissile: false,
+         toggleShop: false,
+         togglePause: false,
       };
    
    }

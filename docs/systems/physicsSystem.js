@@ -16,7 +16,7 @@ RULES:
 ========================================
 DESIGN GOALS:
 - Separate physics logic from input and rendering
-- Frame-rate independent movement using deltaTime if needed
+- Frame-rate independent movement using TIME.fixedDeltaTime
 - Maintain clean boundaries between systems
 ========================================
 RESPONSIBILITIES:

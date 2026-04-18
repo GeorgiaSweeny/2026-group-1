@@ -21,12 +21,12 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Track current and max power values
-- Drain power using fixedDeltaTime
+- Drain power each fixed update tick
 - Provide checks for empty or low power
 - Return percentage of remaining power for UI or system logic
 
 DEPENDENCIES:
-- fixedDeltaTime provided by engine update loop
+- TIME.fixedDeltaTime from config (constant, not passed as parameter)
 - Optional: entity object if interacting with components (e.g., torch)
 - constrain() helper for value clamping
 
@@ -37,7 +37,7 @@ const powerSystem = createPowerSystem(player);
 engine.register(powerSystem);
 ========================================
 Notes:
-- Power drain formula: current -= rate * (fixedDeltaTime / 1000)
+- Power drain formula: current -= rate * TIME.fixedDeltaTime
 - All interactions with power should use the provided methods
 ========================================
 TODO / LIMITATIONS:
@@ -50,62 +50,64 @@ TODO / LIMITATIONS:
 //======================================
 // POWER CLASS
 //======================================
-import { POWER } from '../config.js';
+import { POWER, TORCH, TIME } from '../config.js';
 
 export class PowerSystem {
-  constructor(config = POWER) {
-    this.maxPower = config.MAX_POWER;
-    this.current = config.CURRENT_POWER;
-    this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
-  }
+   constructor(config = POWER) {
+      this.maxPower = config.MAX_POWER;
+      this.current = config.CURRENT_POWER;
+      this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
+      this.drainRate = config.DRAIN_RATE
+   }
 
-  drain(rate, fixedDeltaTime) {
-    this.current -= rate * (fixedDeltaTime / 1000);
-    this.current = Math.max(0, Math.min(this.current, this.maxPower));
-  }
-  
-  isEmpty() {
-    return this.current <= 0;
-  }
+   drain(rate = this.drainRate) {
+      this.current -= rate * TIME.fixedDeltaTime;
+      this.current = Math.max(0, Math.min(this.current, this.maxPower));
+   }
 
-  isLow(threshold = this.lowPowerThreshold) {
-    return this.current <= this.maxPower * threshold;
-  }
+   isEmpty() {
+      return this.current <= 0;
+   }
 
-  getPercent() {
-    return this.current / this.maxPower;
-  }
+   isLow(threshold = this.lowPowerThreshold) {
+      return this.current <= this.maxPower * threshold;
+   }
+
+   getPercent() {
+      return this.current / this.maxPower;
+   }
 }
 //======================================
 // POWER SYSTEM
 //======================================
 
 export function createPowerSystem(entity, config = POWER) {
-  const power = new PowerSystem(config);
-  
-  // returning object literals → commas between entries
-  return {
-    power,
-    
-    //---UPDATE HOOK---//
-    update(fixedDeltaTime, drainRate = 0) {
-      if (drainRate > 0) {
-        power.drain(drainRate, fixedDeltaTime);
-        // auto-handle power-empty state if needed
-        if (power.isEmpty() && entity.torch) {
-          entity.torch.isOn = false;
-        }
+   // Use the power instance already on the entity (Player sets this.power in constructor).
+   // Fallback: create one if the entity has none.
+   if (!entity.power) {
+      entity.power = new PowerSystem(config);
+   }
+   const power = entity.power;
+
+   return {
+      power,
+
+      //---UPDATE HOOK---//
+      update() {
+         let rate = power.drainRate;
+
+         if (entity.torch?.isOn) {
+            rate *= TORCH.DRAIN_RATE;
+         }
+
+         power.drain(rate);
+
+         if (power.isEmpty() && entity.torch) {
+            entity.torch.isOn = false;
+         }
       }
-    },
-    
-    //---DRAW HOOK---//
-    draw() {
-      /* (optional: for UI representation)
-         Could draw a power bar or other UI element here or
-         call a separate drawPowerMeter(entity, power) helper */
-    }
-  };
-}
+   }
+};
 //======================================
 // END
 //======================================

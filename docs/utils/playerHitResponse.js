@@ -15,24 +15,25 @@ RULES:
 
 USAGE:
 import { handlePlayerHit } from '../utils/playerHitResponse.js';
-handlePlayerHit(player, sourceEntity, COMBAT, fixedDeltaTime);
+handlePlayerHit(player, sourceEntity, COMBAT);
 ========================================
 */
 
 //======================================
 // PLAYER HIT RESPONSE
 //======================================
+import { TIME } from '../config.js';
+
 /**
  * Applies damage and knockback to the player on contact with a source entity.
  *
- * @param {Player}  player           - The player instance.
- * @param {object}  source           - Damaging entity; must have a center position
- *                                     via source.position.x/y (Hitbox) or source.x/y (plain object).
- * @param {object}  config           - Tuning values (see COMBAT in config.js).
- * @param {number}  fixedDeltaTime   - Fixed timestep in seconds (used to normalise velocity).
+ * @param {Player}  player  - The player instance.
+ * @param {object}  source  - Damaging entity; must have a center position
+ *                            via source.position.x/y (Hitbox) or source.x/y (plain object).
+ * @param {object}  config  - Tuning values (see COMBAT in config.js).
  **/
 
-export function handlePlayerHit(player, source, config, fixedDeltaTime) {
+export function handlePlayerHit(player, source, config) {
    // --- i-frame check --- //
    // Exit early if the player was hit within the invulnerability window.
    const now = millis();
@@ -64,12 +65,9 @@ export function handlePlayerHit(player, source, config, fixedDeltaTime) {
    const normY = dist > 0 ? dy / dist : 0;
 
    // --- Apply knockback velocity --- //
-   /* Velocity is in pixels-per-fixed-dt-frame, so scale by fixedDeltaTime.
-      The upward lift gives a slight bounce feel regardless of contact angle.
-   */
-   player.velocity.x = normX * config.KNOCKBACK_STRENGTH * fixedDeltaTime;
-   player.velocity.y = normY * config.KNOCKBACK_STRENGTH * fixedDeltaTime
-      - config.KNOCKBACK_LIFT * fixedDeltaTime;
+   player.velocity.x = normX * config.KNOCKBACK_STRENGTH * TIME.fixedDeltaTime;
+   player.velocity.y = normY * config.KNOCKBACK_STRENGTH * TIME.fixedDeltaTime
+      - config.KNOCKBACK_LIFT * TIME.fixedDeltaTime;
 
    // --- Record hit timestamp --- //
    // lastHitTime gates the i-frame window.
