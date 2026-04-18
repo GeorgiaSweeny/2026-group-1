@@ -48,7 +48,7 @@ import { PLAYER } from '../config.js';
 
 export function createPlayerSystem(player) {
   return {
-    update(fixedDeltaTime) {
+    update() {
       // Apply drag each frame
       player.velocity.x *= PLAYER.DRAG;
       player.velocity.y *= PLAYER.DRAG;
@@ -75,7 +75,7 @@ export function createPlayerSystem(player) {
       player.velocity.y = constrain(player.velocity.y, -maxSpeed, maxSpeed);
 
       // Bubble trail — spawn behind submarine when moving
-      const dt = Math.max(0, fixedDeltaTime * 1000 ?? 16);
+      const dt = 1000 / 60;
       const isMoving = Math.abs(player.velocity.x) > 0.1 || Math.abs(player.velocity.y) > 0.1;
       if (isMoving && Math.random() < 0.4) {
         const backX = player.position.x - player.facing * player.w * 0.8;

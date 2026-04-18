@@ -50,7 +50,7 @@ TODO / LIMITATIONS:
 //======================================
 // POWER CLASS
 //======================================
-import { POWER, TORCH } from '../config.js';
+import { POWER, TORCH, TIME } from '../config.js';
 
 export class PowerSystem {
    constructor(config = POWER) {
@@ -60,8 +60,8 @@ export class PowerSystem {
       this.drainRate = config.DRAIN_RATE
    }
 
-   drain(rate = this.drainRate, fixedDeltaTime) {
-      this.current -= rate * (fixedDeltaTime);
+   drain(rate = this.drainRate) {
+      this.current -= rate * TIME.fixedDeltaTime;
       this.current = Math.max(0, Math.min(this.current, this.maxPower));
    }
 
@@ -93,14 +93,14 @@ export function createPowerSystem(entity, config = POWER) {
       power,
 
       //---UPDATE HOOK---//
-      update(fixedDeltaTime) {
+      update() {
          let rate = power.drainRate;
 
          if (entity.torch?.isOn) {
             rate *= TORCH.DRAIN_RATE;
          }
 
-         power.drain(rate, fixedDeltaTime);
+         power.drain(rate);
 
          if (power.isEmpty() && entity.torch) {
             entity.torch.isOn = false;

@@ -98,11 +98,11 @@ export class Missile extends Hitbox {
     return this.distanceTraveled > this.maxDistance;
   }
 
-  get x() {
+  getXPosition() {
     return this.position.x;
   }
 
-  get y() {
+  getYPosition() {
     return this.position.y;
   }
 }

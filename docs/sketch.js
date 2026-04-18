@@ -539,7 +539,7 @@ function draw() {
   } else {
     // if accumulator gained enough frames
     while (accumulator >= TIME.fixedDeltaTime) {
-      engine.update(TIME.fixedDeltaTime);
+      engine.update();
       accumulator -= TIME.fixedDeltaTime;
     }
     alpha = accumulator / TIME.fixedDeltaTime;

@@ -34,25 +34,8 @@ export const GAME = {
 //======================
 // KEY CODES CONFIG
 //======================
+// Only system-level shortcuts that are always active regardless of control mode.
 export const INPUT = {
-  // MOVEMENT KEYS (keyCode — used with keyIsDown)
-  W_KEY: 87,
-  A_KEY: 65,
-  S_KEY: 83,
-  D_KEY: 68,
-  UP_ARROW_KEY: 38,
-  DOWN_ARROW_KEY: 40,
-  LEFT_ARROW_KEY: 37,
-  RIGHT_ARROW_KEY: 39,
-
-  // ACTION KEYS (lowercase string — matched against key.toLowerCase())
-  TOGGLE_TORCH_KEY: 'l',
-  SONAR_KEY: 'e',
-  FIRE_MISSILE_KEY: ' ',
-
-  // UI KEYS (keyCode — matched against keyCode)
-  TOGGLE_PAUSE_KEY: 27,       // Escape
-  TOGGLE_SHOP_KEY: 66,        // B
   TOGGLE_FULLSCREEN_KEY: 70,  // F
 };
 
@@ -207,8 +190,35 @@ export const COMBAT = {
 //======================
 // CONTROLS CONFIG
 //======================
+// Each mode is a complete, independently customisable key map.
+// Number values are matched against keyCode; string values against key.toLowerCase().
 export const CONTROLS = {
   DEFAULT_MODE: 'wasd', // 'wasd' | 'arrows'
+
+  MODES: {
+    wasd: {
+      MOVE_UP:      87,   // W
+      MOVE_DOWN:    83,   // S
+      MOVE_LEFT:    65,   // A
+      MOVE_RIGHT:   68,   // D
+      TOGGLE_TORCH: 'l',
+      SONAR:        'e',
+      FIRE_MISSILE: ' ',
+      TOGGLE_PAUSE: 27,   // Escape
+      TOGGLE_SHOP:  66,   // B
+    },
+    arrows: {
+      MOVE_UP:      38,   // Up arrow
+      MOVE_DOWN:    40,   // Down arrow
+      MOVE_LEFT:    37,   // Left arrow
+      MOVE_RIGHT:   39,   // Right arrow
+      TOGGLE_TORCH: 'l',
+      SONAR:        'e',
+      FIRE_MISSILE: ' ',
+      TOGGLE_PAUSE: 27,   // Escape
+      TOGGLE_SHOP:  66,   // B
+    },
+  },
 };
 
 //======================

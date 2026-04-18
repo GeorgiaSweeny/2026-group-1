@@ -61,9 +61,9 @@ export class Engine {
     this.systems.push(system);
   }
 
-  update(fixedDeltaTime) {
+  update() {
     for (const system of this.systems) {
-      system.update?.(fixedDeltaTime);
+      system.update?.();
     }
   }
 }

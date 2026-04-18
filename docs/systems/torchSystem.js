@@ -65,7 +65,7 @@ export function createTorchSystem(torch, player, { getDifficulty = () => 'normal
 
    return {
       //---UPDATE---//
-      update(fixedDeltaTime) {
+      update() {
          // Hard difficulty: force torch off, reduce radius
          if (getDifficulty() === 'hard') {
             if (torch.isOn) torch.isOn = false;
@@ -75,7 +75,7 @@ export function createTorchSystem(torch, player, { getDifficulty = () => 'normal
          }
 
          // Update internal flicker timer
-         torch.update(fixedDeltaTime);
+         torch.update();
 
          // Handle player intent to toggle torch
          if (player.actionIntent?.toggleTorch) {
@@ -87,7 +87,7 @@ export function createTorchSystem(torch, player, { getDifficulty = () => 'normal
          if (torch.isOn) {
             if (player.power.isEmpty()) {
                torch.isOn = false;
-               torch.radius = reducedRadius;
+               //torch.radius = reducedRadius;
             } else {
                torch.radius = getUpgradedRadius();
             }

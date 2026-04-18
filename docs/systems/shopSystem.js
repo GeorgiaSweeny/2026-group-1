@@ -469,7 +469,7 @@ export function createShopSystem(player) {
     },
 
     // ENGINE INTERFACE
-    update(deltaTime) {
+    update() {
       // Update logic here if needed
       // Currently shop is stateless except for open/closed
     },

@@ -598,7 +598,7 @@ export function createRenderSystem({
       noStroke();
       fill(255, 200, 50);
       for (const m of missiles) {
-         ellipse(m.x, m.y, 8, 4);
+         ellipse(m.getXPosition(), m.getYPosition(), 8, 4);
       }
    }
 
