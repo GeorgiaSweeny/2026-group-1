@@ -21,12 +21,12 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Track current and max power values
-- Drain power using fixedDeltaTime
+- Drain power each fixed update tick
 - Provide checks for empty or low power
 - Return percentage of remaining power for UI or system logic
 
 DEPENDENCIES:
-- fixedDeltaTime provided by engine update loop
+- TIME.fixedDeltaTime from config (constant, not passed as parameter)
 - Optional: entity object if interacting with components (e.g., torch)
 - constrain() helper for value clamping
 
@@ -37,7 +37,7 @@ const powerSystem = createPowerSystem(player);
 engine.register(powerSystem);
 ========================================
 Notes:
-- Power drain formula: current -= rate * (fixedDeltaTime / 1000)
+- Power drain formula: current -= rate * TIME.fixedDeltaTime
 - All interactions with power should use the provided methods
 ========================================
 TODO / LIMITATIONS:

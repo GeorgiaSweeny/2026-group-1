@@ -16,7 +16,7 @@ HIERARCHY:
   - resourceType: "health" (specific resource)
 
 RULES:
-- Runs in update(fixedDeltaTime)
+- Runs in update()
 - Only processes entities with type === "resource" or gid-resolved collectables
 - Delegates to internal handlers based on resourceType
 - Hazard drain is one shot (burst) + continuous if it stays

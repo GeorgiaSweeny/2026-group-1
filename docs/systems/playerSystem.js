@@ -44,7 +44,7 @@ TODO / LIMITATIONS:
 // PLAYER SYSTEM
 //======================================
 
-import { PLAYER } from '../config.js';
+import { PLAYER, TIME } from '../config.js';
 
 export function createPlayerSystem(player) {
   return {
@@ -70,12 +70,11 @@ export function createPlayerSystem(player) {
       }
 
       // Clamp velocity to max speed (MOVE_SPEED is px/sec, clamped per frame)
-      const maxSpeed = PLAYER.MOVE_SPEED / 60;
+      const maxSpeed = PLAYER.MOVE_SPEED * TIME.fixedDeltaTime;
       player.velocity.x = constrain(player.velocity.x, -maxSpeed, maxSpeed);
       player.velocity.y = constrain(player.velocity.y, -maxSpeed, maxSpeed);
 
       // Bubble trail — spawn behind submarine when moving
-      const dt = 1000 / 60;
       const isMoving = Math.abs(player.velocity.x) > 0.1 || Math.abs(player.velocity.y) > 0.1;
       if (isMoving && Math.random() < 0.4) {
         const backX = player.position.x - player.facing * player.w * 0.8;
@@ -84,17 +83,17 @@ export function createPlayerSystem(player) {
           y: player.position.y + (Math.random() * 8 - 4),
           size: 2 + Math.random() * 4,
           life: 200,
-          vx: (Math.random() * 0.04 - 0.02),
-          vy: -(0.03 + Math.random() * 0.05),
+          vx: (Math.random() * 40 - 20),   // px/sec
+          vy: -(30 + Math.random() * 50),   // px/sec upward
         });
       }
 
       // Update existing bubbles (drift upward + fade)
       for (let i = player.bubbles.length - 1; i >= 0; i--) {
         const b = player.bubbles[i];
-        b.x += b.vx * dt;
-        b.y += b.vy * dt;
-        b.life -= 0.15 * dt;
+        b.x += b.vx * TIME.fixedDeltaTime;
+        b.y += b.vy * TIME.fixedDeltaTime;
+        b.life -= 150 * TIME.fixedDeltaTime;
         if (b.life <= 0) {
           player.bubbles.splice(i, 1);
         }

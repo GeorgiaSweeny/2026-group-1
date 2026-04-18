@@ -19,6 +19,19 @@ RULES:
 // PAUSE MENU SYSTEM
 //======================================
 
+import { CONTROLS } from '../config.js';
+
+// Converts a raw binding value to a short human-readable label.
+function keyLabel(binding) {
+  if (binding === ' ') return 'Space';
+  if (typeof binding === 'string') return binding.toUpperCase();
+  const names = {
+    27: 'ESC', 37: '←', 38: '↑', 39: '→', 40: '↓',
+    65: 'A', 66: 'B', 68: 'D', 83: 'S', 87: 'W',
+  };
+  return names[binding] ?? `#${binding}`;
+}
+
 export function createPauseMenuSystem({
   onDifficultyChange,
   onResolutionChange,
@@ -190,8 +203,24 @@ export function createPauseMenuSystem({
     const controlLabel = `Movement: ${controlMode === 'wasd' ? 'WASD' : 'Arrow Keys'}`;
     drawToggle(controlLabel, controlMode === 'arrows', leftX, baseY + 190);
 
+    // Binding reference — shows all keys for the active mode
+    const map = CONTROLS.MODES[controlMode] ?? CONTROLS.MODES[CONTROLS.DEFAULT_MODE];
+    const moveStr = [map.MOVE_UP, map.MOVE_LEFT, map.MOVE_DOWN, map.MOVE_RIGHT].map(keyLabel).join('');
+    textAlign(LEFT, TOP);
+    textSize(11);
+    fill(140);
+    noStroke();
+    text(
+      `Move: ${moveStr}   Torch: ${keyLabel(map.TOGGLE_TORCH)}   Sonar: ${keyLabel(map.SONAR)}   Fire: ${keyLabel(map.FIRE_MISSILE)}`,
+      leftX, baseY + 207,
+    );
+    text(
+      `Pause: ${keyLabel(map.TOGGLE_PAUSE)}   Shop: ${keyLabel(map.TOGGLE_SHOP)}`,
+      leftX, baseY + 221,
+    );
+
     // Debug button
-    const debugY = baseY + 240;
+    const debugY = baseY + 260;
     drawButton(
       "Debug",
       cx - BUTTON_W / 2,
@@ -298,7 +327,7 @@ export function createPauseMenuSystem({
       }
 
       // Debug button
-      const debugY = baseY + 240;
+      const debugY = baseY + 260;
       if (isOver(cx - BUTTON_W / 2, debugY, BUTTON_W, BUTTON_H)) {
         currentPage = "debug";
       }

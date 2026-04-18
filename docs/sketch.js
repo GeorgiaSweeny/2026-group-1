@@ -543,7 +543,7 @@ function draw() {
       accumulator -= TIME.fixedDeltaTime;
     }
     alpha = accumulator / TIME.fixedDeltaTime;
-    renderSystem.draw(TIME.fixedDeltaTime, alpha);
+    renderSystem.draw(alpha);
   }
 }
 

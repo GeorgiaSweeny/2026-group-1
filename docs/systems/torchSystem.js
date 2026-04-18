@@ -16,7 +16,7 @@ RULES:
 ========================================
 DESIGN GOALS:
 - Keep torch logic modular and separate from rendering
-- Ensure frame-rate independent updates using fixedDeltaTime
+- Ensure frame-rate independent updates using TIME.fixedDeltaTime
 - Maintain clear boundaries between systems
 ========================================
 RESPONSIBILITIES:
@@ -37,7 +37,7 @@ engine.register(torchSystem);
 ========================================
 NOTES:
 - Torch visibility flickers when power is low (handled in Torch class)
-- Torch system relies on fixedDeltaTime for frame-rate independence
+- Torch system relies on TIME.fixedDeltaTime (config constant) for frame-rate independence
 - Torch does not know the internal details of PowerSystem
 ========================================
 TODO / LIMITATIONS:

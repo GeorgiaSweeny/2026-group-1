@@ -19,7 +19,7 @@ RULES:
 //======================
 // TIME CONFIG
 //======================
-// engine and systems use seconds, same clock
+// 
 export const TIME = {
   fixedDeltaTime : 1 / 60,
 }
@@ -91,7 +91,7 @@ export const PLAYER = {
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
   STARTING_COINS: 10000,  // 10000 for testing
-  MOVE_SPEED: 260,        // Pixels per second (clamped to /60 per frame)
+  MOVE_SPEED: 200,        // Pixels per second (scaled by TIME.fixedDeltaTime per frame)
   ACCELERATION: 4,        // Velocity increase per frame
   DRAG: 0.9  ,            // Higher = less friction (0.9-0.95 feels good)
   BOUNCE_DAMPING: 0.5,    // Velocity kept after bounce (0.5 = half speed)
@@ -117,9 +117,9 @@ export const POWER = {
       DRAIN_RATE: 0.25          
       (100 power = 400s| 1 power = 4s) - very slow
    
-   (Total drain calculation)
-      Torch OFF	1 × 60fps × (1/60) = 1/sec	100s	1.0s
-      Torch ON	1 × 1.5 × 60fps × (1/60) = 1.5/sec	~66.7s	~0.67s
+   (Total drain calculation: rate * TIME.fixedDeltaTime per frame)
+      Torch OFF	DRAIN_RATE × TIME.fixedDeltaTime per frame
+      Torch ON	DRAIN_RATE × TORCH.DRAIN_RATE × TIME.fixedDeltaTime per frame
 */
   
 };
@@ -171,10 +171,10 @@ export const MISSILE = {
 //======================
 export const COMBAT = {
   /*
-   Knockback is applied as: normDir * KNOCKBACK_STRENGTH * fixedDeltaTime (px/frame).
-   Must satisfy: KNOCKBACK_STRENGTH/60 * DRAG > ACCELERATION so the hit pushes the player
-   away even when they are pressing back toward the hazard.
-   PLAYER.ACCELERATION = 4, PLAYER.DRAG = 0.9 → minimum threshold = 4/0.9*60 ≈ 267.
+   Knockback is applied as: normDir * KNOCKBACK_STRENGTH * TIME.fixedDeltaTime (px/frame).
+   Must satisfy: KNOCKBACK_STRENGTH * TIME.fixedDeltaTime * DRAG > ACCELERATION so the hit
+   pushes the player away even when pressing back toward the hazard.
+   PLAYER.ACCELERATION = 4, PLAYER.DRAG = 0.9 → minimum threshold ≈ 267.
   */
   KNOCKBACK_STRENGTH: 400,
   KNOCKBACK_LIFT: 100,
