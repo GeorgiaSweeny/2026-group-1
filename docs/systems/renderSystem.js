@@ -44,6 +44,8 @@ export function createRenderSystem({
    getCameraScale,
    getMissiles,
    getParticles,
+   getCrabs,
+   getJellyfish,
 }) {
 
 //======================================
@@ -276,47 +278,85 @@ export function createRenderSystem({
       }
    }
 
-   //=== ENEMIES - Crab ===//
-   function drawEnemies(alpha) {
-      const enemies = getEnemies?.() ?? [];
-      if (!enemies.length) return;
+   //=== ENEMIES===//
+function drawEnemies(alpha) {
+   //Crabs
+   const crabs = getCrabs?.() ?? [];
+   for (const crab of crabs) {
+      const currX = Number.isFinite(crab?.position?.x) ? crab.position.x : (Number(crab?.x) || 0);
+      const currY = Number.isFinite(crab?.position?.y) ? crab.position.y : (Number(crab?.y) || 0);
+      const prevX = Number.isFinite(crab?.previousPos?.x) ? crab.previousPos.x : currX;
+      const prevY = Number.isFinite(crab?.previousPos?.y) ? crab.previousPos.y : currY;
+      const crabW = Number(crab?.w ?? crab?.width ?? 20) || 20;
+      const crabH = Number(crab?.h ?? crab?.height ?? 14) || 14;
+      const facing = Number.isFinite(crab?.facing) && crab.facing !== 0 ? crab.facing : 1;
 
-      for (const crab of enemies) {
-         const currX = Number.isFinite(crab?.position?.x) ? crab.position.x : (Number(crab?.x) || 0);
-         const currY = Number.isFinite(crab?.position?.y) ? crab.position.y : (Number(crab?.y) || 0);
-         const prevX = Number.isFinite(crab?.previousPos?.x) ? crab.previousPos.x : currX;
-         const prevY = Number.isFinite(crab?.previousPos?.y) ? crab.previousPos.y : currY;
-         const crabW = Number(crab?.w ?? crab?.width ?? 20) || 20;
-         const crabH = Number(crab?.h ?? crab?.height ?? 14) || 14;
-         const facing = Number.isFinite(crab?.facing) && crab.facing !== 0 ? crab.facing : 1;
+      push();
+      translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
+      scale(facing, 1);
 
-         push();
-         translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
-         scale(facing, 1);
+      noStroke();
+      fill(200, 80, 50);
+      ellipse(0, 0, crabW, crabH);
 
-         // body
-         noStroke();
-         fill(200, 80, 50);
-         ellipse(0, 0, crabW, crabH);
+      fill(180, 60, 40);
+      triangle(-crabW / 2 - 6, -4, -crabW / 2, -8, -crabW / 2, 0);
+      triangle(crabW / 2 + 6, -4, crabW / 2, -8, crabW / 2, 0);
 
-         // left claw
-         fill(180, 60, 40);
-         triangle(-crabW / 2 - 6, -4, -crabW / 2, -8, -crabW / 2, 0);
+      fill(255);
+      circle(-4, -3, 4);
+      circle(4, -3, 4);
+      fill(0);
+      circle(-4, -3, 2);
+      circle(4, -3, 2);
 
-         // right claw  
-         triangle(crabW / 2 + 6, -4, crabW / 2, -8, crabW / 2, 0);
-
-         // eyes
-         fill(255);
-         circle(-4, -3, 4);
-         circle(4, -3, 4);
-         fill(0);
-         circle(-4, -3, 2);
-         circle(4, -3, 2);
-
-         pop();
-      }
+      pop();
    }
+
+   // Draw Jellyfish
+   const jellies = getJellyfish?.() ?? [];
+   for (const jelly of jellies) {
+      const currX = Number.isFinite(jelly?.position?.x) ? jelly.position.x : (Number(jelly?.x) || 0);
+      const currY = Number.isFinite(jelly?.position?.y) ? jelly.position.y : (Number(jelly?.y) || 0);
+      const prevX = Number.isFinite(jelly?.previousPos?.x) ? jelly.previousPos.x : currX;
+      const prevY = Number.isFinite(jelly?.previousPos?.y) ? jelly.previousPos.y : currY;
+      const jellyW = Number(jelly?.w ?? jelly?.width ?? 18) || 18;
+      const jellyH = Number(jelly?.h ?? jelly?.height ?? 22) || 22;
+
+      push();
+      translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
+
+      const pulse = Math.abs(Math.sin(jelly.pulsePhase || 0)) * 0.15 + 0.85;
+      scale(1, pulse);
+
+      noStroke();
+      fill(150, 100, 255, 180);
+      ellipse(0, -jellyH / 4, jellyW, jellyH / 2);
+      fill(255);
+      noStroke();
+      ellipse(-4, -jellyH / 4 - 2, 3, 3);
+      ellipse(4, -jellyH / 4 - 2, 3, 3);
+
+      fill(0);
+      ellipse(-4, -jellyH / 4 - 2, 1.5, 1.5);
+      ellipse(4, -jellyH / 4 - 2, 1.5, 1.5);
+
+
+      stroke(120, 80, 200, 150);
+      strokeWeight(2);
+      for (let i = -1; i <= 1; i++) {
+         const xOff = i * 5;
+         const tentacleWave = Math.sin((jelly.time || 0) + i) * 3;
+         line(xOff, 0, xOff + tentacleWave, jellyH / 2);
+      }
+
+      noStroke();
+      fill(200, 150, 255, 100);
+      ellipse(0, -jellyH / 4, jellyW * 0.6, jellyH * 0.3);
+
+      pop();
+   }
+}
 
 
    //===PLAYER===//
@@ -643,7 +683,7 @@ function renderInterpolate(oldState, newState, alpha){
             pop();
 
             // --- Screen space (fixed to viewport) --- //
-         drawLighting(lightSources, cam, camScale);
+         //drawLighting(lightSources, cam, camScale);
 
          // --- World space overlays (drawn above lighting) --- //
          push();
