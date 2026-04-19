@@ -1,32 +1,50 @@
 /*
-========================================
-VERSION: 1.0
+=======================================
+VERSION: 3.0
 SYSTEM: ENEMY SYSTEM
 AUTHOR: Monal Gupta
 DESCRIPTION:
-- Updates crab patrol movement
+- Updates crab patrol movement and jelly fish sin-wave motion
 - Drains power on touch
 ========================================
 */
 
 import { isColliding } from './hitboxSystem.js';
 import { Crab } from '../entities/crab.js';
+import { Jellyfish } from '../entities/jellyfish.js';
 
-const CRAB_CONTACT_PENALTY = 8;  // burst drain on touch
+const CRAB_CONTACT_PENALTY = 4;  // burst drain on touch
 const CRAB_DRAIN_RATE = 1.0;     // continuous drain while touching
+const JELLYFISH_CONTACT_PENALTY = 9;
+const JELLYFISH_DRAIN_RATE = 1.0;
 
 export function createEnemySystem(player, getEnemies) {
   const contactSet = new Set();
   let crabs = [];
+  let jellyfish = [];
   let sourceEnemiesRef = null;
 
-  // Keep crab instances in sync with current room enemy objects.
-  function syncCrabs() {
+  // syncng crab instances with current room enemy objects.
+  function syncEnemies() {
     const raw = (getEnemies ? getEnemies() : []) ?? [];
     if (raw === sourceEnemiesRef) return;
-
+ 
     sourceEnemiesRef = raw;
-    crabs = raw.map((e) => new Crab(e.x, e.y, e.w, e.h, e.patrolDistance, e.speed));
+    crabs = [];
+    jellyfish = [];
+ 
+    for (const e of raw) {
+      if (e.name === 'crab') {
+        crabs.push(new Crab(e.x, e.y, e.w, e.h, e.patrolDistance, e.speed));
+      } else if (e.name === 'jellyfish') {
+        const variant = e.variant || 'default';
+        const jelly = variant === 'default'
+          ? new Jellyfish(e.x, e.y, e.w, e.h, e.amplitude, e.frequency, e.driftSpeed)
+          : Jellyfish.createVariant(variant, e.x, e.y);
+        jellyfish.push(jelly);
+      }
+    }
+    
     contactSet.clear();
   }
 
@@ -55,36 +73,70 @@ export function createEnemySystem(player, getEnemies) {
 
     crab.position.x = nextX;
 
-    // keeping nextPos in sync for isColliding
     crab.nextPos.x = crab.position.x;
     crab.nextPos.y = crab.position.y;
   }
 
-  function checkPlayerContact(crab, deltaMs) {
-    if (isColliding(crab, player)) {
-      if (!contactSet.has(crab)) {
-        player.power.current = Math.max(0, player.power.current - CRAB_CONTACT_PENALTY);
-        contactSet.add(crab);
+  function updateJellyfish(jelly, dtSeconds) {
+    jelly.previousPos.x = jelly.position.x;
+    jelly.previousPos.y = jelly.position.y;
+ 
+    jelly.time += dtSeconds * jelly.frequency;
+    jelly.pulsePhase = jelly.time;
+ 
+    const yOffset = Math.sin(jelly.time) * jelly.amplitude;
+    jelly.position.y = jelly.spawnY + yOffset;
+ 
+    if (jelly.driftSpeed > 0) {
+      jelly.driftDistance += jelly.driftDirection * jelly.driftSpeed * dtSeconds * 60;
+      
+      // Reverse drift at boundaries
+      if (Math.abs(jelly.driftDistance) > jelly.maxDrift) {
+        jelly.driftDirection *= -1;
+        jelly.driftDistance = Math.sign(jelly.driftDistance) * jelly.maxDrift;
       }
-      player.power.drain(CRAB_DRAIN_RATE, deltaMs);
+      
+      jelly.position.x = jelly.spawnX + jelly.driftDistance;
+    }
+
+    jelly.nextPos.x = jelly.position.x;
+    jelly.nextPos.y = jelly.position.y;
+  }
+
+  function checkPlayerContact(enemy, deltaMs, contactPenalty, drainRate) {
+    if (isColliding(enemy, player)) {
+      if (!contactSet.has(enemy)) {
+        player.power.current = Math.max(0, player.power.current - contactPenalty);
+        contactSet.add(enemy);
+      }
+      player.power.drain(drainRate, deltaMs);
     } else {
-      contactSet.delete(crab);
+      contactSet.delete(enemy);
     }
   }
 
   return {
     update(deltaMs) {
-      syncCrabs();
+      syncEnemies();
       const dtSeconds = Math.max(0, (deltaMs ?? 16) / 1000);
-
+ 
       for (const crab of crabs) {
         updateCrab(crab, dtSeconds);
-        checkPlayerContact(crab, deltaMs ?? 16);
+        checkPlayerContact(crab, deltaMs ?? 16, CRAB_CONTACT_PENALTY, CRAB_DRAIN_RATE);
+      }
+
+      for (const jelly of jellyfish) {
+        updateJellyfish(jelly, dtSeconds);
+        checkPlayerContact(jelly, deltaMs ?? 16, JELLYFISH_CONTACT_PENALTY, JELLYFISH_DRAIN_RATE);
       }
     },
-
+ 
     getCrabs() {
       return crabs;
+    },
+
+    getJellyfish() {
+      return jellyfish;
     }
   };
 }
