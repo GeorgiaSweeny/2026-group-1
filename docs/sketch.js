@@ -440,7 +440,8 @@ function setup() {
       roomSystem
         .getCollectables()
         .filter((c) => !resourceManagementSystem.isCollected(c)),
-    getEnemies: () => enemySystem.getCrabs(),
+    getCrabs: () => enemySystem.getCrabs(),
+    getJellyfish: () => enemySystem.getJellyfish(),
     getTriggers: () => roomSystem.getTriggers(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),
