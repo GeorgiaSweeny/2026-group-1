@@ -251,7 +251,7 @@ export const CONTROLS = {
       MOVE_RIGHT:   68,   // D
       TOGGLE_TORCH: 'l',
       SONAR:        'e',
-      FIRE_MISSILE: ' ',
+      LAUNCH_MISSILE: 'k',
       TOGGLE_PAUSE: 27,   // Escape
       TOGGLE_SHOP:  66,   // B
     },
@@ -262,7 +262,7 @@ export const CONTROLS = {
       MOVE_RIGHT:   39,   // Right arrow
       TOGGLE_TORCH: 'l',
       SONAR:        'e',
-      FIRE_MISSILE: ' ',
+      LAUNCH_MISSILE: 'k',
       TOGGLE_PAUSE: 27,   // Escape
       TOGGLE_SHOP:  66,   // B
     },
