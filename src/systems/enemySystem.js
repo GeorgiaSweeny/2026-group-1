@@ -33,7 +33,6 @@ export function createEnemySystem(player, getEnemies) {
   function updateCrab(crab, dtSeconds) {
     const speed = Number(crab.speed) || 0;
     const patrolDistance = Math.max(0, Number(crab.patrolDistance) || 0);
-    const step = speed * dtSeconds;
 
     crab.previousPos.x = crab.position.x;
     crab.previousPos.y = crab.position.y;

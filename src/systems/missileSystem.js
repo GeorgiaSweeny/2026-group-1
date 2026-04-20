@@ -76,7 +76,7 @@ export function createMissileSystem(player) {
   return {
     update() {
       // Handle player intent to fire missile
-      if (player.consumeAction('fireMissile')) {
+      if (player.consumeAction('launchMissile')) {
         this.fireMissile();
       }
 
