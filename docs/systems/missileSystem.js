@@ -1,23 +1,17 @@
 /*
 ========================================
-VERSION: 1.0
+VERSION: 1.1
 SYSTEM: MISSILE SYSTEM
 AUTHOR: Ben Mounce
 DESCRIPTION:
 - Manages underwater missiles launched by the player
 - Auto-targeting system for enemies and breakable walls
-- Handles missile movement, collision, and destruction
+- Handles missile movement, collision, AoE destruction, and rendering
 
 RULES:
 - Missiles lock on to nearest valid target
 - Missiles are destroyed on impact or timeout
-
-Limitations:
-- Homing only reads position on where enemy was at time of launch
-- Would be preferred if missiles destroyed larger areas in easy mode
-  only one tile in hard mode
-- I would like a red visual indicator for the missile to indicate where
-  it is heading as not all walls will be breakable and see when targeting enemies
+- Destroys adjacent breakable walls in EASY mode
 ========================================
 */
 
@@ -39,8 +33,6 @@ class Missile extends Hitbox {
     }
 
     update() {
-        // use configured fixed timestep from config; sketch.js remains the single place
-        // that controls dynamic timestep values. Systems use the constant TIME.fixedDeltaTime.
         const dt = TIME.fixedDeltaTime;
         this.lifetime -= dt * 1000;
         if (this.lifetime <= 0) {
@@ -73,6 +65,7 @@ class Missile extends Hitbox {
                 this.bubbles.splice(i, 1);
             }
         }
+
         // homing logic
         if (this.target && !this.target.pendingDestroy && !this.target.isDestroyed && this.target.position) {
             const targetPos = this.target.position;
@@ -91,7 +84,7 @@ class Missile extends Hitbox {
         }
 
         // move
-    const step = p5.Vector.mult(this.velocity, dt);
+        const step = p5.Vector.mult(this.velocity, dt);
         this.position.add(step);
         this.nextPos.set(this.position);
 
@@ -104,14 +97,15 @@ export function createMissileSystem(player, getTargets, getWalls) {
     let missiles = [];
     let lastFireTime = 0;
 
-    function findNearestTarget(px, py, targets) {
+    
+    function findNearestTarget(px, py, getTargetsFunc, getWallsFunc) {
         let nearest = null;
         let minDistSq = Infinity;
 
-        // use target argument for enemies
-        const enemyList = Array.isArray(targets) ? targets : (targets?.() ?? []);
+        
+        const enemyList = Array.isArray(getTargetsFunc) ? getTargetsFunc : (getTargetsFunc?.() ?? []);
 
-        const wallRes = (typeof getWalls === 'function') ? getWalls() : (getWalls || []);
+        const wallRes = (typeof getWallsFunc === 'function') ? getWallsFunc() : (getWallsFunc || []);
         const wallList = Array.isArray(wallRes) ? wallRes : [];
         const breakableWalls = wallList.filter(w => w.isBreakable);
         const allPotentialTargets = [...enemyList, ...breakableWalls];
@@ -126,7 +120,7 @@ export function createMissileSystem(player, getTargets, getWalls) {
             const dx = tx - px;
             const dy = ty - py;
 
-            //missile forward check
+            // missile forward check
             if (dx * player.facing <= 0) continue;
             const distSq = dx * dx + dy * dy;
 
@@ -159,36 +153,52 @@ export function createMissileSystem(player, getTargets, getWalls) {
                 
                for (const entity of allEntities) {
                   if (entity.pendingDestroy || entity.isDestroyed) continue;
+                  
                   if (isColliding(missile, entity)) {
                      const isWall = walls.includes(entity);
-                     if(isWall){
+                     
+                     if (isWall) {
                         if (entity.isBreakable) {
-                           entity.isDestroyed = true;
+                           entity.isDestroyed = true; // Destroy the initial tile
+                           
+                           // AoE Logic based on Difficulty
+                           if (GAME.DIFFICULTY === 'EASY') {
+                               const blastRadius = 64; // Adjust based on your tile size
+                               for (const w of walls) {
+                                   // Destroy nearby breakable tiles
+                                   if (w.isBreakable && w !== entity && p5.Vector.dist(entity.position, w.position) <= blastRadius) {
+                                       w.isDestroyed = true;
+                                   }
+                               }
+                           }
                         }
                      } else {
                         entity.pendingDestroy = true;
                      }
+                     
                      missile.pendingDestroy = true;
                      break;
-                     
                   }
                }
             }
+
             // clean up missiles
             missiles = missiles.filter(m => !m.pendingDestroy);
+            
             // handle launch intent
             if (player.actionIntent.launchMissile) {
                 const timeSince = now - lastFireTime;
                 
-                if (timeSince > MISSILE.COOLDOWN) {
+                if (timeSince > MISSILE.COOLDOWN && player.missiles > 0) {
                     const target = findNearestTarget(player.position.x, player.position.y, getTargets, getWalls);
                     missiles.push(new Missile(player.position.x, player.position.y, target, player.facing));
+                    player.missiles--;
                     lastFireTime = now;
                 } 
                 player.actionIntent.launchMissile = false; 
             }
         },
-        
+
         getMissiles() {
             return missiles;
         }
