@@ -450,7 +450,7 @@ function setup() {
     () => roomSystem.getCollectables(),
     () => roomSystem.getHazards(),
     () => pauseMenuSystem.getDifficulty(),
-    () => enemySystem?.getCrabs() ?? [],
+    () => enemySystem?.getEnemies() ?? [],
   );
 
   enemySystem = createEnemySystem(

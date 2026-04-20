@@ -103,13 +103,13 @@ export function createEnemySystem(player, getEnemies) {
     jelly.nextPos.y = jelly.position.y;
   }
 
-  function checkPlayerContact(enemy, deltaMs, contactPenalty, drainRate) {
+  function checkPlayerContact(enemy, contactPenalty, drainRate) {
     if (isColliding(enemy, player)) {
       if (!contactSet.has(enemy)) {
         player.power.current = Math.max(0, player.power.current - contactPenalty);
         contactSet.add(enemy);
       }
-      player.power.drain(drainRate, deltaMs);
+      player.power.drain(drainRate);
     } else {
       contactSet.delete(enemy);
     }
@@ -122,12 +122,12 @@ export function createEnemySystem(player, getEnemies) {
  
       for (const crab of crabs) {
         updateCrab(crab, dtSeconds);
-        checkPlayerContact(crab, deltaMs ?? 16, CRAB_CONTACT_PENALTY, CRAB_DRAIN_RATE);
+        checkPlayerContact(crab, CRAB_CONTACT_PENALTY, CRAB_DRAIN_RATE);
       }
 
       for (const jelly of jellyfish) {
         updateJellyfish(jelly, dtSeconds);
-        checkPlayerContact(jelly, deltaMs ?? 16, JELLYFISH_CONTACT_PENALTY, JELLYFISH_DRAIN_RATE);
+        checkPlayerContact(jelly, JELLYFISH_CONTACT_PENALTY, JELLYFISH_DRAIN_RATE);
       }
     },
  
@@ -137,6 +137,10 @@ export function createEnemySystem(player, getEnemies) {
 
     getJellyfish() {
       return jellyfish;
+    },
+
+    getEnemies() {
+      return [...crabs, ...jellyfish];
     }
   };
 }
