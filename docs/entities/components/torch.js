@@ -21,7 +21,7 @@ RESPONSIBILITIES:
 - Maintain on/off state
 - Track internal flicker timer
 - Compute visible intensity based on power percentage
-- Provide isVisible() and getIntensity() methods for lighting system
+- Provide getIntensity() method for lighting system
 
 DEPENDENCIES:
 - Config object with RADIUS and FLICKER_POWER_THRESHOLD
@@ -30,7 +30,7 @@ DEPENDENCIES:
 USAGE:
 import { Torch } from './torch.js';
 const torch = new Torch(TORCH_CONFIG);
-torch.update(deltaTime);
+torch.update();
 const intensity = torch.getIntensity(player.power.getPercent());
 ========================================
 */
@@ -39,6 +39,8 @@ const intensity = torch.getIntensity(player.power.getPercent());
 //======================
 // TORCH CLASS
 //======================
+import { TIME } from '../../config.js';
+
 export class Torch {
    constructor(config) {
       // Config-driven defaults
@@ -65,14 +67,9 @@ export class Torch {
    }
 
    // Update internal flicker timer
-   update(deltaTime) {
+   update() {
       if (!this.isOn) return;
-      this.flickerTimer += deltaTime;
-   }
-
-   // Returns true/false
-   isVisible(powerPercent) {
-      return this.getIntensity(powerPercent) > 0;
+      this.flickerTimer += TIME.fixedDeltaTime;
    }
 
    // Returns smooth intensity between 0 (off) and 1 (full brightness)

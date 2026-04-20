@@ -18,8 +18,7 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Maintain a registry of active systems
-- Calculate deltaTime using requestAnimationFrame timestamps
-- Call update hooks in a consistent order
+- Call system update hooks each fixed timestep
 - Call draw hooks after all updates complete
 
 DEPENDENCIES:
@@ -28,7 +27,7 @@ DEPENDENCIES:
 
 SYSTEM INTERFACE:
 - Systems may optionally implement:
-    - update(deltaTime)
+    - update()
     - draw()
 
 USAGE:
@@ -39,7 +38,6 @@ engine.register(renderSystem);
 requestAnimationFrame(engine.update.bind(engine));
 ========================================
 NOTES:
-- deltaTime is provided in milliseconds
 - Engine uses optional chaining to safely call hooks
 - Systems are executed in the order they are registered
 ========================================
@@ -61,9 +59,9 @@ export class Engine {
     this.systems.push(system);
   }
 
-  update(fixedDeltaTime) {
+  update() {
     for (const system of this.systems) {
-      system.update?.(fixedDeltaTime);
+      system.update?.();
     }
   }
 }

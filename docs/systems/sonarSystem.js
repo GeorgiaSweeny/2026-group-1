@@ -6,7 +6,7 @@ DESIGN GOALS:
 - Integrate with lightingSystem for darkness layer punch-through
 RESPONSIBILITIES:
 - Create sonar pulses when player triggers sonar intent
-- Update pulse particle positions each frame (velocity * deltaTime)
+- Update pulse particle positions each frame (velocity * TIME.fixedDeltaTime)
 - Detect particle collisions with room platforms/walls
 - Illuminate walls on contact, fade wall alpha over time
 - Expose active pulses for renderSystem to draw

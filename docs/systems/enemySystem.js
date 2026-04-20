@@ -18,50 +18,70 @@ const CRAB_DRAIN_RATE = 1.0;     // continuous drain while touching
 export function createEnemySystem(player, getEnemies) {
   const contactSet = new Set();
   let crabs = [];
-  let initialised = false;
+  let sourceEnemiesRef = null;
 
-  // converting plain room objects into Crab instances once
-  function initCrabs() {
-    const raw = getEnemies ? getEnemies() : [];
-    crabs = raw.map(e => new Crab(e.x, e.y, e.w, e.h, e.patrolDistance, e.speed));
-    initialised = true;
+  // Keep crab instances in sync with current room enemy objects.
+  function syncCrabs() {
+    const raw = (getEnemies ? getEnemies() : []) ?? [];
+    if (raw === sourceEnemiesRef) return;
+
+    sourceEnemiesRef = raw;
+    crabs = raw.map((e) => new Crab(e.x, e.y, e.w, e.h, e.patrolDistance, e.speed));
+    contactSet.clear();
   }
+
+  function updateCrab(crab, dtSeconds) {
+    const speed = Number(crab.speed) || 0;
+    const patrolDistance = Math.max(0, Number(crab.patrolDistance) || 0);
+    const step = speed * dtSeconds;
 
   function updateCrab(crab, fixedDeltaTime) {
     if (crab.pendingDestroy) return; // Skip destroyed crabs
 
     const step = crab.speed * fixedDeltaTime;
     crab.previousPos.x = crab.position.x;
-    crab.previousPos.y = crab.position.y; 
-    crab.position.x += crab.direction * step;
+    crab.previousPos.y = crab.position.y;
 
-    if (crab.position.x > crab.spawnX + crab.patrolDistance) {
+    let nextX = crab.position.x + crab.direction * step;
+    const minX = crab.spawnX - patrolDistance;
+    const maxX = crab.spawnX + patrolDistance;
+
+    if (nextX > maxX) {
+      nextX = maxX;
       crab.direction = -1;
       crab.facing = -1;
     }
-    if (crab.position.x < crab.spawnX - crab.patrolDistance) {
+
+    if (nextX < minX) {
+      nextX = minX;
       crab.direction = 1;
       crab.facing = 1;
     }
+
+    crab.position.x = nextX;
 
     // keeping nextPos in sync for isColliding
     crab.nextPos.x = crab.position.x;
     crab.nextPos.y = crab.position.y;
   }
 
-  function checkPlayerContact(crab) {
+  function checkPlayerContact(crab, deltaMs) {
     if (isColliding(crab, player)) {
       if (!contactSet.has(crab)) {
         player.power.current = Math.max(0, player.power.current - CRAB_CONTACT_PENALTY);
         contactSet.add(crab);
       }
-      player.power.drain(CRAB_DRAIN_RATE, 16);
+      player.power.drain(CRAB_DRAIN_RATE, deltaMs);
     } else {
       contactSet.delete(crab);
     }
   }
 
   return {
+    update(deltaMs) {
+      syncCrabs();
+      const dtSeconds = Math.max(0, (deltaMs ?? 16) / 1000);
+
     update(fixedDeltaTime) {
       if (!initialised) initCrabs();
 
@@ -73,8 +93,8 @@ export function createEnemySystem(player, getEnemies) {
       }
 
       for (const crab of crabs) {
-        updateCrab(crab, fixedDeltaTime);
-        checkPlayerContact(crab);
+        updateCrab(crab, dtSeconds);
+        checkPlayerContact(crab, deltaMs ?? 16);
       }
     },
 

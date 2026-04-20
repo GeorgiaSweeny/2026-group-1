@@ -17,12 +17,13 @@ RULES:
 //======================================
 // CAMERA SYSTEM
 //======================================
+import { CAMERA } from '../config.js';
 
 export function createCameraSystem(player, viewportWidth, viewportHeight) {
   // Effective viewport size is viewportWidth/SCALE × viewportHeight/SCALE
   // Higher SCALE = more zoomed in, lower = more zoomed out
   // 1.0 = 640×360 visible area, 2.0 = 320×180 visible area
-  let SCALE = 1.0;
+  let SCALE = CAMERA.DEFAULT_SCALE;
 
   let camX = player.position.x - (viewportWidth / SCALE) / 2;
   let camY = player.position.y - (viewportHeight / SCALE) / 2;

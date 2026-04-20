@@ -5,22 +5,31 @@
 		   COMSM0166 - Group 1 (2026) <br/></h1>
 		</div>
 		<div align="center">
-		   <h2> SONAR (working title) </h2> 
-			STRAPLINE. Add an exciting one sentence description of your game here. <br/><br/>
+		   <h2> THE ABYSS </h2> 
+			Can you escape the endless dark? <br/><br/>
 			[ADD PROMO IMAGE]
 		</div>
 		<div align="center">
- 			<h3 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/">Play Current Version - V3</a></h3>
+ 			<h3 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/">Play Current Version - V4</a></h3>
 		</div>
 	</body>
 </html>
 
 
-### Video DEMO v3
+
+### Video DEMO v4 (2-3 mins long max)
 *(updated 05/03/26)*
 
 
-https://github.com/user-attachments/assets/1f888baa-3c94-45f3-bc57-3986734ccc7e
+https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
+
+
+
+
+
+
+
+
 
 
 
@@ -621,6 +630,12 @@ fewer or no pickups.
 
 - Teamwork. How did you work together, what tools and methods did you use? Did you define team roles? Reflection on how you worked together. Be honest, we want to hear about what didn't work as well as what did work, and importantly how your team adapted throughout the project.
 
+### Sustainability
+
+- 10% ~750 words
+
+- Evidence of the impact of your game across the environment
+
 ### Conclusion
 
 - 10% ~500 words
@@ -630,6 +645,12 @@ fewer or no pickups.
 ### Contribution Statement
 
 - Provide a table of everyone's contribution, which *may* be used to weight individual grades. We expect that the contribution will be split evenly across team-members in most cases. Please let us know as soon as possible if there are any issues with teamwork as soon as they are apparent and we will do our best to help your team work harmoniously together.
+
+### AI Statement
+~250 words
+
+- summarise your teams use of AI so we know where to give you credit for work done.
+- eg. to make game visuals, help writing code (help to debug, explictily writng any code with AI, to review code etc.) 
 
 ### Additional Marks
 

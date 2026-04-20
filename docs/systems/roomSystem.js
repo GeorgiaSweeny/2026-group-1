@@ -13,7 +13,7 @@ imported Tiled JSON: https://www.mapeditor.org/
 //======================================
 // ROOM SYSTEM
 //======================================
-import { CANVAS } from '../config.js';
+import { CANVAS, TIME } from '../config.js';
 import { pointToPixels, rectToPixels, toPixels } from '../utils/toPixels.js';
 import { Wall } from './hitboxSystem.js';
 
@@ -279,6 +279,7 @@ function normalizeLegacyRoom(roomKey, roomConfig) {
     platforms: [],
     hazards: [],
     collectables: [],
+    enemies: [],
     triggers: [],
     foreground: []
   };
@@ -405,9 +406,9 @@ export function createRoomSystem({
     });
   }
 
-  function updateRoomLogic(fixedDeltaTime) {
+  function updateRoomLogic() {
     for (const entity of entities) {
-      entity.update?.(fixedDeltaTime);
+      entity.update?.();
     }
   }
 
@@ -466,10 +467,10 @@ export function createRoomSystem({
   }
 
   return {
-    update(fixedDeltaTime) {
+    update() {
       if (!currentRoom) return;
-      exitCoolDownSeconds = Math.max(0, exitCoolDownSeconds - (fixedDeltaTime ?? 0));
-      updateRoomLogic(fixedDeltaTime);
+      exitCoolDownSeconds = Math.max(0, exitCoolDownSeconds - TIME.fixedDeltaTime);
+      updateRoomLogic();
       applyExitTransitions();
     },
 

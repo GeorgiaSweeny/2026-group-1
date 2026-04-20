@@ -53,7 +53,7 @@ export function createMenuSystem() {
       fill(255);
       textAlign(CENTER, CENTER);
       textSize(48);
-      text("the GAME", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 - 40);
+      text("The Abyss", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 - 40);
 
       textSize(20);
       text("Select Difficulty", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 + 10);

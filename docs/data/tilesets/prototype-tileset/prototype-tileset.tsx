@@ -7,6 +7,12 @@
    <property name="type" value="exit"/>
   </properties>
  </tile>
+  <tile id="3">
+  <properties>
+   <property name="type" value="breakable"/>
+   <property name="solid" type="bool" value="true"/>
+  </properties>
+ </tile>
  <tile id="12">
   <properties>
    <property name="type" value="hazard"/>

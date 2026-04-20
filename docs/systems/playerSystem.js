@@ -44,48 +44,37 @@ TODO / LIMITATIONS:
 // PLAYER SYSTEM
 //======================================
 
-import { PLAYER } from '../config.js';
+import { PLAYER, TIME } from '../config.js';
 
 export function createPlayerSystem(player) {
   return {
-    update(fixedDeltaTime) {
+    update() {
+      // Apply drag each frame
+      player.velocity.x *= PLAYER.DRAG;
+      player.velocity.y *= PLAYER.DRAG;
 
-      let velocityX;
-      let velocityY; 
-      let normalizedSpeed;
-      let normalizedAcceleration;
-
-      normalizedSpeed = PLAYER.MAX_SPEED * fixedDeltaTime;
-      normalizedAcceleration = PLAYER.ACCELERATION * fixedDeltaTime;
-
-      if((Object.values(player.getMoveIntent()).some(Boolean))){
-        velocityX = normalizedAcceleration;  
-        velocityY = normalizedAcceleration; 
-      }else{ 
-        player.velocity.x *= Math.pow(PLAYER.FRICTION, fixedDeltaTime);            
-        player.velocity.y *= Math.pow(PLAYER.FRICTION, fixedDeltaTime);            
-      }
-
+      // Apply acceleration based on movement intent
       if (player.moveIntent.right) {
-        player.velocity.x += velocityX;
+        player.velocity.x += PLAYER.ACCELERATION;
         player.facing = 1;
       }
       if (player.moveIntent.left) {
-        player.velocity.x -= velocityX;
+        player.velocity.x -= PLAYER.ACCELERATION;
         player.facing = -1;
       }
       if (player.moveIntent.up) {
-        player.velocity.y -= velocityY;
+        player.velocity.y -= PLAYER.ACCELERATION;
       }
       if (player.moveIntent.down) {
-        player.velocity.y += velocityY;
+        player.velocity.y += PLAYER.ACCELERATION;
       }
-      
-      player.velocity.x = constrain(player.velocity.x, -normalizedSpeed, normalizedSpeed);
-      player.velocity.y = constrain(player.velocity.y, -normalizedSpeed, normalizedSpeed);
+
+      // Clamp velocity to max speed (MOVE_SPEED is px/sec, clamped per frame)
+      const maxSpeed = PLAYER.MOVE_SPEED * TIME.fixedDeltaTime;
+      player.velocity.x = constrain(player.velocity.x, -maxSpeed, maxSpeed);
+      player.velocity.y = constrain(player.velocity.y, -maxSpeed, maxSpeed);
 
       // Bubble trail — spawn behind submarine when moving
-      const dt = Math.max(0, fixedDeltaTime * 1000 ?? 16);
       const isMoving = Math.abs(player.velocity.x) > 0.1 || Math.abs(player.velocity.y) > 0.1;
       if (isMoving && Math.random() < 0.4) {
         const backX = player.position.x - player.facing * player.w * 0.8;
@@ -94,17 +83,17 @@ export function createPlayerSystem(player) {
           y: player.position.y + (Math.random() * 8 - 4),
           size: 2 + Math.random() * 4,
           life: 200,
-          vx: (Math.random() * 0.04 - 0.02),
-          vy: -(0.03 + Math.random() * 0.05),
+          vx: (Math.random() * 40 - 20),   // px/sec
+          vy: -(30 + Math.random() * 50),   // px/sec upward
         });
       }
 
       // Update existing bubbles (drift upward + fade)
       for (let i = player.bubbles.length - 1; i >= 0; i--) {
         const b = player.bubbles[i];
-        b.x += b.vx * dt;
-        b.y += b.vy * dt;
-        b.life -= 0.15 * dt;
+        b.x += b.vx * TIME.fixedDeltaTime;
+        b.y += b.vy * TIME.fixedDeltaTime;
+        b.life -= 150 * TIME.fixedDeltaTime;
         if (b.life <= 0) {
           player.bubbles.splice(i, 1);
         }
