@@ -85,7 +85,7 @@ export const DISPLAY = {
 // GAMEPLAY OVERLAY CONFIG
 //======================
 export const GAMEPLAY_OVERLAY = {
-  ENABLED: false, // Set to true to enable the gameplay overlay for testing
+  ENABLED: true, // Set to true to enable the gameplay overlay for testing
   CENTER_ON_SCREEN: true, // When true, overlay is centered before offsets are applied
   OFFSET_X: 0,
   OFFSET_Y: 30,
@@ -110,6 +110,23 @@ export const MINIMAP = {
   // If set, minimap radius is fitted to dialRadius - dialInset.
   DIAL_RADIUS: null,
   DIAL_INSET: 8,
+};
+
+//======================
+// HUD DIALS CONFIG
+//======================
+export const HUD_DIALS = {
+  POWER_X: 630,
+  POWER_Y: 925,
+  SONAR_X: 1285,
+  SONAR_Y: 925,
+
+  // Base dial diameter in pixels.
+  BASE_SIZE: 92,
+
+  // Per-dial scale multipliers.
+  POWER_SCALE: 1.3,
+  SONAR_SCALE: 1.3,
 };
 
 //======================

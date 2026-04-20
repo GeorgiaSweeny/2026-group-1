@@ -39,6 +39,7 @@ import {
   CONTROLS,
   GAMEPLAY_OVERLAY,
   MINIMAP,
+  HUD_DIALS,
 } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
@@ -502,6 +503,15 @@ function setup() {
     getMissiles: () => missileSystem.getMissiles(),
     getParticles: () => particleSystem.getParticles(),
     drawMiniMap: () => miniMapSystem.draw(),
+    getHudDialSettings: () => ({
+      powerX: HUD_DIALS.POWER_X,
+      powerY: HUD_DIALS.POWER_Y,
+      sonarX: HUD_DIALS.SONAR_X,
+      sonarY: HUD_DIALS.SONAR_Y,
+      baseSize: HUD_DIALS.BASE_SIZE,
+      powerScale: HUD_DIALS.POWER_SCALE,
+      sonarScale: HUD_DIALS.SONAR_SCALE,
+    }),
     getGameplayOverlay: () => assets[GAMEPLAY_OVERLAY_ASSET_KEY],
     getGameplayOverlaySettings: () => ({
       enabled: GAMEPLAY_OVERLAY.ENABLED,

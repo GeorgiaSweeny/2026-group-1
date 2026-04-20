@@ -45,6 +45,7 @@ export function createRenderSystem({
    getMissiles,
    getParticles,
    drawMiniMap,
+   getHudDialSettings,
    getGameplayOverlay,
    getGameplayOverlaySettings,
 }) {
@@ -525,11 +526,16 @@ export function createRenderSystem({
    }
 
    function drawUI() {
-      const powerDialX = 94;
-      const powerDialY = 94;
-      const sonarDialX = 214;
-      const sonarDialY = 94;
-      const dialSize = 92;
+      const dialSettings = getHudDialSettings?.() ?? {};
+      const powerDialX = Number.isFinite(dialSettings.powerX) ? dialSettings.powerX : 94;
+      const powerDialY = Number.isFinite(dialSettings.powerY) ? dialSettings.powerY : 94;
+      const sonarDialX = Number.isFinite(dialSettings.sonarX) ? dialSettings.sonarX : 214;
+      const sonarDialY = Number.isFinite(dialSettings.sonarY) ? dialSettings.sonarY : 94;
+      const baseDialSize = Number.isFinite(dialSettings.baseSize) ? dialSettings.baseSize : 92;
+      const powerDialScale = Number.isFinite(dialSettings.powerScale) ? dialSettings.powerScale : 1;
+      const sonarDialScale = Number.isFinite(dialSettings.sonarScale) ? dialSettings.sonarScale : 1;
+      const powerDialSize = baseDialSize * powerDialScale;
+      const sonarDialSize = baseDialSize * sonarDialScale;
 
       // Keep existing power computation logic.
       const powerPercent = Math.round(player.power.current);
@@ -541,7 +547,7 @@ export function createRenderSystem({
       drawDial({
          x: powerDialX,
          y: powerDialY,
-         size: dialSize,
+         size: powerDialSize,
          fillRatio: powerFillRatio,
          centerLabel: `${powerPercent}%`,
          ringColor: powerStrokeColor,
@@ -560,7 +566,7 @@ export function createRenderSystem({
       drawDial({
          x: sonarDialX,
          y: sonarDialY,
-         size: dialSize,
+         size: sonarDialSize,
          fillRatio: sonarFillRatio,
          centerLabel: isSonarCooling ? 'COOLING' : 'READY',
          ringColor: isSonarCooling ? color(220, 90, 70, 240) : color(100, 240, 120, 240),
