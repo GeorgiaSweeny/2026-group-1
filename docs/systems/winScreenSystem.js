@@ -33,7 +33,7 @@ export function createWinScreenSystem() {
       fill(200);
       textSize(20);
       text(
-        "You have secaped the abyss!",
+        "You have escaped the abyss!",
         CANVAS.WIDTH / 2,
         CANVAS.HEIGHT / 2 + 10,
       );

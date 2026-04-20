@@ -1,128 +1,206 @@
 /*
 ========================================
-VERSION: 1.0
+VERSION: 1.1
 SYSTEM: MISSILE SYSTEM
-AUTHOR: Archie Brown
+AUTHOR: Ben Mounce
 DESCRIPTION:
-- Manages creation, movement, and lifecycle of missiles
-- Handles targeting of random tileset squares
-- Updates missile positions and removes missiles when done
+- Manages underwater missiles launched by the player
+- Auto-targeting system for enemies and breakable walls
+- Handles missile movement, collision, AoE destruction, and rendering
 
 RULES:
-- Must not directly modify player state
-- Must not contain rendering logic
-- Missiles are updated each frame after creation
-- Missiles are removed when reaching target or exceeding max distance
-
-DESIGN GOALS:
-- Decouple missile management from player logic
-- Provide simple homing missile behavior
-- Enable proof of concept for future enemy AI
-
-RESPONSIBILITIES:
-- Maintain array of active missiles
-- Create new missiles when requested
-- Update missile positions each frame
-- Remove missiles that have reached target or gone out of bounds
-- Select random target squares within player radius
-
-DEPENDENCIES:
-- Player entity: for position reference
-- Missile class: missile entity definition
-- config: MISSILE and DISPLAY settings
-
-USAGE:
-import { createMissileSystem } from './missileSystem.js';
-
-const missileSystem = createMissileSystem(player);
-engine.register(missileSystem);
-========================================
-NOTES:
-- Targets are random tileset squares within a specified radius
-- Uses TILE_SIZE from config to align targets to grid
-- Future: can be extended to target enemies instead of random squares
+- Missiles lock on to nearest valid target
+- Missiles are destroyed on impact or timeout
+- Destroys adjacent breakable walls in EASY mode
 ========================================
 */
 
-//======================================
-// MISSILE SYSTEM
-//======================================
-import { Missile } from '../entities/missile.js';
-import { MISSILE, CANVAS } from '../config.js';
+import { MISSILE, GAME, TIME } from '../config.js';
+import { isColliding, Hitbox } from './hitboxSystem.js';
 
-export function createMissileSystem(player) {
-  const missiles = [];
-  const maxConcurrentMissiles = MISSILE?.MAX_CONCURRENT ?? 5;
-
-  function getRandomTargetInRadius() {
-    const radius = MISSILE?.TARGET_RADIUS ?? 150;
-    const tileSize = CANVAS?.TILE_SIZE ?? 32;
-
-    // Generate random angle and distance
-    const angle = Math.random() * Math.PI * 2;
-    const distance = Math.random() * radius;
-
-    // Calculate target position
-    let targetX = player.x + Math.cos(angle) * distance;
-    let targetY = player.y + Math.sin(angle) * distance;
-
-    // Snap to tileset grid
-    targetX = Math.round(targetX / tileSize) * tileSize;
-    targetY = Math.round(targetY / tileSize) * tileSize;
-
-    return { x: targetX, y: targetY };
-  }
-
-  return {
-    update() {
-      // Handle player intent to fire missile
-      if (player.consumeAction('fireMissile')) {
-        this.fireMissile();
-      }
-
-      // Update all active missiles
-      for (let i = missiles.length - 1; i >= 0; i--) {
-        const missile = missiles[i];
-        missile.update();
-
-        // Remove if reached target or out of bounds
-        if (missile.isAtTarget() || missile.isOutOfBounds()) {
-          missiles.splice(i, 1);
-        }
-      }
-    },
-
-    fireMissile() {
-      // Don't exceed max concurrent missiles
-      if (missiles.length >= maxConcurrentMissiles) {
-        return false;
-      }
-
-      // Missiles are inventory-based and bought in the shop.
-      if ((player?.missiles ?? 0) <= 0) {
-        return false;
-      }
-
-      // Get random target within radius
-      const target = getRandomTargetInRadius();
-
-      // Create missile at player position
-      const missile = new Missile(player.x, player.y, target.x, target.y);
-      missiles.push(missile);
-      player.missiles -= 1;
-      return true;
-    },
-
-    getMissiles() {
-      return missiles;
-    },
-
-    clearMissiles() {
-      missiles.length = 0;
+class Missile extends Hitbox {
+    constructor(x, y, target, facing = 1, speed = MISSILE.SPEED, turnSpeed = MISSILE.TURN_SPEED) {
+        super(x, y, MISSILE.SIZE, MISSILE.SIZE);
+        this.position = createVector(x, y);
+        this.velocity = createVector(facing * speed, 0); // initial direction based on facing
+        this.target = target;
+        this.speed = speed;
+        this.turnSpeed = turnSpeed;
+        this.lifetime = MISSILE.LIFETIME;
+        this.pendingDestroy = false;
+        this.nextPos = createVector(x, y); // for collision system
+        this.bubbles = [];
     }
-  };
+
+    update() {
+        const dt = TIME.fixedDeltaTime;
+        this.lifetime -= dt * 1000;
+        if (this.lifetime <= 0) {
+            this.pendingDestroy = true;
+            return;
+        }
+
+        // spawn bubbles behind missile
+        if (random() < 0.4) {
+            const angle = this.velocity.heading();
+            const backDist = this.w; // spawn at tail
+            const bx = this.position.x - cos(angle) * backDist;
+            const by = this.position.y - sin(angle) * backDist;
+            
+            this.bubbles.push({
+                x: bx,
+                y: by + (random(-2, 2)),
+                size: random(2, 5),
+                life: 255
+            });
+        }
+
+        // update existing bubbles
+        for (let i = this.bubbles.length - 1; i >= 0; i--) {
+            const b = this.bubbles[i];
+            b.y -= 0.5;
+            b.x += random(-0.2, 0.2);
+            b.life -= 5;
+            if (b.life <= 0) {
+                this.bubbles.splice(i, 1);
+            }
+        }
+
+        // homing logic
+        if (this.target && !this.target.pendingDestroy && !this.target.isDestroyed && this.target.position) {
+            const targetPos = this.target.position;
+            const missilePos = this.position;
+            const dist = p5.Vector.dist(targetPos, missilePos);
+
+            const desiredDirection = p5.Vector.sub(targetPos, missilePos).normalize();
+            const currentDirection = this.velocity.copy().normalize();
+            let effectiveTurnSpeed = this.turnSpeed;
+            if (dist < 100) {
+               effectiveTurnSpeed *= 4; 
+            }
+            const steer = p5.Vector.lerp(currentDirection, desiredDirection, effectiveTurnSpeed * dt); // steer towards target
+            steer.normalize();
+            this.velocity = steer.mult(this.speed);
+        }
+
+        // move
+        const step = p5.Vector.mult(this.velocity, dt);
+        this.position.add(step);
+        this.nextPos.set(this.position);
+
+        this.x = this.position.x;
+        this.y = this.position.y;
+    }
 }
 
-//======================================
-// END
-//======================================
+export function createMissileSystem(player, getTargets, getWalls) {
+    let missiles = [];
+    let lastFireTime = 0;
+
+    
+    function findNearestTarget(px, py, getTargetsFunc, getWallsFunc) {
+        let nearest = null;
+        let minDistSq = Infinity;
+
+        
+        const enemyList = Array.isArray(getTargetsFunc) ? getTargetsFunc : (getTargetsFunc?.() ?? []);
+
+        const wallRes = (typeof getWallsFunc === 'function') ? getWallsFunc() : (getWallsFunc || []);
+        const wallList = Array.isArray(wallRes) ? wallRes : [];
+        const breakableWalls = wallList.filter(w => w.isBreakable);
+        const allPotentialTargets = [...enemyList, ...breakableWalls];
+
+        for (const target of allPotentialTargets) {
+            if (target.pendingDestroy || target.isDestroyed) continue;
+            const tx = target.position ? target.position.x : target.x;
+            const ty = target.position ? target.position.y : target.y;
+
+            if (tx === undefined || ty === undefined) continue;
+
+            const dx = tx - px;
+            const dy = ty - py;
+
+            // missile forward check
+            if (dx * player.facing <= 0) continue;
+            const distSq = dx * dx + dy * dy;
+
+            // max homing range
+            if (distSq > 400 * 400) continue;
+            if (distSq < minDistSq) {
+                minDistSq = distSq;
+                nearest = target;
+            }
+        }
+        return nearest;
+    }
+
+    return {
+        update() {
+            const now = performance.now();
+            
+            for (let i = missiles.length - 1; i >= 0; i--) {
+               const missile = missiles[i];
+               missile.update();
+               
+               if (missile.pendingDestroy) {
+                  missiles.splice(i, 1);
+                  continue;
+               }
+
+               const enemies = Array.isArray(getTargets) ? getTargets : (getTargets?.() ?? []);
+               const walls = Array.isArray(getWalls) ? getWalls : (getWalls?.() ?? []);
+               const allEntities = [...enemies, ...walls];
+                
+               for (const entity of allEntities) {
+                  if (entity.pendingDestroy || entity.isDestroyed) continue;
+                  
+                  if (isColliding(missile, entity)) {
+                     const isWall = walls.includes(entity);
+                     
+                     if (isWall) {
+                        if (entity.isBreakable) {
+                           entity.isDestroyed = true; // Destroy the initial tile
+                           
+                           // AoE Logic based on Difficulty
+                           if (GAME.DIFFICULTY === 'EASY') {
+                               const blastRadius = 64; // Adjust based on your tile size
+                               for (const w of walls) {
+                                   // Destroy nearby breakable tiles
+                                   if (w.isBreakable && w !== entity && p5.Vector.dist(entity.position, w.position) <= blastRadius) {
+                                       w.isDestroyed = true;
+                                   }
+                               }
+                           }
+                        }
+                     } else {
+                        entity.pendingDestroy = true;
+                     }
+                     
+                     missile.pendingDestroy = true;
+                     break;
+                  }
+               }
+            }
+
+            // clean up missiles
+            missiles = missiles.filter(m => !m.pendingDestroy);
+            
+            // handle launch intent
+            if (player.actionIntent.launchMissile) {
+                const timeSince = now - lastFireTime;
+                
+                if (timeSince > MISSILE.COOLDOWN && player.missiles > 0) {
+                    const target = findNearestTarget(player.position.x, player.position.y, getTargets, getWalls);
+                    missiles.push(new Missile(player.position.x, player.position.y, target, player.facing));
+                    player.missiles--;
+                    lastFireTime = now;
+                } 
+                player.actionIntent.launchMissile = false; 
+            }
+        },
+
+        getMissiles() {
+            return missiles;
+        }
+    };
+}

@@ -12,6 +12,7 @@ DESCRIPTION:
 import { isColliding } from './hitboxSystem.js';
 import { Crab } from '../entities/crab.js';
 import { Jellyfish } from '../entities/jellyfish.js';
+import { TIME } from '../config.js';
 
 const CRAB_CONTACT_PENALTY = 4;  // burst drain on touch
 const CRAB_DRAIN_RATE = 1.0;     // continuous drain while touching
@@ -23,6 +24,7 @@ export function createEnemySystem(player, getEnemies) {
   let crabs = [];
   let jellyfish = [];
   let sourceEnemiesRef = null;
+  const fixedDtSeconds = TIME.fixedDeltaTime;
 
   // syncng crab instances with current room enemy objects.
   function syncEnemies() {
@@ -48,10 +50,11 @@ export function createEnemySystem(player, getEnemies) {
     contactSet.clear();
   }
 
-  function updateCrab(crab, dtSeconds) {
+  function updateCrab(crab) {
     const speed = Number(crab.speed) || 0;
     const patrolDistance = Math.max(0, Number(crab.patrolDistance) || 0);
-    const step = speed * dtSeconds;
+    const step = speed * fixedDtSeconds;
+    if (crab.pendingDestroy) return; // Skip destroyed crabs
 
     crab.previousPos.x = crab.position.x;
     crab.previousPos.y = crab.position.y;
@@ -78,18 +81,18 @@ export function createEnemySystem(player, getEnemies) {
     crab.nextPos.y = crab.position.y;
   }
 
-  function updateJellyfish(jelly, dtSeconds) {
+  function updateJellyfish(jelly) {
     jelly.previousPos.x = jelly.position.x;
     jelly.previousPos.y = jelly.position.y;
  
-    jelly.time += dtSeconds * jelly.frequency;
+    jelly.time += fixedDtSeconds * jelly.frequency;
     jelly.pulsePhase = jelly.time;
  
     const yOffset = Math.sin(jelly.time) * jelly.amplitude;
     jelly.position.y = jelly.spawnY + yOffset;
  
     if (jelly.driftSpeed > 0) {
-      jelly.driftDistance += jelly.driftDirection * jelly.driftSpeed * dtSeconds * 60;
+      jelly.driftDistance += jelly.driftDirection * jelly.driftSpeed * fixedDtSeconds * 60;
       
       // Reverse drift at boundaries
       if (Math.abs(jelly.driftDistance) > jelly.maxDrift) {
@@ -117,21 +120,27 @@ export function createEnemySystem(player, getEnemies) {
   }
 
   return {
-    update(deltaMs) {
+    update() {
       syncEnemies();
-      const dtSeconds = Math.max(0, (deltaMs ?? 16) / 1000);
- 
+      
+      // Clean up dead crabs
+      for (let i = crabs.length - 1; i >= 0; i--) {
+        if (crabs[i].pendingDestroy) {
+          crabs.splice(i, 1);
+        }
+      }
+      
       for (const crab of crabs) {
-        updateCrab(crab, dtSeconds);
+        updateCrab(crab);
         checkPlayerContact(crab, CRAB_CONTACT_PENALTY, CRAB_DRAIN_RATE);
       }
 
       for (const jelly of jellyfish) {
-        updateJellyfish(jelly, dtSeconds);
+        updateJellyfish(jelly);
         checkPlayerContact(jelly, JELLYFISH_CONTACT_PENALTY, JELLYFISH_DRAIN_RATE);
       }
     },
- 
+       
     getCrabs() {
       return crabs;
     },
