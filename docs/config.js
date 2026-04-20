@@ -51,7 +51,7 @@ export const INPUT = {
   // ACTION KEYS - functions take strings
   TOGGLE_TORCH_KEY: ['L', 'l'],
   SONAR_KEY: ['E', 'e'],
-  MISSILE_KEY: ['K', 'k']
+  MISSILE_KEY: ['K', 'k'],
   TOGGLE_FULLSCREEN_KEY: 70,  // F
 };
 
@@ -155,11 +155,16 @@ export const TORCH = {
 // MISSILE CONFIG
 //======================
 export const MISSILE = {
+  WIDTH: 8,
+  HEIGHT: 8,
   SPEED: 150, //pixels per second
   TURN_SPEED: 5,
   COOLDOWN: 2000, //milliseconds
   LIFETIME: 3000,
   SIZE: 6, //pixels
+  MAX_DISTANCE: 2000,
+  TARGET_RADIUS: 150,
+  MAX_CONCURRENT: 5
 };
 
 //======================
@@ -179,18 +184,6 @@ export const SONAR = {
   // Cooldown in seconds for readability; derived ms used by sonarSystem
   COOLDOWN: 1,
   COOLDOWN_MS: 1
-};
-
-//======================
-// MISSILE CONFIG
-//======================
-export const MISSILE = {
-  WIDTH: 8,
-  HEIGHT: 8,
-  SPEED: 2,
-  MAX_DISTANCE: 2000,
-  TARGET_RADIUS: 150,
-  MAX_CONCURRENT: 5
 };
 
 //======================

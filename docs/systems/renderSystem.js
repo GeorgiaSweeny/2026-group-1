@@ -44,7 +44,6 @@ export function createRenderSystem({
    getCameraScale,
    getMissiles,
    getParticles,
-   getMissiles,
    getMissileMessage,
 
 }) {
@@ -641,17 +640,6 @@ export function createRenderSystem({
       }
    }
 
-   //===MISSILES===//
-   function drawMissiles() {
-      const missiles = getMissiles?.() ?? [];
-      if (!missiles.length) return;
-      noStroke();
-      fill(255, 200, 50);
-      for (const m of missiles) {
-         ellipse(m.getXPosition(), m.getYPosition(), 8, 4);
-      }
-   }
-
 // calculate rendering positions for higher fps
 function renderInterpolate(oldState, newState, alpha){
    return (oldState + (newState - oldState) * alpha);
@@ -688,7 +676,6 @@ function renderInterpolate(oldState, newState, alpha){
             drawParticles();
             drawMissiles();
             drawPlayer(alpha);
-            drawMissiles();
             debugHitbox(DEBUG_COLOR.DRAW);
 
             pop();

@@ -35,7 +35,6 @@ import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
 import { createShopSystem } from "./systems/shopSystem.js";
-import { createMissileSystem } from "./systems/missileSystem.js";
 import { createParticleSystem } from "./systems/particleSystem.js";
 import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
@@ -63,7 +62,6 @@ let enemySystem;
 let missileSystem;
 let pauseMenuSystem;
 let shopSystem;
-let missileSystem;
 let particleSystem;
 let cameraSystem;
 let lastEnsuredRoom = null;
@@ -411,8 +409,6 @@ function setup() {
     () => roomSystem.getCollectables(),
   );
 
-  missileSystem = createMissileSystem(player);
-
   particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 
   lightingSystem = createLightingSystem(
@@ -491,7 +487,6 @@ function setup() {
   engine.register(playerSystem);
   engine.register(physicsSystem);
   engine.register(sonarSystem);
-  engine.register(missileSystem);
   engine.register(particleSystem);
   engine.register(cameraSystem);
   engine.register(powerSystem);

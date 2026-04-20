@@ -33,10 +33,9 @@ export function createEnemySystem(player, getEnemies) {
   function updateCrab(crab, dtSeconds) {
     const speed = Number(crab.speed) || 0;
     const patrolDistance = Math.max(0, Number(crab.patrolDistance) || 0);
-
+    const step = speed * dtSeconds;
     if (crab.pendingDestroy) return; // Skip destroyed crabs
 
-    const step = crab.speed * dtSeconds;
     crab.previousPos.x = crab.position.x;
     crab.previousPos.y = crab.position.y;
 
@@ -80,25 +79,21 @@ export function createEnemySystem(player, getEnemies) {
       syncCrabs();
       const dtSeconds = Math.max(0, (deltaMs ?? 16) / 1000);
       
-      update(fixedDeltaTime) {
-        if (!initialised) initCrabs();
-        
-        // Clean up dead crabs
-        for (let i = crabs.length - 1; i >= 0; i--) {
-          if (crabs[i].pendingDestroy) {
-            crabs.splice(i, 1);
-          }
+      // Clean up dead crabs
+      for (let i = crabs.length - 1; i >= 0; i--) {
+        if (crabs[i].pendingDestroy) {
+          crabs.splice(i, 1);
         }
-        
-        for (const crab of crabs) {
-          updateCrab(crab, dtSeconds);
-          checkPlayerContact(crab, deltaMs ?? 16);
-        }
-      },
-      
-      getCrabs() {
-        return crabs;
       }
-    };
-  }
+      
+      for (const crab of crabs) {
+        updateCrab(crab, dtSeconds);
+        checkPlayerContact(crab, deltaMs ?? 16);
+      }
+    },
+      
+    getCrabs() {
+      return crabs;
+    }
+  };
 }
