@@ -24,7 +24,7 @@ export function createEnemySystem(player, getEnemies) {
   let crabs = [];
   let jellyfish = [];
   let sourceEnemiesRef = null;
-  const fixedDtSeconds = TIME.fixedDeltaTime / 1000;
+  const fixedDtSeconds = TIME.fixedDeltaTime;
 
   // syncng crab instances with current room enemy objects.
   function syncEnemies() {
