@@ -50,7 +50,7 @@ NOTES:
 //======================================
 /* Intent only, shouldn't directly manipulate anything */
 
-import { CONTROLS, INPUT } from '../config.js';
+import { CONTROLS } from '../config.js';
 
 // Returns true if a key event matches a binding.
 // Number bindings compare against keyCode; string bindings compare against key.toLowerCase().
@@ -78,28 +78,13 @@ export function createInputSystem(player) {
       player.moveIntent.down  = keyIsDown(map.MOVE_DOWN);
     },
 
-    // Unified key handler: supports both (key, keyCode) calls and simple (key) calls.
     onKeyPressed(key, keyCode) {
       const map = getMap();
-
-      // first check mapped bindings (map values may be numbers or strings)
       if (matchesBinding(map.TOGGLE_PAUSE,  key, keyCode)) player.actionIntent.togglePause  = true;
       if (matchesBinding(map.TOGGLE_SHOP,   key, keyCode)) player.actionIntent.toggleShop   = true;
       if (matchesBinding(map.TOGGLE_TORCH,  key, keyCode)) player.actionIntent.toggleTorch  = true;
       if (matchesBinding(map.SONAR,         key, keyCode)) player.actionIntent.emitSonar    = true;
-      if (matchesBinding(map.FIRE_MISSILE,  key, keyCode)) player.actionIntent.launchMissile = true;
-
-      // fallback direct-key handling (for simple callers that pass only a key)
-      const keyLower = typeof key === 'string' ? key.toLowerCase() : '';
-      if (INPUT.TOGGLE_TORCH_KEY.includes(key) || keyLower === 'l') {
-        player.actionIntent.toggleTorch = true;
-      }
-      if (INPUT.SONAR_KEY.includes(key) || keyLower === 'e') {
-        player.actionIntent.emitSonar = true;
-      }
-      if (INPUT.MISSILE_KEY.includes(key) || keyLower === 'f') {
-        player.actionIntent.launchMissile = true;
-      }
+      if (matchesBinding(map.LAUNCH_MISSILE,  key, keyCode)) player.actionIntent.launchMissile  = true;
     },
 
     setControlMode(mode) {
@@ -108,7 +93,7 @@ export function createInputSystem(player) {
 
     getControlMode() {
       return controlMode;
-    }
+    },
   };
 }
 //======================================

@@ -87,7 +87,7 @@ export class Wall extends Hitbox{
 
 // aabb collision resolution 
 export function isColliding(hitbox1, hitbox2){
-    const position2 = hitbox2.nextPos || hitbox2.position;
+    const position2 = hitbox2.nextPos || hitbox2.position; //Had to add to stop crash as the walls/enemy do not have a nextPos yet
     return(((hitbox1.position.x - (hitbox1.w / 2)) <= (position2.x + (hitbox2.w / 2))) &&
            ((hitbox1.position.x + (hitbox1.w / 2)) >= (position2.x - (hitbox2.w / 2))) &&
            ((hitbox1.position.y - (hitbox1.h / 2)) <= (position2.y + (hitbox2.h / 2))) &&
