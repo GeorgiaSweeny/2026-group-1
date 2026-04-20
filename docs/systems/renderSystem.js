@@ -191,8 +191,12 @@ export function createRenderSystem({
       fill(platformColor);
       
       for (const p of platforms) {
+         if (p.isDestroyed) continue; // Skip destroyed walls
          if (drawSpriteFromTileset(p)) continue;
-         rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
+         // Checks if breakable to give visual cue
+         if (p.isBreakable) {
+            rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
+         }
       }
    }
 
@@ -416,6 +420,49 @@ function drawEnemies(alpha) {
       pop();
    }
 
+   //===MISSILES===//
+   function drawMissiles() {
+      const missiles = getMissiles?.() ?? [];
+      for (const missile of missiles) {
+         if (missile.bubbles) {
+             noStroke();
+             for (const b of missile.bubbles) {
+                 fill(150, 220, 255, b.life);
+                 circle(b.x, b.y, b.size);
+             }
+         }
+
+         push();
+         translate(missile.position.x, missile.position.y);         
+         // Rotating missile
+         if (missile.velocity) {
+             rotate(missile.velocity.heading());
+         }
+
+         const w = 24;
+         const h = 10;
+         noStroke();
+
+         // Fins
+         fill(80); 
+         // Top
+         triangle(-w/2 + 4, 0, -w/2 - 4, -h, -w/2 + 8, -h/2);
+         // Bottom
+         triangle(-w/2 + 4, 0, -w/2 - 4, h, -w/2 + 8, h/2);
+
+         // Missile body
+         fill(80);
+         rectMode(CENTER);
+         rect(0, 0, w, h, h/2); 
+
+         // Nose
+         fill(255, 60, 60);
+         arc(w/2 - h/2, 0, h, h, -HALF_PI, HALF_PI);
+         
+         pop();
+      }
+   }
+
    //===BUBBLES===//
    function drawBubbles() {
       const bubbleList = player.bubbles ?? [];
@@ -628,17 +675,6 @@ function drawEnemies(alpha) {
             fill(140, 200, 230, a * 0.5);
          }
          circle(p.x, p.y, p.size * 2);
-      }
-   }
-
-   //===MISSILES===//
-   function drawMissiles() {
-      const missiles = getMissiles?.() ?? [];
-      if (!missiles.length) return;
-      noStroke();
-      fill(255, 200, 50);
-      for (const m of missiles) {
-         ellipse(m.getXPosition(), m.getYPosition(), 8, 4);
       }
    }
 

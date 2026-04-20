@@ -35,11 +35,11 @@ import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
 import { createShopSystem } from "./systems/shopSystem.js";
-import { createMissileSystem } from "./systems/missileSystem.js";
 import { createParticleSystem } from "./systems/particleSystem.js";
 import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 import { createGameOverSystem } from "./systems/gameOverSystem.js";
+import { createMissileSystem } from "./systems/missileSystem.js";
 
 let accumulator = 0;
 let alpha;
@@ -59,9 +59,9 @@ let lightingSystem;
 let roomSystem;
 let resourceManagementSystem;
 let enemySystem;
+let missileSystem;
 let pauseMenuSystem;
 let shopSystem;
-let missileSystem;
 let particleSystem;
 let cameraSystem;
 let lastEnsuredRoom = null;
@@ -409,8 +409,6 @@ function setup() {
     () => roomSystem.getCollectables(),
   );
 
-  missileSystem = createMissileSystem(player);
-
   particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 
   lightingSystem = createLightingSystem(
@@ -430,6 +428,12 @@ function setup() {
   enemySystem = createEnemySystem(
     player,
     () => roomSystem.getEnemies()
+  );
+
+  missileSystem = createMissileSystem(
+    player,
+    () => enemySystem.getCrabs(),
+    () => roomSystem.getPlatforms()
   );
   
   renderSystem = createRenderSystem({
@@ -458,6 +462,8 @@ function setup() {
     getLightSources: () => lightingSystem.getLightSources(),
     getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
+    getMissiles: () => missileSystem.getMissiles(),
+    getMissileMessage: () => missileSystem.getMessage(),
     getCameraOffset: () => cameraSystem.getOffset(),
     getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
@@ -482,7 +488,6 @@ function setup() {
   engine.register(playerSystem);
   engine.register(physicsSystem);
   engine.register(sonarSystem);
-  engine.register(missileSystem);
   engine.register(particleSystem);
   engine.register(cameraSystem);
   engine.register(powerSystem);
@@ -490,6 +495,7 @@ function setup() {
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
   engine.register(enemySystem);
+  engine.register(missileSystem);
   engine.register(pauseMenuSystem);
   engine.register(shopSystem);
 }

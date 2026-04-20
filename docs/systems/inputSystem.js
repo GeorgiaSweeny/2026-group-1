@@ -84,7 +84,7 @@ export function createInputSystem(player) {
       if (matchesBinding(map.TOGGLE_SHOP,   key, keyCode)) player.actionIntent.toggleShop   = true;
       if (matchesBinding(map.TOGGLE_TORCH,  key, keyCode)) player.actionIntent.toggleTorch  = true;
       if (matchesBinding(map.SONAR,         key, keyCode)) player.actionIntent.emitSonar    = true;
-      if (matchesBinding(map.FIRE_MISSILE,  key, keyCode)) player.actionIntent.fireMissile  = true;
+      if (matchesBinding(map.LAUNCH_MISSILE,  key, keyCode)) player.actionIntent.launchMissile  = true;
     },
 
     setControlMode(mode) {

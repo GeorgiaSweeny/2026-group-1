@@ -68,6 +68,9 @@ function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
   const height = layer?.height;
   const FLIP_MASK = 0x1FFFFFFF;
 
+  // Checks if tiled layer is breakable
+  const layerBreakable = layer.properties?.find(p => p.name === 'breakable')?.value === true;
+
   if (!Array.isArray(data) || !width || !height) return result;
 
   for (let y = 0; y < height; y++) {
@@ -78,6 +81,10 @@ function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
 
       const wall = new Wall(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
       wall.gid = gid;
+      
+      if (layerBreakable) {
+          wall.isBreakable = true;
+      }
       result.push(wall);
     }
   }
@@ -142,7 +149,7 @@ function normalizeTiledRoom(roomKey, mapData) {
   for (const layer of mapData?.layers ?? []) {
     const layerName = (layer?.name ?? '').toLowerCase();
 
-    if (layer?.type === 'tilelayer' && layerName === 'collision') {
+    if (layer?.type === 'tilelayer' && (layerName === 'collision' || layerName === 'boundary')) {
       normalized.platforms.push(...parseCollisionTileLayer(layer, tileWidth, tileHeight));
       continue;
     }
@@ -152,6 +159,11 @@ function normalizeTiledRoom(roomKey, mapData) {
         const { x, y, w, h } = getObjectBox(obj, tileWidth, tileHeight);
         const wall = new Wall(x, y, w, h);
         wall.gid = obj?.gid ?? null;
+        
+        // Checks if breakable in tiled
+        if (obj.properties && (obj.properties.breakable === true || obj.properties.type === 'breakable')) {
+            wall.isBreakable = true;
+        }
         normalized.platforms.push(wall);
       }
       continue;
