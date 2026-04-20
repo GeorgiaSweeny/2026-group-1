@@ -487,24 +487,85 @@ export function createRenderSystem({
    }
 
    //===UI===//
-   function drawUI() {
-      const margin = 40;
+   function drawDial({
+      x,
+      y,
+      size,
+      fillRatio,
+      centerLabel,
+      ringColor,
+      labelColor,
+   }) {
+      const clampedFill = Math.max(0, Math.min(1, fillRatio ?? 0));
 
-      textSize(32);
-      textAlign(LEFT, TOP);
+      push();
+      noFill();
+      stroke(255, 255, 255, 90);
+      strokeWeight(10);
+      circle(x, y, size);
 
-      fill(255);
+      stroke(ringColor);
+      strokeWeight(10);
+      strokeCap(ROUND);
+      arc(
+         x,
+         y,
+         size,
+         size,
+         -HALF_PI,
+         -HALF_PI + (TWO_PI * clampedFill),
+      );
+
       noStroke();
-      text(`Power: ${Math.round(player.power.current)}`, margin, margin);
+      fill(labelColor ?? 255);
+      textAlign(CENTER, CENTER);
+      textSize(18);
+      text(centerLabel, x, y);
+      pop();
+   }
+
+   function drawUI() {
+      const powerDialX = 94;
+      const powerDialY = 94;
+      const sonarDialX = 214;
+      const sonarDialY = 94;
+      const dialSize = 92;
+
+      // Keep existing power computation logic.
+      const powerPercent = Math.round(player.power.current);
+      const powerFillRatio = Math.max(0, Math.min(1, powerPercent / 100));
+      const lowPowerColor = color(220, 60, 60, 240);
+      const fullPowerColor = color(80, 230, 120, 240);
+      const powerStrokeColor = lerpColor(lowPowerColor, fullPowerColor, powerFillRatio);
+
+      drawDial({
+         x: powerDialX,
+         y: powerDialY,
+         size: dialSize,
+         fillRatio: powerFillRatio,
+         centerLabel: `${powerPercent}%`,
+         ringColor: powerStrokeColor,
+         labelColor: color(255),
+      });
 
       const sonarCooldown = getSonarCooldown?.() ?? 0;
-      if (Number.isFinite(sonarCooldown) && sonarCooldown > 0) {
-         fill('#d61b1b');
-         text(`Sonar: cooling`, margin, margin + 40);
-      } else {
-         fill('#64ff64');
-         text(`Sonar: ready (E)`, margin, margin + 40);
-      }
+      const isSonarCooling = Number.isFinite(sonarCooldown) && sonarCooldown > 0;
+
+      // Keep existing sonar cooldown logic.
+      // Existing value is 0 when ready and >0 while cooling, so invert for "refill" visual.
+      const sonarFillRatio = isSonarCooling
+         ? Math.max(0, Math.min(1, 1 - sonarCooldown))
+         : 1;
+
+      drawDial({
+         x: sonarDialX,
+         y: sonarDialY,
+         size: dialSize,
+         fillRatio: sonarFillRatio,
+         centerLabel: isSonarCooling ? 'COOLING' : 'READY',
+         ringColor: isSonarCooling ? color(220, 90, 70, 240) : color(100, 240, 120, 240),
+         labelColor: isSonarCooling ? color(255, 210, 200) : color(120, 255, 140),
+      });
 
       drawMiniMap?.();
    }
