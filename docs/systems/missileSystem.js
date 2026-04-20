@@ -16,10 +16,12 @@ Limitations:
 - Homing only reads position on where enemy was at time of launch
 - Would be preferred if missiles destroyed larger areas in easy mode
   only one tile in hard mode
+- I would like a red visual indicator for the missile to indicate where
+  it is heading as not all walls will be breakable and see when targeting enemies
 ========================================
 */
 
-import { MISSILE } from '../config.js';
+import { MISSILE, GAME, TIME } from '../config.js';
 import { isColliding, Hitbox } from './hitboxSystem.js';
 
 class Missile extends Hitbox {
@@ -36,8 +38,11 @@ class Missile extends Hitbox {
         this.bubbles = [];
     }
 
-    update(fixedDeltaTime) {
-        this.lifetime -= fixedDeltaTime * 1000;
+    update() {
+        // use configured fixed timestep from config; sketch.js remains the single place
+        // that controls dynamic timestep values. Systems use the constant TIME.fixedDeltaTime.
+        const dt = TIME.fixedDeltaTime;
+        this.lifetime -= dt * 1000;
         if (this.lifetime <= 0) {
             this.pendingDestroy = true;
             return;
@@ -80,13 +85,13 @@ class Missile extends Hitbox {
             if (dist < 100) {
                effectiveTurnSpeed *= 4; 
             }
-            const steer = p5.Vector.lerp(currentDirection, desiredDirection, effectiveTurnSpeed * fixedDeltaTime); // steer towards target
+            const steer = p5.Vector.lerp(currentDirection, desiredDirection, effectiveTurnSpeed * dt); // steer towards target
             steer.normalize();
             this.velocity = steer.mult(this.speed);
         }
 
         // move
-        const step = p5.Vector.mult(this.velocity, fixedDeltaTime);
+    const step = p5.Vector.mult(this.velocity, dt);
         this.position.add(step);
         this.nextPos.set(this.position);
 
@@ -136,12 +141,12 @@ export function createMissileSystem(player, getTargets, getWalls) {
     }
 
     return {
-        update(fixedDeltaTime) {
+        update() {
             const now = performance.now();
             
             for (let i = missiles.length - 1; i >= 0; i--) {
                const missile = missiles[i];
-               missile.update(fixedDeltaTime);
+               missile.update();
                
                if (missile.pendingDestroy) {
                   missiles.splice(i, 1);
