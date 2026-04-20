@@ -30,7 +30,16 @@ import { createSonarSystem } from "./systems/sonarSystem.js";
 import { createRoomSystem } from "./systems/roomSystem.js";
 import { createPauseMenuSystem } from "./systems/pauseMenuSystem.js";
 import { createCameraSystem } from "./systems/cameraSystem.js";
-import { CANVAS, PLAYER, TIME, GAME, INPUT, CONTROLS } from "./config.js";
+import {
+  CANVAS,
+  PLAYER,
+  TIME,
+  GAME,
+  INPUT,
+  CONTROLS,
+  GAMEPLAY_OVERLAY,
+  MINIMAP,
+} from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
@@ -40,6 +49,7 @@ import { createParticleSystem } from "./systems/particleSystem.js";
 import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 import { createGameOverSystem } from "./systems/gameOverSystem.js";
+import { createMiniMapSystem } from "./systems/miniMapSystem.js";
 
 let accumulator = 0;
 let alpha;
@@ -64,12 +74,14 @@ let shopSystem;
 let missileSystem;
 let particleSystem;
 let cameraSystem;
+let miniMapSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
 let menuSystem;
 let winScreenSystem;
 let gameOverSystem;
+let audioUnlocked = false;
 const WIN_STATE = "WIN";
 const GAME_OVER_STATE = "GAME_OVER";
 
@@ -85,6 +97,8 @@ const BACKGROUND_FILE_MAP = {
   "bg-atmosphere": "bg-atmosphere.jpg",
   "bg-atmosphere.jpg": "bg-atmosphere.jpg",
 };
+const GAMEPLAY_OVERLAY_ASSET_KEY = "ui:gameplayOverlay";
+const GAMEPLAY_OVERLAY_PATH = "assets/ui/gameplay-overlay.png";
 
 function getTilesetForGid(room, gid) {
   if (!Number.isFinite(gid)) return null;
@@ -345,6 +359,17 @@ function preload() {
   for (const imagePath of tilesetImagePaths) {
     assets[`tileset:${imagePath}`] = loadImage(imagePath);
   }
+
+  assets[GAMEPLAY_OVERLAY_ASSET_KEY] = loadImage(
+    GAMEPLAY_OVERLAY_PATH,
+    undefined,
+    () => {
+      assets[GAMEPLAY_OVERLAY_ASSET_KEY] = null;
+      console.warn(
+        `[sketch] Gameplay overlay image not found at ${GAMEPLAY_OVERLAY_PATH}`,
+      );
+    },
+  );
 }
 
 function setup() {
@@ -431,6 +456,15 @@ function setup() {
     player,
     () => roomSystem.getEnemies()
   );
+
+  miniMapSystem = createMiniMapSystem({
+    player,
+    zoom: MINIMAP.ZOOM,
+    getPlayer: () => player,
+    getRoomState: () => roomSystem.getRoomState(),
+    getPlatforms: () => roomSystem.getPlatforms(),
+    getSonarReveals: () => sonarSystem?.getRevealedWalls?.() ?? [],
+  });
   
   renderSystem = createRenderSystem({
     player,
@@ -462,6 +496,16 @@ function setup() {
     getCameraScale: () => cameraSystem.getScale(),
     getMissiles: () => missileSystem.getMissiles(),
     getParticles: () => particleSystem.getParticles(),
+    drawMiniMap: () => miniMapSystem.draw(),
+    getGameplayOverlay: () => assets[GAMEPLAY_OVERLAY_ASSET_KEY],
+    getGameplayOverlaySettings: () => ({
+      enabled: GAMEPLAY_OVERLAY.ENABLED,
+      offsetX: GAMEPLAY_OVERLAY.OFFSET_X,
+      offsetY: GAMEPLAY_OVERLAY.OFFSET_Y,
+      scaleX: GAMEPLAY_OVERLAY.SCALE_X,
+      scaleY: GAMEPLAY_OVERLAY.SCALE_Y,
+      opacity: GAMEPLAY_OVERLAY.OPACITY,
+    }),
   });
 
   pauseMenuSystem = createPauseMenuSystem({
@@ -481,6 +525,7 @@ function setup() {
   engine.register(playerSystem);
   engine.register(physicsSystem);
   engine.register(sonarSystem);
+  engine.register(miniMapSystem);
   engine.register(missileSystem);
   engine.register(particleSystem);
   engine.register(cameraSystem);
@@ -558,8 +603,32 @@ function draw() {
   }
 }
 
+function tryUnlockAudioContext() {
+  if (audioUnlocked) return;
+  if (typeof userStartAudio !== "function") return;
+
+  try {
+    const startResult = userStartAudio();
+    if (startResult && typeof startResult.then === "function") {
+      startResult
+        .then(() => {
+          audioUnlocked = true;
+        })
+        .catch(() => {
+          // Keep false; next user gesture can try again.
+        });
+      return;
+    }
+    audioUnlocked = true;
+  } catch {
+    // Keep false; next user gesture can try again.
+  }
+}
+
 // TODO: input handling in inputsystem
 function keyPressed() {
+  tryUnlockAudioContext();
+
   // Fullscreen toggle — works from any game state
   if (keyCode === INPUT.TOGGLE_FULLSCREEN_KEY) {
     fullscreen(!fullscreen());
@@ -585,6 +654,8 @@ function keyPressed() {
 }
 
 function mousePressed() {
+  tryUnlockAudioContext();
+
   // Shop overlay blocks all clicks
   if (shopSystem?.isShopOpen()) {
     shopSystem?.onMousePressed();

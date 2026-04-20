@@ -44,6 +44,9 @@ export function createRenderSystem({
    getCameraScale,
    getMissiles,
    getParticles,
+   drawMiniMap,
+   getGameplayOverlay,
+   getGameplayOverlaySettings,
 }) {
 
 //======================================
@@ -502,6 +505,34 @@ export function createRenderSystem({
          fill('#64ff64');
          text(`Sonar: ready (E)`, margin, margin + 40);
       }
+
+      drawMiniMap?.();
+   }
+
+   function drawGameplayOverlay() {
+      const overlay = getGameplayOverlay?.();
+      if (!overlay) return;
+
+      const settings = getGameplayOverlaySettings?.() ?? {};
+      if (settings.enabled === false) return;
+
+      const offsetX = Number.isFinite(settings.offsetX) ? settings.offsetX : 0;
+      const offsetY = Number.isFinite(settings.offsetY) ? settings.offsetY : 0;
+      const scaleX = Number.isFinite(settings.scaleX) ? settings.scaleX : 1;
+      const scaleY = Number.isFinite(settings.scaleY) ? settings.scaleY : 1;
+      const opacity = Number.isFinite(settings.opacity)
+         ? Math.max(0, Math.min(255, settings.opacity))
+         : 255;
+
+      const drawW = width * scaleX;
+      const drawH = height * scaleY;
+
+      push();
+      resetMatrix();
+      tint(255, opacity);
+      image(overlay, offsetX, offsetY, drawW, drawH);
+      noTint();
+      pop();
    }
 
 //======================================
@@ -660,6 +691,9 @@ function renderInterpolate(oldState, newState, alpha){
          resetMatrix(); // Returns drawing to default screen space (cancels camera transform)
          drawUI();
          pop();
+
+         // --- Absolute top gameplay layer --- //
+         drawGameplayOverlay();
       }
    };
 }

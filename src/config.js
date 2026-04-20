@@ -82,6 +82,28 @@ export const DISPLAY = {
 };
 
 //======================
+// GAMEPLAY OVERLAY CONFIG
+//======================
+export const GAMEPLAY_OVERLAY = {
+  ENABLED: false, // Set to true to enable the gameplay overlay for testing
+  OFFSET_X: -150,
+  OFFSET_Y: -50,
+  SCALE_X: 1.15,
+  SCALE_Y: 1.15,
+  OPACITY: 255,
+};
+
+//======================
+// MINIMAP CONFIG
+//======================
+export const MINIMAP = {
+  // 1 = fit-to-room baseline scale, >1 zooms in, <1 zooms out.
+  ZOOM: 2,
+  // Player marker diameter relative to rendered minimap tile size.
+  PLAYER_MARKER_TILE_SCALE: 1.25,
+};
+
+//======================
 // PLAYER CONFIG
 //======================
 export const PLAYER = {
