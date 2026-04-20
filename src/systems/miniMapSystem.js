@@ -12,6 +12,10 @@ DESCRIPTION:
 const DEFAULT_MINIMAP_CONFIG = {
     radius: 150,
     padding: 20,
+    centerX: null,
+    centerY: null,
+    dialRadius: null,
+    dialInset: 8,
     borderColor: 'white',
     borderWidth: 2,
     backgroundColor: 'rgba(255, 255, 255, 0.06)',
@@ -19,6 +23,7 @@ const DEFAULT_MINIMAP_CONFIG = {
     zoom: 1,
     discoveredTileColor: 'rgba(120, 170, 210, 0.85)',
     playerColor: 'rgba(255, 120, 120, 0.95)',
+    playerMarkerTileScale: 1.25,
     playerRadius: 4,
 };
 
@@ -214,8 +219,17 @@ function drawDiscoveredTiles(ctx, circle, revealState, player, options = {}) {
 function drawPlayerMarker(ctx, circle, revealState, player, options = {}) {
     if (!revealState || !player) return;
 
+    const mapFrame = getMapFrame(circle, revealState, player, options);
+    const renderedTileSize = Math.max(
+        1,
+        Math.min(revealState.tileWidth, revealState.tileHeight) * mapFrame.scale,
+    );
+    const markerTileScale = Math.max(0.1, Number(options.playerMarkerTileScale ?? DEFAULT_MINIMAP_CONFIG.playerMarkerTileScale));
+    const markerDiameter = renderedTileSize * markerTileScale;
+    const markerRadius = Math.max(1, markerDiameter / 2);
+
     ctx.beginPath();
-    ctx.arc(circle.x, circle.y, options.playerRadius ?? DEFAULT_MINIMAP_CONFIG.playerRadius, 0, 2 * Math.PI);
+    ctx.arc(circle.x, circle.y, markerRadius, 0, 2 * Math.PI);
     ctx.fillStyle = options.playerColor ?? DEFAULT_MINIMAP_CONFIG.playerColor;
     ctx.fill();
 }
@@ -223,10 +237,25 @@ function drawPlayerMarker(ctx, circle, revealState, player, options = {}) {
 export function getMiniMapCircle(canvas, options = {}) {
     const config = { ...DEFAULT_MINIMAP_CONFIG, ...options };
 
+    const dialRadius = Number(config.dialRadius);
+    const dialInset = Math.max(0, Number(config.dialInset ?? 0));
+    const hasDialRadius = Number.isFinite(dialRadius) && dialRadius > 0;
+    const radius = hasDialRadius
+        ? Math.max(4, dialRadius - dialInset)
+        : config.radius;
+
+    const hasAbsoluteCenter = Number.isFinite(config.centerX) && Number.isFinite(config.centerY);
+    const x = hasAbsoluteCenter
+        ? Number(config.centerX)
+        : (canvas.width - config.padding - radius);
+    const y = hasAbsoluteCenter
+        ? Number(config.centerY)
+        : (config.padding + radius);
+
     return {
-        x: canvas.width - config.padding - config.radius,
-        y: config.padding + config.radius,
-        radius: config.radius,
+        x,
+        y,
+        radius,
     };
 }
 

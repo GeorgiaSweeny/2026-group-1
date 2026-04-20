@@ -85,11 +85,12 @@ export const DISPLAY = {
 // GAMEPLAY OVERLAY CONFIG
 //======================
 export const GAMEPLAY_OVERLAY = {
-  ENABLED: false, // Set to true to enable the gameplay overlay for testing
-  OFFSET_X: -150,
-  OFFSET_Y: -50,
+  ENABLED: true, // Set to true to enable the gameplay overlay for testing
+  CENTER_ON_SCREEN: true, // When true, overlay is centered before offsets are applied
+  OFFSET_X: 0,
+  OFFSET_Y: 30,
   SCALE_X: 1.15,
-  SCALE_Y: 1.15,
+  SCALE_Y: 1.19,
   OPACITY: 255,
 };
 
@@ -101,6 +102,14 @@ export const MINIMAP = {
   ZOOM: 2,
   // Player marker diameter relative to rendered minimap tile size.
   PLAYER_MARKER_TILE_SCALE: 1.25,
+
+  // Absolute minimap center in screen space. Set to null to use top-right fallback.
+  CENTER_X: 960,
+  CENTER_Y: 935,
+
+  // If set, minimap radius is fitted to dialRadius - dialInset.
+  DIAL_RADIUS: null,
+  DIAL_INSET: 8,
 };
 
 //======================

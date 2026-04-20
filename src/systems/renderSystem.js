@@ -516,6 +516,7 @@ export function createRenderSystem({
       const settings = getGameplayOverlaySettings?.() ?? {};
       if (settings.enabled === false) return;
 
+      const centerOnScreen = settings.centerOnScreen !== false;
       const offsetX = Number.isFinite(settings.offsetX) ? settings.offsetX : 0;
       const offsetY = Number.isFinite(settings.offsetY) ? settings.offsetY : 0;
       const scaleX = Number.isFinite(settings.scaleX) ? settings.scaleX : 1;
@@ -526,11 +527,13 @@ export function createRenderSystem({
 
       const drawW = width * scaleX;
       const drawH = height * scaleY;
+      const baseX = centerOnScreen ? ((width - drawW) / 2) : 0;
+      const baseY = centerOnScreen ? ((height - drawH) / 2) : 0;
 
       push();
       resetMatrix();
       tint(255, opacity);
-      image(overlay, offsetX, offsetY, drawW, drawH);
+      image(overlay, baseX + offsetX, baseY + offsetY, drawW, drawH);
       noTint();
       pop();
    }

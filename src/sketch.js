@@ -460,6 +460,11 @@ function setup() {
   miniMapSystem = createMiniMapSystem({
     player,
     zoom: MINIMAP.ZOOM,
+    centerX: MINIMAP.CENTER_X,
+    centerY: MINIMAP.CENTER_Y,
+    dialRadius: MINIMAP.DIAL_RADIUS,
+    dialInset: MINIMAP.DIAL_INSET,
+    playerMarkerTileScale: MINIMAP.PLAYER_MARKER_TILE_SCALE,
     getPlayer: () => player,
     getRoomState: () => roomSystem.getRoomState(),
     getPlatforms: () => roomSystem.getPlatforms(),
@@ -500,6 +505,7 @@ function setup() {
     getGameplayOverlay: () => assets[GAMEPLAY_OVERLAY_ASSET_KEY],
     getGameplayOverlaySettings: () => ({
       enabled: GAMEPLAY_OVERLAY.ENABLED,
+      centerOnScreen: GAMEPLAY_OVERLAY.CENTER_ON_SCREEN,
       offsetX: GAMEPLAY_OVERLAY.OFFSET_X,
       offsetY: GAMEPLAY_OVERLAY.OFFSET_Y,
       scaleX: GAMEPLAY_OVERLAY.SCALE_X,
