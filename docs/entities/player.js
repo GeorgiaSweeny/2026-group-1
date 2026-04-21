@@ -75,7 +75,8 @@ export class Player extends Hitbox{
 
       this.bubbles = [];
 
-      this.coins = usingConfigObject ? (xOrConfig.STARTING_COINS ?? 0) : 0;
+      this.credits = usingConfigObject ? (xOrConfig.STARTING_CREDITS ?? 0) : 0;
+      this.extraPower = 0;
       this.missiles = 0;
       this.upgrades = { power: 1, torch: 1, sonar: 1 };
 

@@ -13,7 +13,7 @@ DESCRIPTION:
 HIERARCHY:
 - type: "resource" (main category)
   - resourceType: "power" (specific resource)
-  - resourceType: "health" (specific resource)
+  - resourceType: "credits" (specific resource)
 
 RULES:
 - Runs in update()
@@ -71,9 +71,8 @@ export function createResourceManagementSystem(
     if (!best) return null;
 
     const localTileId = gid - best.firstgid;
-    if (localTileId === 20) return "coin";
-    if (localTileId === 41) return "health";
-    if (localTileId === 53) return "power";
+    if (localTileId === 20) return "credits";
+    if (localTileId === 41 || localTileId === 53) return "power";
     return null;
   }
 
@@ -92,24 +91,20 @@ export function createResourceManagementSystem(
   const handlers = {
     power(player) {
       const difficulty = getDifficulty?.() ?? "normal";
-      const amount = difficulty === "hard" ? 2 : 5;
-      player.power.current = Math.max(
-        0,
-        Math.min(player.power.current + amount, player.power.maxPower),
-      );
-    },
-    coin(player) {
-      const difficulty = getDifficulty?.() ?? "normal";
       const amount = difficulty === "hard" ? 5 : 10;
-      player.coins = (player.coins ?? 0) + amount;
+      const newPower = player.power.current + amount;
+      // If player collects power over max, store additional power in extraPower.
+      if (newPower > player.power.maxPower) {
+        player.extraPower = (player.extraPower ?? 0) + (newPower - player.power.maxPower);
+        player.power.current = player.power.maxPower;
+      } else {
+        player.power.current = Math.max(0, newPower);
+      }
     },
-    health(player) {
+    credits(player, _item) {
       const difficulty = getDifficulty?.() ?? "normal";
-      const amount = difficulty === "hard" ? 5 : 10;
-      player.power.current = Math.max(
-        0,
-        Math.min(player.power.current + amount, player.power.maxPower),
-      );
+      const amount = difficulty === "hard" ? 50 : 100;
+      player.credits = (player.credits ?? 0) + amount;
     },
   };
 

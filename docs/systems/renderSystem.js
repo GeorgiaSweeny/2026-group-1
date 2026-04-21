@@ -172,13 +172,13 @@ export function createRenderSystem({
       if (type) return type;
 
       // Fallback for prototype tileset ids when metadata is absent at runtime.
-      if (localTileId === 41 || localTileId === 53) return 'health';
-      if (localTileId === 20) return 'power';
+      if (localTileId === 41 || localTileId === 53) return 'power';
+      if (localTileId === 20) return 'credits';
       return null;
    }
 
    function getCollectableColorByType(collectableType, alpha = 220) {
-      if (collectableType === 'health') return color(80, 220, 120, alpha);
+      if (collectableType === 'credits') return color(80, 220, 120, alpha);
       if (collectableType === 'power') return color(255, 225, 80, alpha);
       return color(255, 225, 80, alpha);
    }
@@ -732,7 +732,7 @@ export function createRenderSystem({
          const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
          noStroke();
          const collectableType = getCollectableType(r);
-         if (collectableType === 'health') {
+         if (collectableType === 'credits') {
             fill(80, 220, 120, alpha);
          } else if (collectableType === 'power') {
             fill(255, 225, 80, alpha);

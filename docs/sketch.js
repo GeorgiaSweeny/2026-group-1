@@ -941,10 +941,11 @@ function resetGameToStart() {
     player.torch.isOn = false;
   }
 
-  // 5. Reset upgrades, inventory, and coins
+  // 5. Reset upgrades, inventory, credits, and extra power
   player.upgrades = { power: 1, torch: 1, sonar: 1 };
   player.missiles = 0;
-  player.coins = PLAYER.STARTING_COINS;
+  player.credits = PLAYER.STARTING_CREDITS;
+  player.extraPower = 0;
 
   // 6. Reset shop internal state (costs, levels, open state)
   shopSystem?.reset();
