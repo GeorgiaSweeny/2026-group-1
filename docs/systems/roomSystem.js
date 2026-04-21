@@ -159,11 +159,22 @@ function normalizeTiledRoom(roomKey, mapData) {
         const { x, y, w, h } = getObjectBox(obj, tileWidth, tileHeight);
         const wall = new Wall(x, y, w, h);
         wall.gid = obj?.gid ?? null;
-        
+
         // Checks if breakable in tiled
         if (obj.properties && (obj.properties.breakable === true || obj.properties.type === 'breakable')) {
             wall.isBreakable = true;
         }
+        normalized.platforms.push(wall);
+      }
+      continue;
+    }
+
+    if (layer?.type === 'objectgroup' && layerName === 'breakable') {
+      for (const obj of layer.objects ?? []) {
+        const { x, y, w, h } = getObjectBox(obj, tileWidth, tileHeight);
+        const wall = new Wall(x, y, w, h);
+        wall.gid = obj?.gid ?? null;
+        wall.isBreakable = true;
         normalized.platforms.push(wall);
       }
       continue;
