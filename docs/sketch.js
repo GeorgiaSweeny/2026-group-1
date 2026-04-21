@@ -571,7 +571,8 @@ function setup() {
 
   enemySystem = createEnemySystem(
     player,
-    () => roomSystem.getEnemies()
+    () => roomSystem.getEnemies(),
+    () => sonarSystem?.getActivePulses?.() ?? []
   );
 
   miniMapSystem = createMiniMapSystem({
@@ -599,6 +600,7 @@ function setup() {
     getEnemies: () => enemySystem.getCrabs(),
     getCrabs: () => enemySystem.getCrabs(),
     getJellyfish: () => enemySystem.getJellyfish(),
+    getPiranhas: () => enemySystem.getPiranhas(),
     getTriggers: () => roomSystem.getTriggers(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),

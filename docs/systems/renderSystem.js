@@ -46,6 +46,7 @@ export function createRenderSystem({
    getCameraScale,
    getMissiles,
    getParticles,
+   getPiranhas,
    drawMiniMap,
    getHudDialSettings,
    getGameplayOverlay,
@@ -366,6 +367,43 @@ export function createRenderSystem({
          noStroke();
          fill(200, 150, 255, 100);
          ellipse(0, -jellyH / 4, jellyW * 0.6, jellyH * 0.3);
+
+         pop();
+      }
+
+      const piranhas = getPiranhas?.() ?? [];
+      for (const piranha of piranhas) {
+         const currX = Number.isFinite(piranha?.position?.x) ? piranha.position.x : 0;
+         const currY = Number.isFinite(piranha?.position?.y) ? piranha.position.y : 0;
+         const prevX = Number.isFinite(piranha?.previousPos?.x) ? piranha.previousPos.x : currX;
+         const prevY = Number.isFinite(piranha?.previousPos?.y) ? piranha.previousPos.y : currY;
+         const pW = Number(piranha?.w ?? piranha?.width ?? 24) || 24;
+         const pH = Number(piranha?.h ?? piranha?.height ?? 16) || 16;
+         const facing = Number.isFinite(piranha?.facing) && piranha.facing !== 0 ? piranha.facing : 1;
+         const isChasing = piranha?.state === 'chase';
+
+         push();
+         translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
+         scale(facing, 1);
+
+         noStroke();
+         fill(isChasing ? color(220, 40, 40) : color(60, 120, 180));
+         ellipse(0, 0, pW, pH);
+
+         fill(isChasing ? color(180, 30, 30) : color(40, 90, 150));
+         triangle(-pW / 2 - 8, -pH / 3, -pW / 2 - 8, pH / 3, -pW / 2, 0);
+         triangle(-4, -pH / 2, 4, -pH / 2, 0, -pH / 2 - 7);
+
+         fill(255);
+         circle(pW / 4, -2, 6);
+         fill(0);
+         circle(pW / 4, -2, 3);
+
+         if (isChasing) {
+            fill(255);
+            triangle(pW / 2, -3, pW / 2 + 5, -3, pW / 2, 0);
+            triangle(pW / 2, 0, pW / 2 + 5, 0, pW / 2, 3);
+         }
 
          pop();
       }
