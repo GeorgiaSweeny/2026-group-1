@@ -427,7 +427,8 @@ function setup() {
 
   enemySystem = createEnemySystem(
     player,
-    () => roomSystem.getEnemies()
+    () => roomSystem.getEnemies(),
+    () => sonarSystem?.getActivePulses?.() ?? []
   );
 
   missileSystem = createMissileSystem(
@@ -446,6 +447,7 @@ function setup() {
         .filter((c) => !resourceManagementSystem.isCollected(c)),
     getCrabs: () => enemySystem.getCrabs(),
     getJellyfish: () => enemySystem.getJellyfish(),
+    getPiranhas: () => enemySystem.getPiranhas(),
     getTriggers: () => roomSystem.getTriggers(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),
