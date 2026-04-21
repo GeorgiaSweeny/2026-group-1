@@ -82,6 +82,7 @@ export function createEnemySystem(player, getEnemies) {
   }
 
   function updateJellyfish(jelly) {
+    if (jelly.pendingDestroy) return;
     jelly.previousPos.x = jelly.position.x;
     jelly.previousPos.y = jelly.position.y;
  
