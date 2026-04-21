@@ -92,14 +92,7 @@ export function createResourceManagementSystem(
     power(player) {
       const difficulty = getDifficulty?.() ?? "normal";
       const amount = difficulty === "hard" ? 5 : 10;
-      const newPower = player.power.current + amount;
-      // If player collects power over max, store additional power in extraPower.
-      if (newPower > player.power.maxPower) {
-        player.extraPower = (player.extraPower ?? 0) + (newPower - player.power.maxPower);
-        player.power.current = player.power.maxPower;
-      } else {
-        player.power.current = Math.max(0, newPower);
-      }
+      player.power.current = Math.min(player.power.current + amount, player.power.maxPower);
     },
     credits(player, _item) {
       const difficulty = getDifficulty?.() ?? "normal";

@@ -63,6 +63,8 @@ TODO / LIMITATIONS:
 */
 
 
+import { POWER } from '../config.js';
+
 //======================================
 // SHOP SYSTEM
 //======================================
@@ -377,6 +379,10 @@ export function createShopSystem(player) {
     // Increment upgrade level
     if (player.upgrades && upgradeName in player.upgrades) {
       player.upgrades[upgradeName]++;
+    }
+
+    if (upgradeName === 'power') {
+      player.power.maxPower += POWER.UPGRADE_AMOUNT;
     }
     
     // Update shop display
