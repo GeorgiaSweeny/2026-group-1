@@ -436,7 +436,11 @@ function setup() {
     () => roomSystem.getCollectables(),
   );
 
-  missileSystem = createMissileSystem(player);
+  missileSystem = createMissileSystem(
+    player,
+    () => enemySystem?.getEnemies() ?? [],
+    () => roomSystem.getPlatforms()
+  );
 
   particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 

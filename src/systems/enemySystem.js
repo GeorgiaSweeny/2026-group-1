@@ -134,6 +134,10 @@ export function createEnemySystem(player, getEnemies) {
         checkPlayerContact(crab, CRAB_CONTACT_PENALTY, CRAB_DRAIN_RATE);
       }
 
+      for (let i = jellyfish.length - 1; i >= 0; i--) {
+        if (jellyfish[i].pendingDestroy) jellyfish.splice(i, 1);
+      }
+
       for (const jelly of jellyfish) {
         updateJellyfish(jelly);
         checkPlayerContact(jelly, JELLYFISH_CONTACT_PENALTY, JELLYFISH_DRAIN_RATE);
