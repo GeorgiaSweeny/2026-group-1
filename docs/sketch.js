@@ -30,7 +30,17 @@ import { createSonarSystem } from "./systems/sonarSystem.js";
 import { createRoomSystem } from "./systems/roomSystem.js";
 import { createPauseMenuSystem } from "./systems/pauseMenuSystem.js";
 import { createCameraSystem } from "./systems/cameraSystem.js";
-import { CANVAS, PLAYER, TIME, GAME, INPUT, CONTROLS } from "./config.js";
+import {
+  CANVAS,
+  PLAYER,
+  TIME,
+  GAME,
+  INPUT,
+  CONTROLS,
+  GAMEPLAY_OVERLAY,
+  MINIMAP,
+  HUD_DIALS,
+} from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
@@ -40,6 +50,7 @@ import { createParticleSystem } from "./systems/particleSystem.js";
 import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 import { createGameOverSystem } from "./systems/gameOverSystem.js";
+import { createMiniMapSystem } from "./systems/miniMapSystem.js";
 
 let accumulator = 0;
 let alpha;
@@ -64,19 +75,22 @@ let shopSystem;
 let missileSystem;
 let particleSystem;
 let cameraSystem;
+let miniMapSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
 let menuSystem;
 let winScreenSystem;
 let gameOverSystem;
+let audioUnlocked = false;
 const WIN_STATE = "WIN";
 const GAME_OVER_STATE = "GAME_OVER";
 
 let assets = {};
 const INITIAL_ROOM_ID = "startArea";
 // NOTE: Some rooms are placeholders (see docs/data/rooms/*.json) so the build runs end-to-end.
-const ROOM_IDS = ["roomA", "roomB", "startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
+const ROOM_IDS = [/* test maps */ "roomA", "roomB",
+                  /* game maps */ "startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
                   "theDrop", "endlessAbyss", "theBiolume", "jellyfishAtrium", "theSurface"];
 const roomData = {};
 const FIT_CANVAS_TO_ROOM = false;
@@ -85,6 +99,8 @@ const BACKGROUND_FILE_MAP = {
   "bg-atmosphere": "bg-atmosphere.jpg",
   "bg-atmosphere.jpg": "bg-atmosphere.jpg",
 };
+const GAMEPLAY_OVERLAY_ASSET_KEY = "ui:gameplayOverlay";
+const GAMEPLAY_OVERLAY_PATH = "assets/ui/gameplay-overlay.png";
 
 function getTilesetForGid(room, gid) {
   if (!Number.isFinite(gid)) return null;
@@ -111,6 +127,14 @@ function normalizeRelativePath(basePath, relativePath) {
     baseParts.push(part);
   }
   return baseParts.join("/");
+}
+
+function getPathDir(path) {
+  const parts = String(path ?? "")
+    .split("/")
+    .filter(Boolean);
+  parts.pop();
+  return parts.join("/");
 }
 
 function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
@@ -148,6 +172,81 @@ function parseTsxTileProperties(xmlText) {
   }
 
   return byId;
+}
+
+function parseTsxMetadata(xmlText, sourcePath = "") {
+  const empty = {
+    tilePropertiesById: {},
+    tileImagesById: {},
+    resolvedImagePath: null,
+    tilewidth: null,
+    tileheight: null,
+    columns: null,
+    tilecount: null,
+  };
+  if (!xmlText || typeof DOMParser === "undefined") return empty;
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, "application/xml");
+  const tilesetNode = doc.querySelector("tileset");
+  if (!tilesetNode) return empty;
+
+  const baseDir = getPathDir(sourcePath);
+  const tilePropertiesById = {};
+  const tileImagesById = {};
+
+  const rootChildren = Array.from(tilesetNode.children ?? []);
+  const rootImageNode = rootChildren.find(
+    (node) => String(node?.tagName).toLowerCase() === "image",
+  );
+  const rootImageSource = rootImageNode?.getAttribute("source") ?? null;
+  const resolvedImagePath = rootImageSource
+    ? normalizeRelativePath(baseDir, rootImageSource)
+    : null;
+
+  const tileNodes = Array.from(tilesetNode.querySelectorAll("tile"));
+  for (const tileNode of tileNodes) {
+    const localId = Number(tileNode.getAttribute("id"));
+    if (!Number.isFinite(localId)) continue;
+
+    const props = {};
+    const propertyNodes = Array.from(
+      tileNode.querySelectorAll("properties > property"),
+    );
+    for (const propNode of propertyNodes) {
+      const name = propNode.getAttribute("name");
+      if (!name) continue;
+      const valueAttr = propNode.getAttribute("value");
+      props[name] = valueAttr ?? propNode.textContent ?? "";
+    }
+    if (Object.keys(props).length) {
+      tilePropertiesById[localId] = props;
+    }
+
+    const tileChildren = Array.from(tileNode.children ?? []);
+    const tileImageNode = tileChildren.find(
+      (node) => String(node?.tagName).toLowerCase() === "image",
+    );
+    const tileImageSource = tileImageNode?.getAttribute("source") ?? null;
+    if (!tileImageSource) continue;
+
+    tileImagesById[localId] = {
+      source: tileImageSource,
+      resolvedImagePath: normalizeRelativePath(baseDir, tileImageSource),
+      width: Number(tileImageNode.getAttribute("width") ?? 0) || null,
+      height: Number(tileImageNode.getAttribute("height") ?? 0) || null,
+    };
+  }
+
+  return {
+    tilePropertiesById,
+    tileImagesById,
+    resolvedImagePath,
+    tilewidth: Number(tilesetNode.getAttribute("tilewidth") ?? 0) || null,
+    tileheight: Number(tilesetNode.getAttribute("tileheight") ?? 0) || null,
+    columns: Number(tilesetNode.getAttribute("columns") ?? 0) || null,
+    tilecount: Number(tilesetNode.getAttribute("tilecount") ?? 0) || null,
+  };
 }
 
 function getMapProperty(mapData, key, fallback = null) {
@@ -241,12 +340,24 @@ function ensureRoomAssetsLoaded(roomId) {
 
   const mapDir = roomMapDir(roomId);
   for (const tileset of room?.tilesets ?? []) {
-    const imagePath = tilesetSourceToImagePath(tileset?.source, mapDir);
-    if (!imagePath) continue;
-    tileset.resolvedImagePath = imagePath;
-    const key = `tileset:${imagePath}`;
-    if (!assets[key]) {
-      assets[key] = loadImage(imagePath);
+    const imagePath =
+      tileset.resolvedImagePath ??
+      tilesetSourceToImagePath(tileset?.source, mapDir);
+    if (imagePath) {
+      tileset.resolvedImagePath = imagePath;
+      const key = `tileset:${imagePath}`;
+      if (!assets[key]) {
+        assets[key] = loadImage(imagePath);
+      }
+    }
+
+    for (const tileImage of Object.values(tileset?.tileImagesById ?? {})) {
+      const tileImagePath = tileImage?.resolvedImagePath;
+      if (!tileImagePath) continue;
+      const tileKey = `tileset:${tileImagePath}`;
+      if (!assets[tileKey]) {
+        assets[tileKey] = loadImage(tileImagePath);
+      }
     }
   }
 }
@@ -287,17 +398,18 @@ function preload() {
     roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
   }
 
-  const tilePropsBySourcePath = {};
+  const tsxMetaBySourcePath = {};
   for (const [roomId, room] of Object.entries(roomData)) {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
       const sourcePath = normalizeRelativePath(mapDir, tileset?.source ?? "");
       if (!sourcePath.toLowerCase().endsWith(".tsx")) continue;
-      if (tilePropsBySourcePath[sourcePath]) continue;
+      if (tsxMetaBySourcePath[sourcePath]) continue;
 
       const tsxLines = loadStrings(sourcePath) ?? [];
-      tilePropsBySourcePath[sourcePath] = parseTsxTileProperties(
+      tsxMetaBySourcePath[sourcePath] = parseTsxMetadata(
         tsxLines.join("\n"),
+        sourcePath,
       );
     }
   }
@@ -306,10 +418,18 @@ function preload() {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
       const sourcePath = normalizeRelativePath(mapDir, tileset?.source ?? "");
-      tileset.tilePropertiesById = tilePropsBySourcePath[sourcePath] ?? {};
+      const tsxMeta = tsxMetaBySourcePath[sourcePath] ?? {};
+      tileset.tilePropertiesById = tsxMeta.tilePropertiesById ?? {};
+      tileset.tileImagesById = tsxMeta.tileImagesById ?? {};
       // Attach the resolved image path so the render system can look it up
       // without needing to re-derive the map directory at draw time.
-      tileset.resolvedImagePath = tilesetSourceToImagePath(tileset?.source, mapDir);
+      tileset.resolvedImagePath =
+        tsxMeta.resolvedImagePath ??
+        tilesetSourceToImagePath(tileset?.source, mapDir);
+      if (tsxMeta.tilewidth) tileset.tilewidth = tsxMeta.tilewidth;
+      if (tsxMeta.tileheight) tileset.tileheight = tsxMeta.tileheight;
+      if (tsxMeta.columns != null) tileset.columns = tsxMeta.columns;
+      if (tsxMeta.tilecount != null) tileset.tilecount = tsxMeta.tilecount;
     }
   }
 
@@ -337,14 +457,32 @@ function preload() {
   for (const [roomId, room] of Object.entries(roomData)) {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
-      const imagePath = tilesetSourceToImagePath(tileset?.source, mapDir);
+      const imagePath =
+        tileset.resolvedImagePath ??
+        tilesetSourceToImagePath(tileset?.source, mapDir);
       if (imagePath) tilesetImagePaths.add(imagePath);
+      for (const tileImage of Object.values(tileset?.tileImagesById ?? {})) {
+        if (tileImage?.resolvedImagePath) {
+          tilesetImagePaths.add(tileImage.resolvedImagePath);
+        }
+      }
     }
   }
 
   for (const imagePath of tilesetImagePaths) {
     assets[`tileset:${imagePath}`] = loadImage(imagePath);
   }
+
+  assets[GAMEPLAY_OVERLAY_ASSET_KEY] = loadImage(
+    GAMEPLAY_OVERLAY_PATH,
+    undefined,
+    () => {
+      assets[GAMEPLAY_OVERLAY_ASSET_KEY] = null;
+      console.warn(
+        `[sketch] Gameplay overlay image not found at ${GAMEPLAY_OVERLAY_PATH}`,
+      );
+    },
+  );
 }
 
 function setup() {
@@ -409,7 +547,11 @@ function setup() {
     () => roomSystem.getCollectables(),
   );
 
-  missileSystem = createMissileSystem(player);
+  missileSystem = createMissileSystem(
+    player,
+    () => enemySystem?.getEnemies() ?? [],
+    () => roomSystem.getPlatforms()
+  );
 
   particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 
@@ -424,13 +566,28 @@ function setup() {
     () => roomSystem.getCollectables(),
     () => roomSystem.getHazards(),
     () => pauseMenuSystem.getDifficulty(),
-    () => enemySystem?.getCrabs() ?? [],
+    () => enemySystem?.getEnemies() ?? [],
   );
 
   enemySystem = createEnemySystem(
     player,
-    () => roomSystem.getEnemies()
+    () => roomSystem.getEnemies(),
+    () => sonarSystem?.getActivePulses?.() ?? []
   );
+
+  miniMapSystem = createMiniMapSystem({
+    player,
+    zoom: MINIMAP.ZOOM,
+    centerX: MINIMAP.CENTER_X,
+    centerY: MINIMAP.CENTER_Y,
+    dialRadius: MINIMAP.DIAL_RADIUS,
+    dialInset: MINIMAP.DIAL_INSET,
+    playerMarkerTileScale: MINIMAP.PLAYER_MARKER_TILE_SCALE,
+    getPlayer: () => player,
+    getRoomState: () => roomSystem.getRoomState(),
+    getPlatforms: () => roomSystem.getPlatforms(),
+    getSonarReveals: () => sonarSystem?.getRevealedWalls?.() ?? [],
+  });
   
   renderSystem = createRenderSystem({
     player,
@@ -441,6 +598,9 @@ function setup() {
         .getCollectables()
         .filter((c) => !resourceManagementSystem.isCollected(c)),
     getEnemies: () => enemySystem.getCrabs(),
+    getCrabs: () => enemySystem.getCrabs(),
+    getJellyfish: () => enemySystem.getJellyfish(),
+    getPiranhas: () => enemySystem.getPiranhas(),
     getTriggers: () => roomSystem.getTriggers(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),
@@ -462,6 +622,26 @@ function setup() {
     getCameraScale: () => cameraSystem.getScale(),
     getMissiles: () => missileSystem.getMissiles(),
     getParticles: () => particleSystem.getParticles(),
+    drawMiniMap: () => miniMapSystem.draw(),
+    getHudDialSettings: () => ({
+      powerX: HUD_DIALS.POWER_X,
+      powerY: HUD_DIALS.POWER_Y,
+      sonarX: HUD_DIALS.SONAR_X,
+      sonarY: HUD_DIALS.SONAR_Y,
+      baseSize: HUD_DIALS.BASE_SIZE,
+      powerScale: HUD_DIALS.POWER_SCALE,
+      sonarScale: HUD_DIALS.SONAR_SCALE,
+    }),
+    getGameplayOverlay: () => assets[GAMEPLAY_OVERLAY_ASSET_KEY],
+    getGameplayOverlaySettings: () => ({
+      enabled: GAMEPLAY_OVERLAY.ENABLED,
+      centerOnScreen: GAMEPLAY_OVERLAY.CENTER_ON_SCREEN,
+      offsetX: GAMEPLAY_OVERLAY.OFFSET_X,
+      offsetY: GAMEPLAY_OVERLAY.OFFSET_Y,
+      scaleX: GAMEPLAY_OVERLAY.SCALE_X,
+      scaleY: GAMEPLAY_OVERLAY.SCALE_Y,
+      opacity: GAMEPLAY_OVERLAY.OPACITY,
+    }),
   });
 
   pauseMenuSystem = createPauseMenuSystem({
@@ -481,6 +661,7 @@ function setup() {
   engine.register(playerSystem);
   engine.register(physicsSystem);
   engine.register(sonarSystem);
+  engine.register(miniMapSystem);
   engine.register(missileSystem);
   engine.register(particleSystem);
   engine.register(cameraSystem);
@@ -558,8 +739,32 @@ function draw() {
   }
 }
 
+function tryUnlockAudioContext() {
+  if (audioUnlocked) return;
+  if (typeof userStartAudio !== "function") return;
+
+  try {
+    const startResult = userStartAudio();
+    if (startResult && typeof startResult.then === "function") {
+      startResult
+        .then(() => {
+          audioUnlocked = true;
+        })
+        .catch(() => {
+          // Keep false; next user gesture can try again.
+        });
+      return;
+    }
+    audioUnlocked = true;
+  } catch {
+    // Keep false; next user gesture can try again.
+  }
+}
+
 // TODO: input handling in inputsystem
 function keyPressed() {
+  tryUnlockAudioContext();
+
   // Fullscreen toggle — works from any game state
   if (keyCode === INPUT.TOGGLE_FULLSCREEN_KEY) {
     fullscreen(!fullscreen());
@@ -585,6 +790,8 @@ function keyPressed() {
 }
 
 function mousePressed() {
+  tryUnlockAudioContext();
+
   // Shop overlay blocks all clicks
   if (shopSystem?.isShopOpen()) {
     shopSystem?.onMousePressed();

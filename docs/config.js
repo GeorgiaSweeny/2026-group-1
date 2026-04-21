@@ -36,6 +36,22 @@ export const GAME = {
 //======================
 // Only system-level shortcuts that are always active regardless of control mode.
 export const INPUT = {
+  // MOVEMENT KEYS - function takes ascii
+  // WASD ASCII
+  W_KEY: 87,
+  A_KEY: 65,
+  S_KEY: 83,
+  D_KEY: 68,
+  // ARROW ASCII - can also use special keyCodes
+  UP_ARROW_KEY: 38,
+  DOWN_ARROW_KEY: 40,
+  LEFT_ARROW_KEY:  37,
+  RIGHT_ARROW_KEY: 39,
+  
+  // ACTION KEYS - functions take strings
+  TOGGLE_TORCH_KEY: ['L', 'l'],
+  SONAR_KEY: ['E', 'e'],
+  MISSILE_KEY: ['K', 'k'],
   TOGGLE_FULLSCREEN_KEY: 70,  // F
 };
 
@@ -79,6 +95,54 @@ export const DISPLAY = {
   HEIGHT: 1080,
   DEV_WIDTH: 640,
   DEV_HEIGHT: 360,
+};
+
+//======================
+// GAMEPLAY OVERLAY CONFIG
+//======================
+export const GAMEPLAY_OVERLAY = {
+  ENABLED: false, // Set to true to enable the gameplay overlay for testing
+  CENTER_ON_SCREEN: true, // When true, overlay is centered before offsets are applied
+  OFFSET_X: 0,
+  OFFSET_Y: 30,
+  SCALE_X: 1.15,
+  SCALE_Y: 1.19,
+  OPACITY: 255,
+};
+
+//======================
+// MINIMAP CONFIG
+//======================
+export const MINIMAP = {
+  // 1 = fit-to-room baseline scale, >1 zooms in, <1 zooms out.
+  ZOOM: 2,
+  // Player marker diameter relative to rendered minimap tile size.
+  PLAYER_MARKER_TILE_SCALE: 1.25,
+
+  // Absolute minimap center in screen space. Set to null to use top-right fallback.
+  CENTER_X: 960,
+  CENTER_Y: 935,
+
+  // If set, minimap radius is fitted to dialRadius - dialInset.
+  DIAL_RADIUS: null,
+  DIAL_INSET: 8,
+};
+
+//======================
+// HUD DIALS CONFIG
+//======================
+export const HUD_DIALS = {
+  POWER_X: 630,
+  POWER_Y: 925,
+  SONAR_X: 1285,
+  SONAR_Y: 925,
+
+  // Base dial diameter in pixels.
+  BASE_SIZE: 92,
+
+  // Per-dial scale multipliers.
+  POWER_SCALE: 1.3,
+  SONAR_SCALE: 1.3,
 };
 
 //======================
@@ -132,7 +196,23 @@ export const TORCH = {
   UPGRADE_RADIUS_BONUS: 22,
   MIN_RADIUS_WHEN_DRAINED: 50,
   FLICKER_POWER_THRESHOLD: 0.15,
-  DRAIN_RATE: 1.5 // power drain rate is multipled by torch when on
+  DRAIN_RATE: 1
+};
+
+//======================
+// MISSILE CONFIG
+//======================
+export const MISSILE = {
+  WIDTH: 8,
+  HEIGHT: 8,
+  SPEED: 150, //pixels per second
+  TURN_SPEED: 5,
+  COOLDOWN: 2000, //milliseconds
+  LIFETIME: 3000,
+  SIZE: 6, //pixels
+  MAX_DISTANCE: 2000,
+  TARGET_RADIUS: 150,
+  MAX_CONCURRENT: 5
 };
 
 //======================
@@ -152,18 +232,6 @@ export const SONAR = {
   // Cooldown in seconds for readability; derived ms used by sonarSystem
   COOLDOWN: 1,
   COOLDOWN_MS: 1
-};
-
-//======================
-// MISSILE CONFIG
-//======================
-export const MISSILE = {
-  WIDTH: 8,
-  HEIGHT: 8,
-  SPEED: 2,
-  MAX_DISTANCE: 2000,
-  TARGET_RADIUS: 150,
-  MAX_CONCURRENT: 5
 };
 
 //======================
@@ -203,7 +271,7 @@ export const CONTROLS = {
       MOVE_RIGHT:   68,   // D
       TOGGLE_TORCH: 'l',
       SONAR:        'e',
-      FIRE_MISSILE: ' ',
+      LAUNCH_MISSILE: 'k',
       TOGGLE_PAUSE: 27,   // Escape
       TOGGLE_SHOP:  66,   // B
     },
@@ -214,7 +282,7 @@ export const CONTROLS = {
       MOVE_RIGHT:   39,   // Right arrow
       TOGGLE_TORCH: 'l',
       SONAR:        'e',
-      FIRE_MISSILE: ' ',
+      LAUNCH_MISSILE: 'k',
       TOGGLE_PAUSE: 27,   // Escape
       TOGGLE_SHOP:  66,   // B
     },

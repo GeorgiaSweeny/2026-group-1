@@ -52,8 +52,15 @@ export function createPhysicsSystem(player, platformsOrGetter) {
     player.setNextPosition();
     const walls = resolveWalls(getRoomCollisionSource());
     for (const wall of walls) {
+      // Skip destroyed wall
+      if (wall.isDestroyed) continue;
+
       const physicsWall = toPhysicsWall(wall);
       if (!physicsWall) continue;
+      
+      // Ignores already destroyed walls
+      if (wall.isBreakable && wall.isDestroyed) continue;
+
       physicsWall.updateZones(player);
       if (isColliding(physicsWall, player)) {
         resolveWallCollision(player, physicsWall);

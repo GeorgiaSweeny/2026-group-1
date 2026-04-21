@@ -1,39 +1,71 @@
 /*
-========================================
-VERSION: 1.0
+=======================================
+VERSION: 3.0
 SYSTEM: ENEMY SYSTEM
 AUTHOR: Monal Gupta
 DESCRIPTION:
-- Updates crab patrol movement
+- Updates crab patrol movement and jelly fish sin-wave motion
 - Drains power on touch
 ========================================
 */
 
 import { isColliding } from './hitboxSystem.js';
 import { Crab } from '../entities/crab.js';
+import { Jellyfish } from '../entities/jellyfish.js';
+import { TIME } from '../config.js';
+import { Piranha } from '../entities/piranha.js';
 
-const CRAB_CONTACT_PENALTY = 8;  // burst drain on touch
+const CRAB_CONTACT_PENALTY = 4;  // burst drain on touch
 const CRAB_DRAIN_RATE = 1.0;     // continuous drain while touching
+const JELLYFISH_CONTACT_PENALTY = 9;
+const JELLYFISH_DRAIN_RATE = 1.0;
 
-export function createEnemySystem(player, getEnemies) {
+const RETURN_THRESHOLD = 6;
+const RETURN_SPEED_MULT = 0.6;
+const CHASE_DURATION_FRAMES = 180;
+
+export function createEnemySystem(player, getEnemies, getActivePulses) {
   const contactSet = new Set();
   let crabs = [];
+  let jellyfish = [];
+  let piranhas = [];
   let sourceEnemiesRef = null;
+  const fixedDtSeconds = TIME.fixedDeltaTime;
 
-  // Keep crab instances in sync with current room enemy objects.
-  function syncCrabs() {
+  // syncng crab instances with current room enemy objects.
+  function syncEnemies() {
     const raw = (getEnemies ? getEnemies() : []) ?? [];
     if (raw === sourceEnemiesRef) return;
-
+ 
     sourceEnemiesRef = raw;
-    crabs = raw.map((e) => new Crab(e.x, e.y, e.w, e.h, e.patrolDistance, e.speed));
+    crabs = [];
+    jellyfish = [];
+    piranhas = [];
+ 
+    for (const e of raw) {
+      if (e.name === 'crab') {
+        crabs.push(new Crab(e.x, e.y, e.w, e.h, e.patrolDistance, e.speed));
+      } else if (e.name === 'jellyfish') {
+        const variant = e.variant || 'default';
+        const jelly = variant === 'default'
+          ? new Jellyfish(e.x, e.y, e.w, e.h, e.amplitude, e.frequency, e.driftSpeed)
+          : Jellyfish.createVariant(variant, e.x, e.y);
+        jellyfish.push(jelly);
+      } else if (e.name === 'piranha') {
+        const detectionRadius = e.detectionRadius ?? 120;
+        const chaseSpeed = e.chaseSpeed ?? 0.6;
+        piranhas.push(new Piranha(e.x, e.y, e.w, e.h, detectionRadius, chaseSpeed));
+      }
+    }
+    
     contactSet.clear();
   }
 
-  function updateCrab(crab, dtSeconds) {
+  function updateCrab(crab) {
     const speed = Number(crab.speed) || 0;
     const patrolDistance = Math.max(0, Number(crab.patrolDistance) || 0);
-    const step = speed * dtSeconds;
+    const step = speed * fixedDtSeconds;
+    if (crab.pendingDestroy) return;
 
     crab.previousPos.x = crab.position.x;
     crab.previousPos.y = crab.position.y;
@@ -56,36 +88,180 @@ export function createEnemySystem(player, getEnemies) {
 
     crab.position.x = nextX;
 
-    // keeping nextPos in sync for isColliding
     crab.nextPos.x = crab.position.x;
     crab.nextPos.y = crab.position.y;
   }
 
-  function checkPlayerContact(crab, deltaMs) {
-    if (isColliding(crab, player)) {
-      if (!contactSet.has(crab)) {
-        player.power.current = Math.max(0, player.power.current - CRAB_CONTACT_PENALTY);
-        contactSet.add(crab);
+  function updateJellyfish(jelly) {
+    if (jelly.pendingDestroy) return;
+    jelly.previousPos.x = jelly.position.x;
+    jelly.previousPos.y = jelly.position.y;
+
+    jelly.time += fixedDtSeconds * jelly.frequency;
+    jelly.pulsePhase = jelly.time;
+
+    const yOffset = Math.sin(jelly.time) * jelly.amplitude;
+    jelly.position.y = jelly.spawnY + yOffset;
+
+    if (jelly.driftSpeed > 0) {
+      jelly.driftDistance += jelly.driftDirection * jelly.driftSpeed * fixedDtSeconds * 60;
+
+      // Reverse drift at boundaries
+      if (Math.abs(jelly.driftDistance) > jelly.maxDrift) {
+        jelly.driftDirection *= -1;
+        jelly.driftDistance = Math.sign(jelly.driftDistance) * jelly.maxDrift;
       }
-      player.power.drain(CRAB_DRAIN_RATE, deltaMs);
+
+      jelly.position.x = jelly.spawnX + jelly.driftDistance;
+    }
+
+    jelly.nextPos.x = jelly.position.x;
+    jelly.nextPos.y = jelly.position.y;
+  }
+
+  function checkSonarTrigger(piranha, cx, cy, activePulses) {
+    const r = piranha.detectionRadius;
+
+    for (const pulse of activePulses) {
+      for (const particle of pulse.particles) {
+        if (particle.life <= 0) continue;
+
+        const dx = particle.pos.x - cx;
+        const dy = particle.pos.y - cy;
+
+        if (dx * dx + dy * dy <= r * r) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  function updatePiranha(piranha, player, activePulses) {
+    piranha.previousPos.x = piranha.position.x;
+    piranha.previousPos.y = piranha.position.y;
+
+    const px = piranha.position.x;
+    const py = piranha.position.y;
+
+    if (piranha.state === 'idle') {
+      piranha.bobTime += 0.05 * piranha.bobFrequency;
+      const bobOffset = Math.sin(piranha.bobTime) * piranha.bobAmplitude;
+
+      piranha.position.x = piranha.spawnX;
+      piranha.position.y = piranha.spawnY + bobOffset;
+
+      const triggered = checkSonarTrigger(piranha, px, py, activePulses);
+      if (triggered) {
+        piranha.state = 'chase';
+        piranha.chaseTimer = CHASE_DURATION_FRAMES;
+      }
+
+    } else if (piranha.state === 'chase') {
+      // chasing player
+      const playerCX = player.x;
+      const playerCY = player.y;
+
+      const dx = playerCX - px;
+      const dy = playerCY - py;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist > 2) {
+        const nx = dx / dist;
+        const ny = dy / dist;
+        piranha.position.x += nx * piranha.chaseSpeed;
+        piranha.position.y += ny * piranha.chaseSpeed;
+
+        piranha.facing = nx >= 0 ? 1 : -1;
+      }
+
+      piranha.chaseTimer--;
+      if (piranha.chaseTimer <= 0) {
+        piranha.state = 'return';
+      }
+
+    } else if (piranha.state === 'return') {
+      const dx = piranha.spawnX - piranha.position.x;
+      const dy = piranha.spawnY - piranha.position.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < RETURN_THRESHOLD) {
+        piranha.position.x = piranha.spawnX;
+        piranha.position.y = piranha.spawnY;
+        piranha.bobTime = Math.random() * Math.PI * 2;
+        piranha.state = 'idle';
+      } else {
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const returnSpeed = piranha.chaseSpeed * RETURN_SPEED_MULT;
+        piranha.position.x += nx * returnSpeed;
+        piranha.position.y += ny * returnSpeed;
+
+        piranha.facing = nx >= 0 ? 1 : -1;
+      }
+    }
+
+    piranha.nextPos.x = piranha.position.x;
+    piranha.nextPos.y = piranha.position.y;
+  }
+
+  function checkPlayerContact(enemy, contactPenalty, drainRate) {
+    if (isColliding(enemy, player)) {
+      if (!contactSet.has(enemy)) {
+        player.power.current = Math.max(0, player.power.current - contactPenalty);
+        contactSet.add(enemy);
+      }
+      player.power.drain(drainRate);
     } else {
-      contactSet.delete(crab);
+      contactSet.delete(enemy);
     }
   }
 
   return {
-    update(deltaMs) {
-      syncCrabs();
-      const dtSeconds = Math.max(0, (deltaMs ?? 16) / 1000);
+    update() {
+      syncEnemies();
+      for (let i = crabs.length - 1; i >= 0; i--) {
+        if (crabs[i].pendingDestroy) {
+          crabs.splice(i, 1);
+        }
+      }
+
 
       for (const crab of crabs) {
-        updateCrab(crab, dtSeconds);
-        checkPlayerContact(crab, deltaMs ?? 16);
+        updateCrab(crab);
+        checkPlayerContact(crab, CRAB_CONTACT_PENALTY, CRAB_DRAIN_RATE);
+      }
+
+      for (let i = jellyfish.length - 1; i >= 0; i--) {
+        if (jellyfish[i].pendingDestroy) jellyfish.splice(i, 1);
+      }
+
+      for (const jelly of jellyfish) {
+        updateJellyfish(jelly);
+        checkPlayerContact(jelly, JELLYFISH_CONTACT_PENALTY, JELLYFISH_DRAIN_RATE);
+      }
+
+      for (const piranha of piranhas) {
+        updatePiranha(piranha, player, getActivePulses ? getActivePulses() : []);
+        checkPlayerContact(piranha, CRAB_CONTACT_PENALTY, CRAB_DRAIN_RATE);
       }
     },
-
+ 
     getCrabs() {
       return crabs;
+    },
+
+    getJellyfish() {
+      return jellyfish;
+    },
+
+    getPiranhas() { 
+      return piranhas;
+    },
+
+    getEnemies() {
+      return [...crabs, ...jellyfish, ...piranhas];
     }
   };
 }

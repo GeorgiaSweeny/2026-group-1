@@ -23,6 +23,8 @@ export function createRenderSystem({
    getHazards,
    getCollectables,
    getEnemies,
+   getCrabs,
+   getJellyfish,
    getTriggers,
    getEntities,
    getSpawnPoints,
@@ -44,6 +46,11 @@ export function createRenderSystem({
    getCameraScale,
    getMissiles,
    getParticles,
+   getPiranhas,
+   drawMiniMap,
+   getHudDialSettings,
+   getGameplayOverlay,
+   getGameplayOverlaySettings,
 }) {
 
 //======================================
@@ -113,6 +120,21 @@ export function createRenderSystem({
          return false;
       }
 
+      const rect = getObjectRect(obj);
+      if (!rect) return false;
+
+      const localTileId = gid - Number(tileset.firstgid);
+      const collectionTileImagePath = tileset?.tileImagesById?.[localTileId]?.resolvedImagePath;
+      if (collectionTileImagePath) {
+         const collectionTileImage = assets?.[`tileset:${collectionTileImagePath}`];
+         if (!collectionTileImage) {
+            console.warn(`[renderSystem] Missing tile image for path: "${collectionTileImagePath}" (source: "${tileset.source}")`);
+            return false;
+         }
+         image(collectionTileImage, rect.x, rect.y, rect.w, rect.h);
+         return true;
+      }
+
       const imagePath = tileset.resolvedImagePath ?? tilesetSourceToImagePath(tileset.source);
       const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
       if (!tilesetImage) {
@@ -120,13 +142,9 @@ export function createRenderSystem({
          return false;
       }
 
-      const rect = getObjectRect(obj);
-      if (!rect) return false;
-
       const tileSize = getTileSize?.() ?? {};
       const tileWidth = tileSize.tileWidth ?? tileset.tilewidth ?? 16;
       const tileHeight = tileSize.tileHeight ?? tileset.tileheight ?? 16;
-      const localTileId = gid - Number(tileset.firstgid);
       const columns = Number(tileset.columns) || Math.max(1, Math.floor(tilesetImage.width / tileWidth));
       const srcX = (localTileId % columns) * tileWidth;
       const srcY = Math.floor(localTileId / columns) * tileHeight;
@@ -172,7 +190,7 @@ export function createRenderSystem({
       if (bg?.color) {
          background(bg.color);
       } else {
-         background(0);
+         background('#021B3A');
       }
 
       if (bg?.image && assets?.[bg.image]) {
@@ -189,8 +207,11 @@ export function createRenderSystem({
       fill(platformColor);
       
       for (const p of platforms) {
+         if (p.isDestroyed) continue;
          if (drawSpriteFromTileset(p)) continue;
-         rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
+         if (p.isBreakable) {
+            rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
+         }
       }
    }
 
@@ -276,12 +297,10 @@ export function createRenderSystem({
       }
    }
 
-   //=== ENEMIES - Crab ===//
+   //=== ENEMIES ===//
    function drawEnemies(alpha) {
-      const enemies = getEnemies?.() ?? [];
-      if (!enemies.length) return;
-
-      for (const crab of enemies) {
+      const crabs = getCrabs?.() ?? [];
+      for (const crab of crabs) {
          const currX = Number.isFinite(crab?.position?.x) ? crab.position.x : (Number(crab?.x) || 0);
          const currY = Number.isFinite(crab?.position?.y) ? crab.position.y : (Number(crab?.y) || 0);
          const prevX = Number.isFinite(crab?.previousPos?.x) ? crab.previousPos.x : currX;
@@ -294,25 +313,97 @@ export function createRenderSystem({
          translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
          scale(facing, 1);
 
-         // body
          noStroke();
          fill(200, 80, 50);
          ellipse(0, 0, crabW, crabH);
 
-         // left claw
          fill(180, 60, 40);
          triangle(-crabW / 2 - 6, -4, -crabW / 2, -8, -crabW / 2, 0);
-
-         // right claw  
          triangle(crabW / 2 + 6, -4, crabW / 2, -8, crabW / 2, 0);
 
-         // eyes
          fill(255);
          circle(-4, -3, 4);
          circle(4, -3, 4);
          fill(0);
          circle(-4, -3, 2);
          circle(4, -3, 2);
+
+         pop();
+      }
+
+      const jellies = getJellyfish?.() ?? [];
+      for (const jelly of jellies) {
+         const currX = Number.isFinite(jelly?.position?.x) ? jelly.position.x : (Number(jelly?.x) || 0);
+         const currY = Number.isFinite(jelly?.position?.y) ? jelly.position.y : (Number(jelly?.y) || 0);
+         const prevX = Number.isFinite(jelly?.previousPos?.x) ? jelly.previousPos.x : currX;
+         const prevY = Number.isFinite(jelly?.previousPos?.y) ? jelly.previousPos.y : currY;
+         const jellyW = Number(jelly?.w ?? jelly?.width ?? 18) || 18;
+         const jellyH = Number(jelly?.h ?? jelly?.height ?? 22) || 22;
+
+         push();
+         translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
+
+         const pulse = Math.abs(Math.sin(jelly.pulsePhase || 0)) * 0.15 + 0.85;
+         scale(1, pulse);
+
+         noStroke();
+         fill(150, 100, 255, 180);
+         ellipse(0, -jellyH / 4, jellyW, jellyH / 2);
+         fill(255);
+         ellipse(-4, -jellyH / 4 - 2, 3, 3);
+         ellipse(4, -jellyH / 4 - 2, 3, 3);
+         fill(0);
+         ellipse(-4, -jellyH / 4 - 2, 1.5, 1.5);
+         ellipse(4, -jellyH / 4 - 2, 1.5, 1.5);
+
+         stroke(120, 80, 200, 150);
+         strokeWeight(2);
+         for (let i = -1; i <= 1; i++) {
+            const xOff = i * 5;
+            const tentacleWave = Math.sin((jelly.time || 0) + i) * 3;
+            line(xOff, 0, xOff + tentacleWave, jellyH / 2);
+         }
+
+         noStroke();
+         fill(200, 150, 255, 100);
+         ellipse(0, -jellyH / 4, jellyW * 0.6, jellyH * 0.3);
+
+         pop();
+      }
+
+      const piranhas = getPiranhas?.() ?? [];
+      for (const piranha of piranhas) {
+         const currX = Number.isFinite(piranha?.position?.x) ? piranha.position.x : 0;
+         const currY = Number.isFinite(piranha?.position?.y) ? piranha.position.y : 0;
+         const prevX = Number.isFinite(piranha?.previousPos?.x) ? piranha.previousPos.x : currX;
+         const prevY = Number.isFinite(piranha?.previousPos?.y) ? piranha.previousPos.y : currY;
+         const pW = Number(piranha?.w ?? piranha?.width ?? 24) || 24;
+         const pH = Number(piranha?.h ?? piranha?.height ?? 16) || 16;
+         const facing = Number.isFinite(piranha?.facing) && piranha.facing !== 0 ? piranha.facing : 1;
+         const isChasing = piranha?.state === 'chase';
+
+         push();
+         translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
+         scale(facing, 1);
+
+         noStroke();
+         fill(isChasing ? color(220, 40, 40) : color(60, 120, 180));
+         ellipse(0, 0, pW, pH);
+
+         fill(isChasing ? color(180, 30, 30) : color(40, 90, 150));
+         triangle(-pW / 2 - 8, -pH / 3, -pW / 2 - 8, pH / 3, -pW / 2, 0);
+         triangle(-4, -pH / 2, 4, -pH / 2, 0, -pH / 2 - 7);
+
+         fill(255);
+         circle(pW / 4, -2, 6);
+         fill(0);
+         circle(pW / 4, -2, 3);
+
+         if (isChasing) {
+            fill(255);
+            triangle(pW / 2, -3, pW / 2 + 5, -3, pW / 2, 0);
+            triangle(pW / 2, 0, pW / 2 + 5, 0, pW / 2, 3);
+         }
 
          pop();
       }
@@ -484,24 +575,121 @@ export function createRenderSystem({
    }
 
    //===UI===//
-   function drawUI() {
-      const margin = 40;
+   function drawDial({
+      x,
+      y,
+      size,
+      fillRatio,
+      centerLabel,
+      ringColor,
+      labelColor,
+   }) {
+      const clampedFill = Math.max(0, Math.min(1, fillRatio ?? 0));
 
-      textSize(32);
-      textAlign(LEFT, TOP);
+      push();
+      noFill();
+      stroke(255, 255, 255, 90);
+      strokeWeight(10);
+      circle(x, y, size);
 
-      fill(255);
+      stroke(ringColor);
+      strokeWeight(10);
+      strokeCap(ROUND);
+      arc(
+         x,
+         y,
+         size,
+         size,
+         -HALF_PI,
+         -HALF_PI + (TWO_PI * clampedFill),
+      );
+
       noStroke();
-      text(`Power: ${Math.round(player.power.current)}`, margin, margin);
+      fill(labelColor ?? 255);
+      textAlign(CENTER, CENTER);
+      textSize(18);
+      text(centerLabel, x, y);
+      pop();
+   }
+
+   function drawUI() {
+      const dialSettings = getHudDialSettings?.() ?? {};
+      const powerDialX = Number.isFinite(dialSettings.powerX) ? dialSettings.powerX : 94;
+      const powerDialY = Number.isFinite(dialSettings.powerY) ? dialSettings.powerY : 94;
+      const sonarDialX = Number.isFinite(dialSettings.sonarX) ? dialSettings.sonarX : 214;
+      const sonarDialY = Number.isFinite(dialSettings.sonarY) ? dialSettings.sonarY : 94;
+      const baseDialSize = Number.isFinite(dialSettings.baseSize) ? dialSettings.baseSize : 92;
+      const powerDialScale = Number.isFinite(dialSettings.powerScale) ? dialSettings.powerScale : 1;
+      const sonarDialScale = Number.isFinite(dialSettings.sonarScale) ? dialSettings.sonarScale : 1;
+      const powerDialSize = baseDialSize * powerDialScale;
+      const sonarDialSize = baseDialSize * sonarDialScale;
+
+      // Keep existing power computation logic.
+      const powerPercent = Math.round(player.power.current);
+      const powerFillRatio = Math.max(0, Math.min(1, powerPercent / 100));
+      const lowPowerColor = color(220, 60, 60, 240);
+      const fullPowerColor = color(80, 230, 120, 240);
+      const powerStrokeColor = lerpColor(lowPowerColor, fullPowerColor, powerFillRatio);
+
+      drawDial({
+         x: powerDialX,
+         y: powerDialY,
+         size: powerDialSize,
+         fillRatio: powerFillRatio,
+         centerLabel: `${powerPercent}%`,
+         ringColor: powerStrokeColor,
+         labelColor: color(255),
+      });
 
       const sonarCooldown = getSonarCooldown?.() ?? 0;
-      if (Number.isFinite(sonarCooldown) && sonarCooldown > 0) {
-         fill('#d61b1b');
-         text(`Sonar: cooling`, margin, margin + 40);
-      } else {
-         fill('#64ff64');
-         text(`Sonar: ready (E)`, margin, margin + 40);
-      }
+      const isSonarCooling = Number.isFinite(sonarCooldown) && sonarCooldown > 0;
+
+      // Keep existing sonar cooldown logic.
+      // Existing value is 0 when ready and >0 while cooling, so invert for "refill" visual.
+      const sonarFillRatio = isSonarCooling
+         ? Math.max(0, Math.min(1, 1 - sonarCooldown))
+         : 1;
+
+      drawDial({
+         x: sonarDialX,
+         y: sonarDialY,
+         size: sonarDialSize,
+         fillRatio: sonarFillRatio,
+         centerLabel: isSonarCooling ? 'COOLING' : 'READY',
+         ringColor: isSonarCooling ? color(220, 90, 70, 240) : color(100, 240, 120, 240),
+         labelColor: isSonarCooling ? color(255, 210, 200) : color(120, 255, 140),
+      });
+
+      drawMiniMap?.();
+   }
+
+   function drawGameplayOverlay() {
+      const overlay = getGameplayOverlay?.();
+      if (!overlay) return;
+
+      const settings = getGameplayOverlaySettings?.() ?? {};
+      if (settings.enabled === false) return;
+
+      const centerOnScreen = settings.centerOnScreen !== false;
+      const offsetX = Number.isFinite(settings.offsetX) ? settings.offsetX : 0;
+      const offsetY = Number.isFinite(settings.offsetY) ? settings.offsetY : 0;
+      const scaleX = Number.isFinite(settings.scaleX) ? settings.scaleX : 1;
+      const scaleY = Number.isFinite(settings.scaleY) ? settings.scaleY : 1;
+      const opacity = Number.isFinite(settings.opacity)
+         ? Math.max(0, Math.min(255, settings.opacity))
+         : 255;
+
+      const drawW = width * scaleX;
+      const drawH = height * scaleY;
+      const baseX = centerOnScreen ? ((width - drawW) / 2) : 0;
+      const baseY = centerOnScreen ? ((height - drawH) / 2) : 0;
+
+      push();
+      resetMatrix();
+      tint(255, opacity);
+      image(overlay, baseX + offsetX, baseY + offsetY, drawW, drawH);
+      noTint();
+      pop();
    }
 
 //======================================
@@ -594,11 +782,35 @@ export function createRenderSystem({
    //===MISSILES===//
    function drawMissiles() {
       const missiles = getMissiles?.() ?? [];
-      if (!missiles.length) return;
-      noStroke();
-      fill(255, 200, 50);
-      for (const m of missiles) {
-         ellipse(m.getXPosition(), m.getYPosition(), 8, 4);
+      for (const missile of missiles) {
+         if (missile.bubbles) {
+            noStroke();
+            for (const b of missile.bubbles) {
+               fill(150, 220, 255, b.life);
+               circle(b.x, b.y, b.size);
+            }
+         }
+
+         push();
+         translate(missile.position.x, missile.position.y);
+         if (missile.velocity) rotate(missile.velocity.heading());
+
+         const w = 24;
+         const h = 10;
+         noStroke();
+
+         fill(80);
+         triangle(-w/2 + 4, 0, -w/2 - 4, -h, -w/2 + 8, -h/2);
+         triangle(-w/2 + 4, 0, -w/2 - 4, h, -w/2 + 8, h/2);
+
+         fill(80);
+         rectMode(CENTER);
+         rect(0, 0, w, h, h/2);
+
+         fill(255, 60, 60);
+         arc(w/2 - h/2, 0, h, h, -HALF_PI, HALF_PI);
+
+         pop();
       }
    }
 
@@ -660,6 +872,9 @@ function renderInterpolate(oldState, newState, alpha){
          resetMatrix(); // Returns drawing to default screen space (cancels camera transform)
          drawUI();
          pop();
+
+         // --- Absolute top gameplay layer --- //
+         drawGameplayOverlay();
       }
    };
 }
