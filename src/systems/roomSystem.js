@@ -127,7 +127,7 @@ function normalizeTiledRoom(roomKey, mapData) {
     tileHeight,
     tilesets: [...(mapData?.tilesets ?? [])],
     background: {
-      color: getTiledProperty(mapData, 'backgroundColor', '#000000'),
+      color: getTiledProperty(mapData, 'backgroundColor', '#021B3A'),
       image: getTiledProperty(mapData, 'backgroundImage', null),
       gid: null,
       w: null,

@@ -119,6 +119,21 @@ export function createRenderSystem({
          return false;
       }
 
+      const rect = getObjectRect(obj);
+      if (!rect) return false;
+
+      const localTileId = gid - Number(tileset.firstgid);
+      const collectionTileImagePath = tileset?.tileImagesById?.[localTileId]?.resolvedImagePath;
+      if (collectionTileImagePath) {
+         const collectionTileImage = assets?.[`tileset:${collectionTileImagePath}`];
+         if (!collectionTileImage) {
+            console.warn(`[renderSystem] Missing tile image for path: "${collectionTileImagePath}" (source: "${tileset.source}")`);
+            return false;
+         }
+         image(collectionTileImage, rect.x, rect.y, rect.w, rect.h);
+         return true;
+      }
+
       const imagePath = tileset.resolvedImagePath ?? tilesetSourceToImagePath(tileset.source);
       const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
       if (!tilesetImage) {
@@ -126,13 +141,9 @@ export function createRenderSystem({
          return false;
       }
 
-      const rect = getObjectRect(obj);
-      if (!rect) return false;
-
       const tileSize = getTileSize?.() ?? {};
       const tileWidth = tileSize.tileWidth ?? tileset.tilewidth ?? 16;
       const tileHeight = tileSize.tileHeight ?? tileset.tileheight ?? 16;
-      const localTileId = gid - Number(tileset.firstgid);
       const columns = Number(tileset.columns) || Math.max(1, Math.floor(tilesetImage.width / tileWidth));
       const srcX = (localTileId % columns) * tileWidth;
       const srcY = Math.floor(localTileId / columns) * tileHeight;
@@ -178,7 +189,7 @@ export function createRenderSystem({
       if (bg?.color) {
          background(bg.color);
       } else {
-         background(0);
+         background('#021B3A');
       }
 
       if (bg?.image && assets?.[bg.image]) {

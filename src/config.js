@@ -101,7 +101,7 @@ export const DISPLAY = {
 // GAMEPLAY OVERLAY CONFIG
 //======================
 export const GAMEPLAY_OVERLAY = {
-  ENABLED: true, // Set to true to enable the gameplay overlay for testing
+  ENABLED: false, // Set to true to enable the gameplay overlay for testing
   CENTER_ON_SCREEN: true, // When true, overlay is centered before offsets are applied
   OFFSET_X: 0,
   OFFSET_Y: 30,

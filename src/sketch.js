@@ -129,6 +129,14 @@ function normalizeRelativePath(basePath, relativePath) {
   return baseParts.join("/");
 }
 
+function getPathDir(path) {
+  const parts = String(path ?? "")
+    .split("/")
+    .filter(Boolean);
+  parts.pop();
+  return parts.join("/");
+}
+
 function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
   if (!source) return null;
   // backgrounds.tsx is an image collection (no single .png atlas file to load).
@@ -164,6 +172,81 @@ function parseTsxTileProperties(xmlText) {
   }
 
   return byId;
+}
+
+function parseTsxMetadata(xmlText, sourcePath = "") {
+  const empty = {
+    tilePropertiesById: {},
+    tileImagesById: {},
+    resolvedImagePath: null,
+    tilewidth: null,
+    tileheight: null,
+    columns: null,
+    tilecount: null,
+  };
+  if (!xmlText || typeof DOMParser === "undefined") return empty;
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, "application/xml");
+  const tilesetNode = doc.querySelector("tileset");
+  if (!tilesetNode) return empty;
+
+  const baseDir = getPathDir(sourcePath);
+  const tilePropertiesById = {};
+  const tileImagesById = {};
+
+  const rootChildren = Array.from(tilesetNode.children ?? []);
+  const rootImageNode = rootChildren.find(
+    (node) => String(node?.tagName).toLowerCase() === "image",
+  );
+  const rootImageSource = rootImageNode?.getAttribute("source") ?? null;
+  const resolvedImagePath = rootImageSource
+    ? normalizeRelativePath(baseDir, rootImageSource)
+    : null;
+
+  const tileNodes = Array.from(tilesetNode.querySelectorAll("tile"));
+  for (const tileNode of tileNodes) {
+    const localId = Number(tileNode.getAttribute("id"));
+    if (!Number.isFinite(localId)) continue;
+
+    const props = {};
+    const propertyNodes = Array.from(
+      tileNode.querySelectorAll("properties > property"),
+    );
+    for (const propNode of propertyNodes) {
+      const name = propNode.getAttribute("name");
+      if (!name) continue;
+      const valueAttr = propNode.getAttribute("value");
+      props[name] = valueAttr ?? propNode.textContent ?? "";
+    }
+    if (Object.keys(props).length) {
+      tilePropertiesById[localId] = props;
+    }
+
+    const tileChildren = Array.from(tileNode.children ?? []);
+    const tileImageNode = tileChildren.find(
+      (node) => String(node?.tagName).toLowerCase() === "image",
+    );
+    const tileImageSource = tileImageNode?.getAttribute("source") ?? null;
+    if (!tileImageSource) continue;
+
+    tileImagesById[localId] = {
+      source: tileImageSource,
+      resolvedImagePath: normalizeRelativePath(baseDir, tileImageSource),
+      width: Number(tileImageNode.getAttribute("width") ?? 0) || null,
+      height: Number(tileImageNode.getAttribute("height") ?? 0) || null,
+    };
+  }
+
+  return {
+    tilePropertiesById,
+    tileImagesById,
+    resolvedImagePath,
+    tilewidth: Number(tilesetNode.getAttribute("tilewidth") ?? 0) || null,
+    tileheight: Number(tilesetNode.getAttribute("tileheight") ?? 0) || null,
+    columns: Number(tilesetNode.getAttribute("columns") ?? 0) || null,
+    tilecount: Number(tilesetNode.getAttribute("tilecount") ?? 0) || null,
+  };
 }
 
 function getMapProperty(mapData, key, fallback = null) {
@@ -257,12 +340,24 @@ function ensureRoomAssetsLoaded(roomId) {
 
   const mapDir = roomMapDir(roomId);
   for (const tileset of room?.tilesets ?? []) {
-    const imagePath = tilesetSourceToImagePath(tileset?.source, mapDir);
-    if (!imagePath) continue;
-    tileset.resolvedImagePath = imagePath;
-    const key = `tileset:${imagePath}`;
-    if (!assets[key]) {
-      assets[key] = loadImage(imagePath);
+    const imagePath =
+      tileset.resolvedImagePath ??
+      tilesetSourceToImagePath(tileset?.source, mapDir);
+    if (imagePath) {
+      tileset.resolvedImagePath = imagePath;
+      const key = `tileset:${imagePath}`;
+      if (!assets[key]) {
+        assets[key] = loadImage(imagePath);
+      }
+    }
+
+    for (const tileImage of Object.values(tileset?.tileImagesById ?? {})) {
+      const tileImagePath = tileImage?.resolvedImagePath;
+      if (!tileImagePath) continue;
+      const tileKey = `tileset:${tileImagePath}`;
+      if (!assets[tileKey]) {
+        assets[tileKey] = loadImage(tileImagePath);
+      }
     }
   }
 }
@@ -303,17 +398,18 @@ function preload() {
     roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
   }
 
-  const tilePropsBySourcePath = {};
+  const tsxMetaBySourcePath = {};
   for (const [roomId, room] of Object.entries(roomData)) {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
       const sourcePath = normalizeRelativePath(mapDir, tileset?.source ?? "");
       if (!sourcePath.toLowerCase().endsWith(".tsx")) continue;
-      if (tilePropsBySourcePath[sourcePath]) continue;
+      if (tsxMetaBySourcePath[sourcePath]) continue;
 
       const tsxLines = loadStrings(sourcePath) ?? [];
-      tilePropsBySourcePath[sourcePath] = parseTsxTileProperties(
+      tsxMetaBySourcePath[sourcePath] = parseTsxMetadata(
         tsxLines.join("\n"),
+        sourcePath,
       );
     }
   }
@@ -322,10 +418,18 @@ function preload() {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
       const sourcePath = normalizeRelativePath(mapDir, tileset?.source ?? "");
-      tileset.tilePropertiesById = tilePropsBySourcePath[sourcePath] ?? {};
+      const tsxMeta = tsxMetaBySourcePath[sourcePath] ?? {};
+      tileset.tilePropertiesById = tsxMeta.tilePropertiesById ?? {};
+      tileset.tileImagesById = tsxMeta.tileImagesById ?? {};
       // Attach the resolved image path so the render system can look it up
       // without needing to re-derive the map directory at draw time.
-      tileset.resolvedImagePath = tilesetSourceToImagePath(tileset?.source, mapDir);
+      tileset.resolvedImagePath =
+        tsxMeta.resolvedImagePath ??
+        tilesetSourceToImagePath(tileset?.source, mapDir);
+      if (tsxMeta.tilewidth) tileset.tilewidth = tsxMeta.tilewidth;
+      if (tsxMeta.tileheight) tileset.tileheight = tsxMeta.tileheight;
+      if (tsxMeta.columns != null) tileset.columns = tsxMeta.columns;
+      if (tsxMeta.tilecount != null) tileset.tilecount = tsxMeta.tilecount;
     }
   }
 
@@ -353,8 +457,15 @@ function preload() {
   for (const [roomId, room] of Object.entries(roomData)) {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
-      const imagePath = tilesetSourceToImagePath(tileset?.source, mapDir);
+      const imagePath =
+        tileset.resolvedImagePath ??
+        tilesetSourceToImagePath(tileset?.source, mapDir);
       if (imagePath) tilesetImagePaths.add(imagePath);
+      for (const tileImage of Object.values(tileset?.tileImagesById ?? {})) {
+        if (tileImage?.resolvedImagePath) {
+          tilesetImagePaths.add(tileImage.resolvedImagePath);
+        }
+      }
     }
   }
 
