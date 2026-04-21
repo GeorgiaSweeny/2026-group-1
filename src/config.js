@@ -36,6 +36,22 @@ export const GAME = {
 //======================
 // Only system-level shortcuts that are always active regardless of control mode.
 export const INPUT = {
+  // MOVEMENT KEYS - function takes ascii
+  // WASD ASCII
+  W_KEY: 87,
+  A_KEY: 65,
+  S_KEY: 83,
+  D_KEY: 68,
+  // ARROW ASCII - can also use special keyCodes
+  UP_ARROW_KEY: 38,
+  DOWN_ARROW_KEY: 40,
+  LEFT_ARROW_KEY:  37,
+  RIGHT_ARROW_KEY: 39,
+  
+  // ACTION KEYS - functions take strings
+  TOGGLE_TORCH_KEY: ['L', 'l'],
+  SONAR_KEY: ['E', 'e'],
+  MISSILE_KEY: ['K', 'k'],
   TOGGLE_FULLSCREEN_KEY: 70,  // F
 };
 
@@ -180,7 +196,23 @@ export const TORCH = {
   UPGRADE_RADIUS_BONUS: 22,
   MIN_RADIUS_WHEN_DRAINED: 50,
   FLICKER_POWER_THRESHOLD: 0.15,
-  DRAIN_RATE: 1.5 // power drain rate is multipled by torch when on
+  DRAIN_RATE: 1
+};
+
+//======================
+// MISSILE CONFIG
+//======================
+export const MISSILE = {
+  WIDTH: 8,
+  HEIGHT: 8,
+  SPEED: 150, //pixels per second
+  TURN_SPEED: 5,
+  COOLDOWN: 2000, //milliseconds
+  LIFETIME: 3000,
+  SIZE: 6, //pixels
+  MAX_DISTANCE: 2000,
+  TARGET_RADIUS: 150,
+  MAX_CONCURRENT: 5
 };
 
 //======================
@@ -200,18 +232,6 @@ export const SONAR = {
   // Cooldown in seconds for readability; derived ms used by sonarSystem
   COOLDOWN: 1,
   COOLDOWN_MS: 1
-};
-
-//======================
-// MISSILE CONFIG
-//======================
-export const MISSILE = {
-  WIDTH: 8,
-  HEIGHT: 8,
-  SPEED: 2,
-  MAX_DISTANCE: 2000,
-  TARGET_RADIUS: 150,
-  MAX_CONCURRENT: 5
 };
 
 //======================

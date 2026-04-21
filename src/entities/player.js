@@ -89,6 +89,8 @@ export class Player extends Hitbox{
          toggleTorch: false,
          emitSonar: false,
          launchMissile: false,
+         toggleShop: false,
+         togglePause: false,
       };
    
    }

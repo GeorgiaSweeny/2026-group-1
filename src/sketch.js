@@ -70,9 +70,9 @@ let lightingSystem;
 let roomSystem;
 let resourceManagementSystem;
 let enemySystem;
-let missileSystem;
 let pauseMenuSystem;
 let shopSystem;
+let missileSystem;
 let particleSystem;
 let cameraSystem;
 let miniMapSystem;
@@ -89,7 +89,8 @@ const GAME_OVER_STATE = "GAME_OVER";
 let assets = {};
 const INITIAL_ROOM_ID = "startArea";
 // NOTE: Some rooms are placeholders (see docs/data/rooms/*.json) so the build runs end-to-end.
-const ROOM_IDS = ["roomA", "roomB", "startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
+const ROOM_IDS = [/* test maps */ "roomA", "roomB",
+                  /* game maps */ "startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
                   "theDrop", "endlessAbyss", "theBiolume", "jellyfishAtrium", "theSurface"];
 const roomData = {};
 const FIT_CANVAS_TO_ROOM = false;
@@ -480,6 +481,7 @@ function setup() {
       roomSystem
         .getCollectables()
         .filter((c) => !resourceManagementSystem.isCollected(c)),
+    getEnemies: () => enemySystem.getCrabs(),
     getCrabs: () => enemySystem.getCrabs(),
     getJellyfish: () => enemySystem.getJellyfish(),
     getTriggers: () => roomSystem.getTriggers(),
@@ -498,8 +500,6 @@ function setup() {
     getLightSources: () => lightingSystem.getLightSources(),
     getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
-    getMissiles: () => missileSystem.getMissiles(),
-    getMissileMessage: () => missileSystem.getMessage(),
     getCameraOffset: () => cameraSystem.getOffset(),
     getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
@@ -553,7 +553,6 @@ function setup() {
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
   engine.register(enemySystem);
-  engine.register(missileSystem);
   engine.register(pauseMenuSystem);
   engine.register(shopSystem);
 }
