@@ -87,10 +87,11 @@ const WIN_STATE = "WIN";
 const GAME_OVER_STATE = "GAME_OVER";
 
 let assets = {};
-const INITIAL_ROOM_ID = "startArea";
+const INITIAL_ROOM_ID = "demoStart";
 // NOTE: Some rooms are placeholders (see docs/data/rooms/*.json) so the build runs end-to-end.
-const ROOM_IDS = [/* test maps */ "roomA", "roomB",
-                  /* game maps */ "startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
+const ROOM_IDS = [/* Prototypes */ "roomA", "roomB",
+                  /* Demo */ "demoStart", /* crabCaverns & theSurface also in demo */
+                  /* Full Game */ "startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
                   "theDrop", "endlessAbyss", "theBiolume", "jellyfishAtrium", "theSurface"];
 const roomData = {};
 const FIT_CANVAS_TO_ROOM = false;
