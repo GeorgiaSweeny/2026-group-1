@@ -192,7 +192,9 @@ export const POWER = {
       DRAIN_RATE: 0.6667 ~[2/3] 
       (100 power = 150s| 1 power = 1.5s) - fast
       DRAIN_RATE: 0.5           
-      (100 power = 200s| 1 power = 2s) - feels most balanced
+      (100 power = 200s| 1 power = 2s) - feels balanced
+      DRAIN_RATE: 0.333 ~[1/3] 
+      (100 power = 300s| 1 power = 3s) - slow
       DRAIN_RATE: 0.25          
       (100 power = 400s| 1 power = 4s) - very slow
    
