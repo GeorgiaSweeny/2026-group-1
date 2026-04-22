@@ -56,6 +56,16 @@ export class Torch {
       this.flickerSpeed = config.FLICKER_SPEED;
       this.flickerThreshold = config.FLICKER_POWER_THRESHOLD;   // flicker starts below this
       this.blackoutThreshold = config.BLACKOUT_POWER_THRESHOLD; // blackouts start below this
+
+      // Intensity ranges (base is implicit: 1.0 - range), clamped to [0, 1]
+      this.gentleIntensityRange = Math.max(0, Math.min(1, config.GENTLE_INTENSITY_RANGE));
+      this.dyingIntensityRange  = Math.max(0, Math.min(1, config.DYING_INTENSITY_RANGE));
+
+      // Dropout thresholds (deterministic sine wave cutoffs, not random chances)
+      this.sputterBaseThreshold = config.SPUTTER_BASE_THRESHOLD;
+      this.sputterScaling = config.SPUTTER_SCALING;
+      this.burstBaseThreshold = config.BURST_BASE_THRESHOLD;
+      this.burstScaling = config.BURST_SCALING;
    }
 
    // Set radius based on upgrade level (level 1 = base radius)
@@ -115,32 +125,24 @@ export class Torch {
 
       // Micro-dropouts begin at flicker threshold
       const sputterFreq = 5.9;
-      const sputterBaseChance = 0.12;
-      const sputterScaling = 0.18;
       const sputterGate = (Math.sin(t * sputterFreq) + 1) / 2;
-      if (sputterGate < sputterBaseChance + lowPowerRatio * sputterScaling) return 0;
+      if (sputterGate < this.sputterBaseThreshold + lowPowerRatio * this.sputterScaling) return 0;
 
       // Blackout bursts only begin below the blackout threshold
       if (powerPercent <= this.blackoutThreshold) {
          const burstFreq = 0.7;
          const burstModFreq = 0.13;
          const burstModDepth = 2.0;
-         const burstBaseChance = 0.18;
-         const burstScaling = 0.42;
          const burstGate = (Math.sin(t * burstFreq + Math.sin(t * burstModFreq) * burstModDepth) + 1) / 2;
-         if (burstGate < burstBaseChance + blackoutRatio * burstScaling) return 0;
+         if (burstGate < this.burstBaseThreshold + blackoutRatio * this.burstScaling) return 0;
       }
 
       // Above blackout threshold: subtle flicker keeps radius close to full
       // Below blackout threshold: full dying-bulb range lets radius shrink
-      const gentleBase = 0.85;
-      const gentleRange = 0.15;
-      const dyingBase = 0.35;
-      const dyingRange = 0.65;
       if (powerPercent > this.blackoutThreshold) {
-         return gentleBase + gentleRange * combined;
+         return (1.0 - this.gentleIntensityRange) + this.gentleIntensityRange * combined;
       }
-      return dyingBase + dyingRange * combined;
+      return (1.0 - this.dyingIntensityRange) + this.dyingIntensityRange * combined;
    }
 }
 //======================================
