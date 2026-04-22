@@ -544,6 +544,7 @@ function setup() {
   torchSystem = createTorchSystem(player.torch, player, {
     getDifficulty: () =>
       pauseMenuSystem ? pauseMenuSystem.getDifficulty() : "normal",
+    soundSystem,
   });
 
   sonarSystem = createSonarSystem(
@@ -557,7 +558,8 @@ function setup() {
   missileSystem = createMissileSystem(
     player,
     () => enemySystem?.getEnemies() ?? [],
-    () => roomSystem.getPlatforms()
+    () => roomSystem.getPlatforms(),
+    soundSystem,
   );
 
   particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
