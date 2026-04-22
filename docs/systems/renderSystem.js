@@ -337,14 +337,14 @@ export function createRenderSystem({
          const currY = Number.isFinite(jelly?.position?.y) ? jelly.position.y : (Number(jelly?.y) || 0);
          const prevX = Number.isFinite(jelly?.previousPos?.x) ? jelly.previousPos.x : currX;
          const prevY = Number.isFinite(jelly?.previousPos?.y) ? jelly.previousPos.y : currY;
-         const jellyW = Number(jelly?.w ?? jelly?.width ?? 18) || 18;
-         const jellyH = Number(jelly?.h ?? jelly?.height ?? 22) || 22;
+         const jellyW = Number(jelly?.w ?? jelly?.width ?? 48) || 48;
+         const jellyH = Number(jelly?.h ?? jelly?.height ?? 52) || 52;
 
          push();
          translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
 
          const pulse = Math.abs(Math.sin(jelly.pulsePhase || 0)) * 0.15 + 0.85;
-         scale(1, pulse);
+         scale(1.5, pulse*1.5);
 
          noStroke();
          fill(150, 100, 255, 180);
