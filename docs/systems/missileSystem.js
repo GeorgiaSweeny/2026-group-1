@@ -84,7 +84,7 @@ class Missile extends Hitbox {
     }
 }
 
-export function createMissileSystem(player, getTargets, getWalls) {
+export function createMissileSystem(player, getTargets, getWalls, soundSystem = null) {
     let missiles = [];
     let lastFireTime = 0;
 
@@ -166,6 +166,8 @@ export function createMissileSystem(player, getTargets, getWalls) {
                     missiles.push(new Missile(player.position.x, player.position.y, target, player.facing));
                     player.missiles--;
                     lastFireTime = now;
+
+                    soundSystem?.play('missileFired', 0.2);
                 }
                 player.actionIntent.launchMissile = false;
             }

@@ -53,7 +53,9 @@ TODO / LIMITATIONS:
 //======================
 import { TORCH } from '../config.js';
 
-export function createTorchSystem(torch, player, { getDifficulty = () => 'normal' } = {}) {
+export function createTorchSystem(torch, player, { getDifficulty = () => 'normal', soundSystem = null } = {}) {
+   const baseRadius = TORCH.RADIUS;
+   const upgradeBonusPerLevel = TORCH.UPGRADE_RADIUS_BONUS ?? 20;
    const reducedRadius = TORCH.MIN_RADIUS_WHEN_DRAINED ?? 50;
 
    return {
@@ -73,6 +75,7 @@ export function createTorchSystem(torch, player, { getDifficulty = () => 'normal
          // Handle player intent to toggle torch
          if (player.actionIntent?.toggleTorch) {
             torch.tryToggle(!player.power.isEmpty());
+            soundSystem?.play('torchToggle', 0.8);
             player.actionIntent.toggleTorch = false;
          }
 
