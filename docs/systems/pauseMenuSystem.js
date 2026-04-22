@@ -19,18 +19,7 @@ RULES:
 // PAUSE MENU SYSTEM
 //======================================
 
-import { CONTROLS } from '../config.js';
-
-// Converts a raw binding value to a short human-readable label.
-function keyLabel(binding) {
-  if (binding === ' ') return 'Space';
-  if (typeof binding === 'string') return binding.toUpperCase();
-  const names = {
-    27: 'ESC', 37: '←', 38: '↑', 39: '→', 40: '↓',
-    65: 'A', 66: 'B', 68: 'D', 83: 'S', 87: 'W',
-  };
-  return names[binding] ?? `#${binding}`;
-}
+import { CONTROLS, keyLabel } from '../config.js';
 
 export function createPauseMenuSystem({
   onDifficultyChange,
@@ -88,12 +77,12 @@ export function createPauseMenuSystem({
     text(label, x + w / 2, y + h / 2);
   }
 
-  function drawToggle(label, value, x, y) {
+  function drawToggle(label, value, x, y, labelX = x) {
     textAlign(LEFT, CENTER);
     textSize(14);
     fill(200);
     noStroke();
-    text(label, x, y);
+    text(label, labelX, y);
 
     const toggleX = x + 160;
     const toggleW = 48;
@@ -196,12 +185,12 @@ export function createPauseMenuSystem({
     drawSlider("Volume", volume, 0, 100, leftX, baseY + 50);
 
     // Toggles (UI only)
-    drawToggle("Show FPS", showFPS, leftX, baseY + 110);
-    drawToggle("Screen Shake", screenShake, leftX, baseY + 150);
+    drawToggle("Show FPS", showFPS, leftX + 30, baseY + 110, leftX);
+    drawToggle("Screen Shake", screenShake, leftX + 30, baseY + 150, leftX);
 
     // Control mode toggle
     const controlLabel = `Movement: ${controlMode === 'wasd' ? 'WASD' : 'Arrow Keys'}`;
-    drawToggle(controlLabel, controlMode === 'arrows', leftX, baseY + 190);
+    drawToggle(controlLabel, controlMode === 'arrows', leftX + 30, baseY + 190, leftX);
 
     // Binding reference — shows all keys for the active mode
     const map = CONTROLS.MODES[controlMode] ?? CONTROLS.MODES[CONTROLS.DEFAULT_MODE];
@@ -211,11 +200,11 @@ export function createPauseMenuSystem({
     fill(140);
     noStroke();
     text(
-      `Move: ${moveStr}   Torch: ${keyLabel(map.TOGGLE_TORCH)}   Sonar: ${keyLabel(map.SONAR)}   Fire: ${keyLabel(map.FIRE_MISSILE)}`,
+      `Move: ${moveStr}   Torch: ${keyLabel(map.TOGGLE_TORCH)}   Sonar: ${keyLabel(map.SONAR)}   Fire: ${keyLabel(map.LAUNCH_MISSILE)}`,
       leftX, baseY + 207,
     );
     text(
-      `Pause: ${keyLabel(map.TOGGLE_PAUSE)}   Shop: ${keyLabel(map.TOGGLE_SHOP)}`,
+      `Shop: ${keyLabel(map.TOGGLE_SHOP)}   Pause: ${keyLabel(map.TOGGLE_PAUSE)}   Fullscreen: ${keyLabel(map.TOGGLE_FULLSCREEN)}`,
       leftX, baseY + 221,
     );
 
