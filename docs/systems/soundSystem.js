@@ -9,6 +9,7 @@ DESCRIPTION:
 
 export function createSoundSystem() {
     const sounds = {};
+    let masterVolume = 0.8;
 
     return {
         preload() {
@@ -21,10 +22,14 @@ export function createSoundSystem() {
             sounds.playerHit = loadSound('assets/sounds/playerHit1.wav');
         },
 
+      setMasterVolume(zeroToHundred) {
+        masterVolume = zeroToHundred / 100;
+      },
+
         play(key, volume = 1.0) {
       const s = sounds[key];
       if (s && s.isLoaded()) {
-        s.setVolume(volume);
+        s.setVolume(volume*masterVolume);
         s.play();
       } else {
         console.warn(`[soundSystem] Sound not ready: "${key}"`);
