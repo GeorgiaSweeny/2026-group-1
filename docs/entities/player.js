@@ -19,7 +19,7 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Maintain player positional and state data (x, y, w, h, vy, onGround)
-- Maintain runtime resources (power, torch, health, oxygen)
+- Maintain runtime resources (power, torch, oxygen)
 - Store and expose player moveIntent for systems to consume
 
 DEPENDENCIES:
@@ -70,7 +70,6 @@ export class Player extends Hitbox{
 
       this.torch = new Torch(TORCH);
       this.power = new PowerSystem();
-      this.health = null;
       this.oxygen = null;
 
       this.bubbles = [];
