@@ -610,9 +610,23 @@ fewer or no pickups.
 
 ### Implementation
 
-- 15% ~750 words
+Before tackling the core mechanics for our game, we established the foundational architecture using an Object-Oriented approach. All physical entities in the game inherit from the base hitbox class, ensuring a standardisation method for position tracking and collision detection. The initial physics implementation was difficult, especially maintaining the consistent movement speed across varying frame rates. To resolve this, we implemented a fixed timestep loop, which detached the game logic from the rendering framerates. This ensured smooth and predictable movements from both the player and the dynamic objects.
 
-- Describe implementation of your game, in particular highlighting the TWO areas of *technical challenge* in developing your game. 
+### Challenge 1 - Sonar Pulse Mechanic
+
+Given the dark nature of our underwater setting, the sonar pulse was a critical mechanic used for the navigation of the player to reveal terrain and hazards throughout the map. Implementing this presented significant performance and rendering challenges, as our primary design goal was to implement this without mutating the shared game state of our room and entities. Instead of a simple expanding radius, we built a custom ray-casting engine. When triggered, the system spawns a pulse consisting of 360 individual particles. These particles are each assigned a velocity vector pointing out at 1-degree intervals. Every frame, these particles step outward and check for point vs bounding box collisions against normalised wall and hazard data.
+
+Another significant challenge faced was managing the temporary visual of the revealed state of the environment without directly modifying the physical walls or hazards. To solve this challenge, we utilised JavaScript WeakMap structure using the wallAlpha and hazardAlpha to reveal and fade the objects revealed by the sonar.
+
+When the sonar particle collides with an entity, the particle is destroyed, and the entity is used as a key in the WeakMap to store the alpha transparency value. The value slowly degrades over time using the update() loop. The rendering pipeline then polls getRevealedWalls(), which draws an added glow only for the items that exist in WeakMap. This method completely decoupled our visual pulse from the core game physics, preventing complex bugs. For instance, if a missile destroys a wall, the WeakMap automatically drops the reference, seamlessly updating the environment without crashing the sonar system.
+
+### Challenge 2
+
+- 15% ~400 words left
+
+- Describe implementation of your game, in particular highlighting the TWO areas of *technical challenge* in developing your game.
+
+---
 
 ### Evaluation
 
