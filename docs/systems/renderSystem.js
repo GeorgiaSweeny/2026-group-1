@@ -172,7 +172,7 @@ export function createRenderSystem({
       if (type) return type;
 
       // Fallback for prototype tileset ids when metadata is absent at runtime.
-      if (localTileId === 41 || localTileId === 53) return 'power';
+      if (localTileId === 41) return 'power';
       if (localTileId === 20) return 'credits';
       return null;
    }

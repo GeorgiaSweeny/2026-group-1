@@ -72,7 +72,7 @@ export function createResourceManagementSystem(
 
     const localTileId = gid - best.firstgid;
     if (localTileId === 20) return "credits";
-    if (localTileId === 41 || localTileId === 53) return "power";
+    if (localTileId === 41) return "power";
     return null;
   }
 
