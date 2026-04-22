@@ -18,6 +18,7 @@ export function createSoundSystem() {
             // sounds.crabHit = loadSound('assets/sounds/crabHit.wav');
             // sounds.jellyfishHit = loadSound('assets/sounds/jellyfishHit.wav');
             // sounds.piranhaHit = loadSound('assets/sounds/piranhaHit.wav');
+            sounds.playerHit = loadSound('assets/sounds/playerHit1.wav');
         },
 
         play(key, volume = 1.0) {

@@ -581,7 +581,8 @@ function setup() {
   enemySystem = createEnemySystem(
     player,
     () => roomSystem.getEnemies(),
-    () => sonarSystem?.getActivePulses?.() ?? []
+    () => sonarSystem?.getActivePulses?.() ?? [],
+    soundSystem,
   );
 
   miniMapSystem = createMiniMapSystem({
