@@ -99,7 +99,7 @@ function readCenterRect(objectLike) {
   return { x: x - w / 2, y: y - h / 2, w, h };
 }
 
-export function createSonarSystem(player, getWalls, getHazards = () => [], getCollectables = () => []) {
+export function createSonarSystem(player, getWalls, getHazards = () => [], getCollectables = () => [], soundSystem = null) {
   let pulses = [];
   const wallAlpha = new WeakMap();
   const hazardAlpha = new WeakMap();
@@ -120,6 +120,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
           if (Number.isFinite(px) && Number.isFinite(py)) {
             pulses.push(new Pulse(px, py));
             cooldownTimer = SONAR.COOLDOWN_MS ?? 0;
+            soundSystem?.play('sonarPing', 0.8);
           }
         }
         player.actionIntent.emitSonar = false;

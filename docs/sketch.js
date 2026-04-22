@@ -51,6 +51,7 @@ import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 import { createGameOverSystem } from "./systems/gameOverSystem.js";
 import { createMiniMapSystem } from "./systems/miniMapSystem.js";
+import { createSoundSystem } from "./systems/soundSystem.js";
 
 let accumulator = 0;
 let alpha;
@@ -84,6 +85,7 @@ let menuSystem;
 let winScreenSystem;
 let gameOverSystem;
 let audioUnlocked = false;
+let soundSystem;  
 const WIN_STATE = "WIN";
 const GAME_OVER_STATE = "GAME_OVER";
 
@@ -396,6 +398,10 @@ function roomMapDir(_roomId) {
 }
 
 function preload() {
+
+  soundSystem = createSoundSystem();
+  soundSystem.preload();
+
   for (const roomId of ROOM_IDS) {
     roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
   }
@@ -549,6 +555,7 @@ function setup() {
     () => roomSystem.getPlatforms(),
     () => roomSystem.getHazards(),
     () => roomSystem.getCollectables(),
+    soundSystem,
   );
 
   missileSystem = createMissileSystem(
