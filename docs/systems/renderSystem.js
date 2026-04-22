@@ -612,38 +612,6 @@ export function createRenderSystem({
       pop();
    }
 
-   function drawExtraPowerRing(x, y, size) {
-      const upgradeLevel = player.upgrades?.power ?? 1;
-      const maxUpgradeLevel = 8;
-      if (upgradeLevel <= 1) return;
-
-      const bonusPower = player.power.getBonusPower();
-      const bonusMax = player.power.maxPower - player.power.baseMaxPower;
-
-      // Fraction of the ring arc that is unlocked by upgrades purchased so far
-      const unlockedFraction = Math.min(1, (upgradeLevel - 1) / (maxUpgradeLevel - 1));
-      // Fraction of the unlocked arc that is filled with bonus power
-      const fillFraction = bonusMax > 0 ? Math.min(1, bonusPower / bonusMax) : 0;
-
-      const outerSize = size + 20;
-      push();
-      noFill();
-      strokeCap(ROUND);
-
-      // Unlocked-but-empty arc — visible amber so the capacity is clear
-      stroke(255, 200, 50, 140);
-      strokeWeight(8);
-      arc(x, y, outerSize, outerSize, -HALF_PI, -HALF_PI + (TWO_PI * unlockedFraction));
-
-      // Filled arc
-      if (fillFraction > 0) {
-         stroke(255, 225, 80, 230);
-         strokeWeight(8);
-         arc(x, y, outerSize, outerSize, -HALF_PI, -HALF_PI + (TWO_PI * unlockedFraction * fillFraction));
-      }
-      pop();
-   }
-
    function drawUI() {
       const dialSettings = getHudDialSettings?.() ?? {};
       const powerDialX = Number.isFinite(dialSettings.powerX) ? dialSettings.powerX : 94;
@@ -656,7 +624,7 @@ export function createRenderSystem({
       const powerDialSize = baseDialSize * powerDialScale;
       const sonarDialSize = baseDialSize * sonarDialScale;
 
-      const powerFillRatio = Math.max(0, Math.min(1, player.power.getBasePower() / player.power.baseMaxPower));
+      const powerFillRatio = Math.max(0, Math.min(1, player.power.getPercent()));
       const powerPercent = Math.round(powerFillRatio * 100);
       const lowPowerColor = color(220, 60, 60, 240);
       const fullPowerColor = color(80, 230, 120, 240);
@@ -671,7 +639,6 @@ export function createRenderSystem({
          ringColor: powerStrokeColor,
          labelColor: color(255),
       });
-      drawExtraPowerRing(powerDialX, powerDialY, powerDialSize);
 
       const sonarCooldown = getSonarCooldown?.() ?? 0;
       const isSonarCooling = Number.isFinite(sonarCooldown) && sonarCooldown > 0;

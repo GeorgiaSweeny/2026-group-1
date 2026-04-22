@@ -945,7 +945,6 @@ function resetGameToStart() {
   player.upgrades = { power: 1, torch: 1, sonar: 1 };
   player.missiles = 0;
   player.credits = PLAYER.STARTING_CREDITS;
-  player.power.maxPower = player.power.baseMaxPower;
 
   // 6. Reset shop internal state (costs, levels, open state)
   shopSystem?.reset();

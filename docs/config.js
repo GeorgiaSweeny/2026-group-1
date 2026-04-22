@@ -184,9 +184,7 @@ export const POWER = {
   MAX_POWER: 100,
   CURRENT_POWER: 100,
   LOW_POWER_THRESHOLD: 0.15,
-  DRAIN_RATE: 0.5,
-  UPGRADE_AMOUNT: 10,
-  MAX_UPGRADE_LEVEL: 8              
+  DRAIN_RATE: 0.5
   /* 
    (Tested Options)
       DRAIN_RATE: 1             

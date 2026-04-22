@@ -54,7 +54,6 @@ import { POWER, TORCH, TIME } from '../config.js';
 
 export class PowerSystem {
    constructor(config = POWER) {
-      this.baseMaxPower = config.MAX_POWER;
       this.maxPower = config.MAX_POWER;
       this.current = config.CURRENT_POWER;
       this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
@@ -75,16 +74,6 @@ export class PowerSystem {
 
    getPercent() {
       return this.current / this.maxPower;
-   }
-
-   // Power within the base capacity (inner ring)
-   getBasePower() {
-      return Math.min(this.current, this.baseMaxPower);
-   }
-
-   // Power above base capacity from upgrades (outer ring)
-   getBonusPower() {
-      return Math.max(this.current - this.baseMaxPower, 0);
    }
 }
 //======================================
