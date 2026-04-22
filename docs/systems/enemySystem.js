@@ -24,7 +24,7 @@ const RETURN_THRESHOLD = 6;
 const RETURN_SPEED_MULT = 0.6;
 const CHASE_DURATION_FRAMES = 180;
 
-export function createEnemySystem(player, getEnemies, getActivePulses) {
+export function createEnemySystem(player, getEnemies, getActivePulses, soundSystem = null) {
   const contactSet = new Set();
   let crabs = [];
   let jellyfish = [];
@@ -211,6 +211,7 @@ export function createEnemySystem(player, getEnemies, getActivePulses) {
       if (!contactSet.has(enemy)) {
         player.power.current = Math.max(0, player.power.current - contactPenalty);
         contactSet.add(enemy);
+        soundSystem?.play('playerHit', 1.0);
       }
       player.power.drain(drainRate);
     } else {
