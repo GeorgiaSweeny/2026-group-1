@@ -67,8 +67,11 @@ TODO / LIMITATIONS:
 // SHOP SYSTEM
 //======================================
 
-export function createShopSystem(player) {
+import { CONTROLS, keyLabel } from '../config.js';
+
+export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_MODE) {
   let shopOpen = false;
+  let controlMode = initialControlMode;
 
   const INITIAL_UPGRADE_COSTS = { power: 50, torch: 40, sonar: 60 };
 
@@ -345,10 +348,11 @@ export function createShopSystem(player) {
 
     fill(116, 160, 171);
     textSize(11);
-    text("Click any card to buy. Press B or close to return.", info.x + 20, info.y + 204, info.w - 40, 80);
+    const shopKey = keyLabel(CONTROLS.MODES[controlMode].ACCEPT);
+    text(`Click any card to buy. Press ${shopKey} or close to return.`, info.x + 20, info.y + 204, info.w - 40, 80);
 
     drawButton(
-      "ACCEPT (B)",
+      `ACCEPT (${shopKey})`,
       layout.closeButton.x,
       layout.closeButton.y,
       layout.closeButton.w,
@@ -455,6 +459,10 @@ export function createShopSystem(player) {
     // STATE QUERIES
     isShopOpen() {
       return shopOpen;
+    },
+
+    setControlMode(mode) {
+      if (CONTROLS.MODES[mode]) controlMode = mode;
     },
 
     // STATE CONTROL

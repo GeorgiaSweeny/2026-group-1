@@ -35,7 +35,6 @@ import {
   PLAYER,
   TIME,
   GAME,
-  INPUT,
   CONTROLS,
   GAMEPLAY_OVERLAY,
   MINIMAP,
@@ -655,11 +654,11 @@ function setup() {
       useDevResolution = isDev;
       applyDisplayScale();
     },
-    onControlModeChange: (mode) => inputSystem.setControlMode(mode),
+    onControlModeChange: (mode) => { inputSystem.setControlMode(mode); shopSystem?.setControlMode(mode); },
     initialControlMode: CONTROLS.DEFAULT_MODE,
   });
 
-  shopSystem = createShopSystem(player);
+  shopSystem = createShopSystem(player, CONTROLS.DEFAULT_MODE);
 
   engine = new Engine();
   engine.register(inputSystem);
@@ -771,7 +770,7 @@ function keyPressed() {
   tryUnlockAudioContext();
 
   // Fullscreen toggle — works from any game state
-  if (keyCode === INPUT.TOGGLE_FULLSCREEN_KEY) {
+  if (keyCode === CONTROLS.MODES[CONTROLS.DEFAULT_MODE].TOGGLE_FULLSCREEN) {
     fullscreen(!fullscreen());
     return;
   }
@@ -784,10 +783,14 @@ function keyPressed() {
     player.actionIntent.togglePause = false;
   }
 
-  // Always process shop toggle (B)
   if (player?.actionIntent?.toggleShop) {
     shopSystem?.toggleShop();
     player.actionIntent.toggleShop = false;
+  }
+
+  if (player?.actionIntent?.accept) {
+    if (shopSystem?.isShopOpen()) shopSystem.toggleShop();
+    player.actionIntent.accept = false;
   }
 
   // Only process other actions if not paused
