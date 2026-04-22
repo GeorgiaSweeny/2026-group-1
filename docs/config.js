@@ -160,7 +160,7 @@ export const PLAYER = {
 //======================
 export const POWER = {
   MAX_POWER: 100,
-  CURRENT_POWER: 100,
+  CURRENT_POWER: 16,
   LOW_POWER_THRESHOLD: 0.15,
   DRAIN_RATE: 0.5
   /* 
