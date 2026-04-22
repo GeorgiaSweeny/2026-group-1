@@ -71,8 +71,9 @@ export function createResourceManagementSystem(
     if (!best) return null;
 
     const localTileId = gid - best.firstgid;
-    if (localTileId === 20) return "power";
-    if (localTileId === 41 || localTileId === 53) return "health";
+    if (localTileId === 20) return "coin";
+    if (localTileId === 41) return "health";
+    if (localTileId === 53) return "power";
     return null;
   }
 
@@ -89,17 +90,22 @@ export function createResourceManagementSystem(
   // Moved game logic from sketch.js to here
   //======================================
   const handlers = {
-    power(player, item) {
+    power(player) {
       const difficulty = getDifficulty?.() ?? "normal";
-      const amount = difficulty === "hard" ? 5 : 10;
+      const amount = difficulty === "hard" ? 2 : 5;
       player.power.current = Math.max(
         0,
         Math.min(player.power.current + amount, player.power.maxPower),
       );
     },
-    health(player, item) {
+    coin(player) {
       const difficulty = getDifficulty?.() ?? "normal";
-      const amount = difficulty === "hard" ? 2 : 5;
+      const amount = difficulty === "hard" ? 5 : 10;
+      player.coins = (player.coins ?? 0) + amount;
+    },
+    health(player) {
+      const difficulty = getDifficulty?.() ?? "normal";
+      const amount = difficulty === "hard" ? 5 : 10;
       player.power.current = Math.max(
         0,
         Math.min(player.power.current + amount, player.power.maxPower),

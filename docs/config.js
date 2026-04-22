@@ -32,6 +32,21 @@ export const GAME = {
 };
 
 //======================
+// GAME VERSIONS CONFIG
+//======================
+export const GAME_VERSIONS = {
+  demo: {
+    startRoom: "demoStart",
+    rooms: ["demoStart", "crabCaverns", "theSurface"],
+  },
+  full: {
+    startRoom: "startArea",
+    rooms: ["startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
+            "theDrop", "endlessAbyss", "theBiolume", "jellyfishAtrium", "theSurface"],
+  },
+};
+
+//======================
 // KEY CODES CONFIG
 //======================
 // Only system-level shortcuts that are always active regardless of control mode.
@@ -154,7 +169,7 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  STARTING_COINS: 10000,  // 10000 for testing
+  STARTING_COINS: 0,  // 10000 for testing
   MOVE_SPEED: 200,        // Pixels per second (scaled by TIME.fixedDeltaTime per frame)
   ACCELERATION: 4,        // Velocity increase per frame
   DRAG: 0.9  ,            // Higher = less friction (0.9-0.95 feels good)

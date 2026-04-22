@@ -40,6 +40,7 @@ import {
   GAMEPLAY_OVERLAY,
   MINIMAP,
   HUD_DIALS,
+  GAME_VERSIONS,
 } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
@@ -79,6 +80,7 @@ let miniMapSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
+let gameVersion = "full"; // "demo" | "full"
 let menuSystem;
 let winScreenSystem;
 let gameOverSystem;
@@ -87,12 +89,12 @@ const WIN_STATE = "WIN";
 const GAME_OVER_STATE = "GAME_OVER";
 
 let assets = {};
-const INITIAL_ROOM_ID = "demoStart";
 // NOTE: Some rooms are placeholders (see docs/data/rooms/*.json) so the build runs end-to-end.
-const ROOM_IDS = [/* Prototypes */ "roomA", "roomB",
-                  /* Demo */ "demoStart", /* crabCaverns & theSurface also in demo */
-                  /* Full Game */ "startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
-                  "theDrop", "endlessAbyss", "theBiolume", "jellyfishAtrium", "theSurface"];
+// Prototype rooms are preloaded for testing but not part of any game version.
+const ROOM_IDS = [
+  "roomA", "roomB",
+  ...new Set(Object.values(GAME_VERSIONS).flatMap(v => v.rooms)),
+];
 const roomData = {};
 const FIT_CANVAS_TO_ROOM = false;
 let useDevResolution = false;
@@ -498,7 +500,7 @@ function setup() {
 
   player = new Player(PLAYER);
 
-  const initialRoom = INITIAL_ROOM_ID;
+  const initialRoom = GAME_VERSIONS.demo.startRoom;
   roomSystem = createRoomSystem({
     initialRoom,
     roomData,
@@ -519,6 +521,8 @@ function setup() {
     onWin: () => {
       gameState = WIN_STATE;
     },
+    getAllowedRooms: () => GAME_VERSIONS[gameVersion].rooms,
+    getGameVersion: () => gameVersion,
   });
   roomSystem.goToRoom(initialRoom, { spawnId: "default" });
   syncCanvasToCurrentRoom();
@@ -803,6 +807,8 @@ function mousePressed() {
     const selection = winScreenSystem.checkClick(mouseX, mouseY);
     if (selection === "MENU") {
       resetGameToStart();
+      gameVersion = "full";
+      menuSystem.setScreen("main");
       gameState = "MENU";
     }
     return;
@@ -815,6 +821,8 @@ function mousePressed() {
       gameState = "PLAYING";
     } else if (selection === "NO") {
       resetGameToStart();
+      gameVersion = "full";
+      menuSystem.setScreen("main");
       gameState = "MENU";
     } else if (selection === "SETTINGS") {
       settingsReturnState = GAME_OVER_STATE;
@@ -827,8 +835,19 @@ function mousePressed() {
   if (gameState === "MENU") {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
-    if (selection === "EASY" || selection === "HARD") {
+    if (selection === "DEMO") {
+      menuSystem.setScreen("demo_difficulty");
+    } else if (selection === "BACK") {
+      menuSystem.setScreen("main");
+    } else if (selection === "DEMO_EASY" || selection === "DEMO_HARD") {
+      gameVersion = "demo";
+      applyDifficultyConfig(selection === "DEMO_EASY" ? "EASY" : "HARD");
+      resetGameToStart();
+      gameState = "PLAYING";
+    } else if (selection === "EASY" || selection === "HARD") {
+      gameVersion = "full";
       applyDifficultyConfig(selection);
+      resetGameToStart();
       gameState = "PLAYING";
     } else if (selection === "SETTINGS") {
       settingsReturnState = "MENU";
@@ -902,7 +921,8 @@ function applyDisplayScale() {
 
 function resetGameToStart() {
   // 1. Send the player back to the first room
-  roomSystem.goToRoom(INITIAL_ROOM_ID, { spawnId: "default" });
+  const startRoom = GAME_VERSIONS[gameVersion].startRoom;
+  roomSystem.goToRoom(startRoom, { spawnId: "default" });
 
   // 2. Snap the player's physical coordinates to the spawn point
   const playerStart = roomSystem.getPlayerStart();

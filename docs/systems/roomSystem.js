@@ -353,7 +353,9 @@ export function createRoomSystem({
   roomData = {},
   player = null,
   onRoomLoaded = null,
-  onWin = null
+  onWin = null,
+  getAllowedRooms = null,
+  getGameVersion = null,
 } = {}) {
   let currentRoom = null;
   let currentConfig = null;
@@ -463,8 +465,14 @@ export function createRoomSystem({
         break;
       }
 
+      const exitVersion = exit?.properties?.gameVersion ?? null;
+      if (exitVersion && exitVersion !== getGameVersion?.()) continue;
+
       const targetRoom = exit?.properties?.targetRoom;
       if (!targetRoom || !roomData[targetRoom]) continue;
+
+      const allowed = getAllowedRooms?.();
+      if (allowed && !allowed.includes(targetRoom)) continue;
 
       const targetSpawn = exit?.properties?.targetSpawn ?? null;
       loadRoom(targetRoom, { spawnId: targetSpawn });

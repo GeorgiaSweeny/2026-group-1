@@ -20,7 +20,7 @@
  </tile>
  <tile id="20">
   <properties>
-   <property name="collectableType" value="power"/>
+   <property name="collectableType" value="coin"/>
    <property name="type" value="collectable"/>
   </properties>
  </tile>
@@ -42,7 +42,7 @@
  </tile>
  <tile id="53">
   <properties>
-   <property name="collectableType" value="health"/>
+   <property name="collectableType" value="power"/>
    <property name="type" value="collectable"/>
    <property name="value" type="int" value="25"/>
   </properties>
