@@ -45,12 +45,12 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 
 |Name|Email|Role|
 |:-|:-|:-|
-|Archie Brown|cq25988@bristol.ac.uk||
-|Monal Gupta|ta25702@bristol.ac.uk||
-|Ben Mounce|wv25183@bristol.ac.uk||
-|Georgia Sweeny|dp25498@bristol.ac.uk| Code Reviewer</br>Game Engine / Systems Architecture</br>Game Data & Configuration Design: Input configuration, Tileset property definitions, Map metadata</br>Gameplay Systems Developer: torch, power, lighting systems|
-|Nick Jankov|ve21144@bristol.ac.uk||
-|Jude Hsu|ca20853@bristol.ac.uk||
+|Archie Brown|cq25988@bristol.ac.uk| Co-developer |
+|Monal Gupta|ta25702@bristol.ac.uk| Co-developer |
+|Ben Mounce|wv25183@bristol.ac.uk| Co-developer |
+|Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer, System Architect & Code reviewer |
+|Nick Jankov|ve21144@bristol.ac.uk| Co-developer & Code reviewer |
+|Jude Hsu|ca20853@bristol.ac.uk| Co-developer |
 
 </br>
 
@@ -67,35 +67,38 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 # Project Report
 
 ## 1. Introduction
-- 5% ~250 words 
-- Describe your game, what is based on, what makes it novel? (what's the "twist"?) 
-
-Our game is a tense, underwater exploration adventure where **players navigate their way out of abyss** using movement, resource management, and environmental interaction. The core **twist** is the 
-**echolocation-based sonar mechanic**, which allows players to temporarily reveal their surroundings in an **otherwise dark** and hazardous environment. This mechanic drives both **gameplay and atmosphere**,
+Our game is a tense, underwater exploration adventure where players navigate their way out of abyss using movement, resource management, and environmental interaction. The core twist is the 
+echolocation-based sonar mechanic, which allows players to temporarily reveal their surroundings in an otherwise dark and hazardous environment. This mechanic drives both gameplay and atmosphere,
 creating tension and encouraging strategic decision-making.
 
-The game draws inspiration from **Metroidvania-style** design, featuring interconnected rooms, gated areas unlocked through new abilities, and challenges that reward exploration and mastery. Unlike traditional
-underwater games, the use of **sonar as a primary navigation** and discovery tool sets it apart, providing a **fresh experience** where visibility is limited and deliberate planning is essential.
+The game draws inspiration from Metroidvania-style design, featuring interconnected rooms, gated areas unlocked through new abilities, and challenges that reward exploration and mastery. Unlike traditional
+underwater games, the use of sonar as a primary navigation and discovery tool sets it apart, providing a fresh experience where visibility is limited and deliberate planning is essential.
 
-Players must **manage resources** such as power, air, and health while exploring unknown areas. **Strategic** use of the **torch and sonar** is crucial, as these tools consume resources but are necessary for
-survival and progression. This combination of limited visibility, environmental hazards, and resource management emphasizes **careful exploration over fast-paced action**, creating an immersive and atmospheric
+Players must manage resources such as power, and health while exploring unknown areas. Strategic use of the torch and sonar is crucial, as these tools consume resources but are necessary for
+survival and progression. This combination of limited visibility, environmental hazards, and resource management emphasizes careful exploration over fast-paced action, creating an immersive and atmospheric
 gameplay loop.
 
-The game’s **novelty** lies in how the **sonar mechanic integrates with world design, enemies, and lighting**. It encourages players to think tactically, interact meaningfully with the environment, and engage with
-risk versus reward. By combining a familiar exploration framework with a unique visibility mechanic, the game provides a **distinctive experience** that is both challenging and rewarding, appealing to players
-seeking **depth, immersion, and discovery in an underwater setting**.
+The game’s novelty lies in how the sonar mechanic integrates with world design, enemies, and lighting. It encourages players to think tactically, interact meaningfully with the environment, and engage with
+risk versus reward. By combining a familiar exploration framework with a unique visibility mechanic, the game provides a distinctive experience** that is both challenging and rewarding, appealing to players
+seeking depth, immersion, and discovery in an underwater setting**.
 
 ## 2. Requirements 
-- 15% ~750 words
-- Early stages design. Ideation process. How did you decide as a team what to develop? Use case diagrams, user stories.
-
 ### 2.1 Early Stage Design & Ideation
-The game concept was developed collaboratively through group discussions and pitch proposals. Each team member suggested ideas and voted on their favourites, with two concepts centred on echolocation. 
-This mechanic became the foundation, naturally inspiring an underwater exploration theme and tension through limited visibility. The team agreed that the core differentiator would be a sonar-based mechanic,
-supported by darkness and resource management systems. Development was structured around Epics and user stories to align design with implementation.
+The game concept was developed collaboratively through group discussions and pitch proposals. During the early design phase, we used Notion to document and refine ideas. Each team member proposed a concept [Figure 1: Game Ideas], and the team then voted on their preferred option [Figure 2: Poll Results for Game Ideas]. Two of the proposed concepts were centred on echolocation, which helped establish it as the foundation of the project. Through further discussion, the selected concept evolved into an underwater exploration game, where limited visibility creates tension and supports the overall atmosphere. The game’s core differentiator is its sonar-based mechanic, supported by darkness and resource management systems.
 
+[Figure 1: Game Ideas / Figure 2: Poll Results for Game Ideas]
+<p align="center">
+    <img src=""
+    alt="Figure 1: Game Ideas" width="500" />
+</p>
+
+<p align="center">
+    <img src=""
+    alt="Figure 2: Poll Results for Game Ideas" width="500" />
+</p>
 
 ### 2.2 Paper Prototypes
+In the early stage of development
 Paper prototyping allowed the team to experiment with core mechanics at low cost before coding. Informal playtesting and feedback identified the most engaging mechanics, with the echolocation system receiving
 particularly positive responses. Testers highlighted the tension from limited visibility and sonar use, validating the mechanic and setting.
 
@@ -103,19 +106,16 @@ Based on this feedback, the team adopted a Metroidvania-inspired structure empha
 These elements complement the sonar mechanic by encouraging players to navigate carefully, conserve resources, and decide when to reveal their surroundings. This phase helped us refine the
 game's identity, confirming that the core appeal lies in controlled exploration, atmosphere, and tension.
 
-![Descriptive Alt Text](docs/paper-prototype/FlappyBird.gif)
 ![Descriptive Alt Text](docs/paper-prototype/SubGame.gif)
 
----
-</br>
-
 ### 2.3 Stakeholders - Onion Model
-![Stakeholders Onion Model](https://github.com/user-attachments/assets/b768743b-cfa2-456d-9c32-e7780289a064)
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/b768743b-cfa2-456d-9c32-e7780289a064"
+    alt="Stakeholders Onion Model" width="500" />
+</p>
 
----
-</br>
-
-## 2.4 Epics and User Stories
+### 2.4 Epics and User Stories
+We used epics and user stories to explore the details of 
 
 ### EPIC 1 – Core Player Interaction
 **Description:** The player must move, explore, and interact with the underwater world intuitively.  
@@ -182,8 +182,7 @@ game's identity, confirming that the core appeal lies in controlled exploration,
   
 **Acceptance Criteria:** Modular systems (Input, Physics, Resource, Lighting, Enemy); central engine update order; lighting separated from rendering; deltaTime used for all time-based behaviour; room and camera systems manage world scale independently.
 
----
-</br>
+
 
 ### 2.5 Use Case Diagram
 
@@ -261,9 +260,6 @@ graph TD
 
 ```
 
----
-</br>
-
 ### 2.6 Prioritised Feature Breakdown
 A risk-managed development approach prioritising core mechanics and technical feasibility over feature breadth.
 Based on user stories derived from our game Epics
@@ -330,9 +326,6 @@ Engine             → orchestrates
 - **RoomSystem** manages which data is active for the current room.
 
 This separation ensures the game remains predictable, testable, and modular, while supporting incremental development of complex systems like sonar without destabilising rendering.
-
----
-</br>
 
 ### 3.2 Behavioural Flow
 The **Engine + Systems + Input Bridge + Render Flow** diagram shows the **per-frame execution order:**
