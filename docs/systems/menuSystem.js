@@ -51,7 +51,7 @@ export function createMenuSystem() {
       } else {
         background(30);
       }
-      fill(0, 0, 0, 150);
+      fill(0, 0, 0, 0);
       rect(0, 0, CANVAS.WIDTH, CANVAS.HEIGHT);
 
       // 2. Game Title

@@ -62,6 +62,7 @@ let darknessLayer;
 let player;
 let mainPageSystem;
 let mainPageBg;
+let menuBg;
 let inputSystem;
 let playerSystem;
 let physicsSystem;
@@ -497,6 +498,7 @@ function preload() {
 
 
   mainPageBg = loadImage("assets/backgrounds/titleBackground.png");
+  menuBg = loadImage("assets/backgrounds/bg_black.png");
 }
 
 function setup() {
@@ -704,7 +706,7 @@ function draw() {
   }
 
   if (gameState === "MENU") {
-    menuSystem.draw(null);
+    menuSystem.draw(menuBg);
     return;
   } else if (gameState === "SETTINGS") {
     pauseMenuSystem.draw();
