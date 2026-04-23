@@ -151,6 +151,19 @@ function getPathDir(path) {
   return parts.join("/");
 }
 
+function normalizeTilesetSource(source, mapDir) {
+  if (!source) return source;
+  const resolved = normalizeRelativePath(mapDir, source);
+  if (resolved.startsWith("data/tilesets/")) return source;
+  const idx = source.indexOf("tilesets/");
+  if (idx !== -1) {
+    const fixed = `../${source.slice(idx)}`;
+    console.warn(`[preload] Fixed tileset source: "${source}" → "${fixed}"`);
+    return fixed;
+  }
+  return source;
+}
+
 function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
   if (!source) return null;
   // backgrounds.tsx is an image collection (no single .png atlas file to load).
@@ -420,6 +433,7 @@ function preload() {
   for (const [roomId, room] of Object.entries(roomData)) {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
+      tileset.source = normalizeTilesetSource(tileset.source, mapDir);
       const sourcePath = normalizeRelativePath(mapDir, tileset?.source ?? "");
       if (!sourcePath.toLowerCase().endsWith(".tsx")) continue;
       if (tsxMetaBySourcePath[sourcePath]) continue;
