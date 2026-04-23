@@ -89,22 +89,23 @@ The game concept was developed collaboratively through group discussions and pit
 [Figure 1: Game Ideas / Figure 2: Poll Results for Game Ideas]
 <p align="center">
     <img src=""
-    alt="Figure 1: Game Ideas" width="500" />
+    alt="Figure 1: Game Ideas" width="300" />
 </p>
 
 <p align="center">
     <img src=""
-    alt="Figure 2: Poll Results for Game Ideas" width="500" />
+    alt="Figure 2: Poll Results for Game Ideas" width="300" />
 </p>
 
-### 2.2 Paper Prototypes
-In the early stage of development
-Paper prototyping allowed the team to experiment with core mechanics at low cost before coding. Informal playtesting and feedback identified the most engaging mechanics, with the echolocation system receiving
-particularly positive responses. Testers highlighted the tension from limited visibility and sonar use, validating the mechanic and setting.
+We also have 
 
-Based on this feedback, the team adopted a Metroidvania-inspired structure emphasizing exploration, gradual mastery of abilities, environmental gating, and strategic resource management. 
-These elements complement the sonar mechanic by encouraging players to navigate carefully, conserve resources, and decide when to reveal their surroundings. This phase helped us refine the
-game's identity, confirming that the core appeal lies in controlled exploration, atmosphere, and tension.
+### 2.2 Paper Prototypes
+In the early stage of development, we created a paper prototype to visualise and test the flow of the game’s core mechanics. This stage allowed the team to explore the overall layout of the game and discuss key design elements such as enemies, player objectives, setting, and what would make the game engaging. Paper prototyping also provided a low-cost way to experiment with ideas before moving into implementation.
+
+We later asked testers to play through the prototype and share feedback. Their responses helped identify the most engaging aspects of the design, with the echolocation mechanic receiving particularly positive reactions. Testers highlighted the tension created by limited visibility and sonar use, which helped validate both the core mechanic and the underwater setting.
+
+Based on this feedback, the team shaped the game around exploration, tension, and careful resource use. A Metroidvania-inspired structure was chosen to support these goals, allowing progression through interconnected spaces, restricted areas, and gradual access to new abilities. This worked well with the sonar mechanic, as players needed to decide when to reveal their surroundings and when to conserve resources. Overall, the paper prototyping stage helped clarify the game’s direction and confirmed that its main appeal lies in atmosphere, uncertainty, and controlled exploration.
+
 
 ![Descriptive Alt Text](docs/paper-prototype/SubGame.gif)
 
@@ -115,7 +116,17 @@ game's identity, confirming that the core appeal lies in controlled exploration,
 </p>
 
 ### 2.4 Epics and User Stories
-We used epics and user stories to explore the details of 
+We used epics and user stories to structure the game idea into a clearer and manageable development plan that the team could actually work with. At the start of the project, the overall concept was a bit too broad, so epics helped us organise the project into major areas of player experience and technical functionality, such as player movement, resource management, sonar and lighting, enemies, world progression, interface, and system architecture. 
+
+For each epic, we wrote features from the perspective of the player, and in some cases from the perspective of the developer. This forced us to think about why a feature mattered, not just what needed to be coded.
+
+We also used acceptance criteria to define what "completed" looked like. This helped make features more concrete and reduced ambiguity during implementation. It also make it easier to determine what belonged in the MVP and what could be ranked as lower priority.
+
+The main thing we learned from this process was that epics and user stories were most useful when they stayed practical. They helped the team focus on player experience, communicate implementation priorities more clearly.
+
+For repo readibility, we listed two representative examples below. The full set of epics, user stories, and acceptance criteria can be found in the following link: 
+
+[Full list](Epics_and_user_stories.md)
 
 ### EPIC 1 – Core Player Interaction
 **Description:** The player must move, explore, and interact with the underwater world intuitively.  
@@ -135,53 +146,6 @@ We used epics and user stories to explore the details of
 - As a player, I want health to decrease when colliding with enemies, so there are tangable consequences.  
   
 **Acceptance Criteria:** Resources drain continuously and predictably; Game Over triggers if any resource reaches zero; UI displays all resources clearly.
-
-### EPIC 3 – Sonar & Lighting Identity Mechanic
-**Description:** The sonar system defines the game’s identity and atmosphere.  
-**User Stories:**  
-- As a player, I want to activate sonar, so that hidden areas are temporarily revealed.  
-- As a player, I want revealed areas to fade over time, so that tension is maintained.  
-- As a player, I want the torch to provide limited visibility, so that I can navigate carefully.
-  
-**Acceptance Criteria:** Sonar pulse reveals environment temporarily; lighting and rendering are modular; enemy reactions vary by type.
-
-### EPIC 4 – Enemies & Challenge
-**Description:** Enemies create risk and strategic gameplay in each room.  
-**User Stories:**  
-- As a player, I want enemies to patrol, so that the world feels alive.  
-- As a player, I want enemies to react to sonar, torch, or proximity, so that encounters feel meaningful.  
-- As a casual player, I want enemy behaviour to be readable, so that I can anticipate threats.
-  
-**Acceptance Criteria:** Room-specific enemies with defined states; collisions reduce health; reactions vary by enemy type.
-
-### EPIC 5 – World Structure & Progression
-**Description:** The world supports exploration and progression in a Metroidvania style.  
-**User Stories:**  
-- As a player, I want interconnected rooms, so that exploration feels cohesive.
-- As a player, I want gated paths, so that new abilities unlock new areas.
-- As a player, I want the camera to follow me, so that I am immersed in large rooms.
-  
-**Acceptance Criteria:** 3–5 interconnected rooms; abilities unlock new areas; camera clamps to room bounds; reaching final exit triggers win state.
-
-### EPIC 6 – Interface & Game States
-**Description:** Players navigate menus and understand game states clearly.  
-**User Stories:**  
-- As a player, I want a start menu, so that I can begin the game intentionally.
-- As a player, I want a settings menu, so that I can adjust preferences.
-- As a player, I want in-game UI for resources, so that I can manage power, air, and health.
-- As a non-English speaker, I want the UI to use symbols, so that I can understand it without reading.
-  
-**Acceptance Criteria:** Menus pause gameplay; UI shows all resources; Game Over and Win states trigger correctly.
-
-### EPIC 7 – Technical Architecture & Maintainability
-**Description:** The system remains modular and extensible for collaborative development.  
-**User Stories:**  
-- As a developer, I want systems to have single responsibilities, so that debugging is easier.
-- As a future developer, I want to add new systems without rewriting core logic, so that development remains scalable.
-- As a JavaScript developer, I want logic separated from rendering, so that advanced features like layered lighting are easier to implement.
-  
-**Acceptance Criteria:** Modular systems (Input, Physics, Resource, Lighting, Enemy); central engine update order; lighting separated from rendering; deltaTime used for all time-based behaviour; room and camera systems manage world scale independently.
-
 
 
 ### 2.5 Use Case Diagram
@@ -290,17 +254,12 @@ Based on user stories derived from our game Epics
 ---
 </br>
 
-## 3. Design
-
-- 15% ~750 words 
-- System architecture. Class diagrams, behavioural diagrams.
-
----
-</br>
-  
+## 3. Design  
 ### 3.1 System Architecture
-
 The project is built using a **modular, state-driven architecture** that separates **logic, rendering, input, and game world state.** Each system has a clear responsibility and communicates only via defined interfaces, which simplifies debugging, allows independent testing, and reduces unintended side-effects when new features are added.
+
+At an early stage, we expected the project to be described using more traditional object-oriented diagram, such as a class diagram showing relationships between classes. However, as development progressed, the codebase became organised more around runtime systems, shared state, and per-frame updates than around inheritance-heavy object structure.
+
 
 This **high-level architecture snapshot** illustrates the responsibilities of each system:
 
@@ -327,7 +286,104 @@ Engine             → orchestrates
 
 This separation ensures the game remains predictable, testable, and modular, while supporting incremental development of complex systems like sonar without destabilising rendering.
 
-### 3.2 Behavioural Flow
+### 3.2 Class diagram
+
+As mentioned above, the structure of this project separates the container, the shared data/state, and the logic into different files. A traditional UML class diagram is useful for showing the static structure of software, such as classes, inheritance, and relationships. However, that kind of diagram does not represent this project particularly well, because the project is organised more around systems, shared state, and execution flow than around object-oriented inheritance.
+
+For that reason, this diagram is intended less as a traditional “who inherits from what” class diagram, and more as a structural overview of how data flows through the game and how different systems interact during execution.
+
+This diagram is divided into four parts:
+
+1. **Core loop and inputs**
+
+   This part shows how the game is driven at the highest level. It begins with p5.js event functions such as `keyPressed` and `draw`, which feed into `sketch.js`, the main orchestrator. `sketch.js` then triggers the engine, which runs the update sequence each frame.
+
+2. **Data / entities**
+
+   This section represents the shared game state that the systems read from and modify. It includes the player object, room state, and global game state. Rather than owning behaviour directly, these elements mainly store the data that the systems operate on.
+
+3. **Update phase / logic**
+
+   This part shows the ordered sequence of gameplay systems executed by the engine during each update cycle. Each system performs a specific responsibility, such as handling input, applying movement, resolving physics, updating resources, managing torch and sonar behaviour, processing room transitions, and updating the camera. Together, these systems implement the game logic by reading and mutating the shared state.
+
+4. **Render phase**
+
+   This section shows how the current game state is turned into what the player sees on screen. Rendering-related systems use the updated data to calculate lighting, draw the world, and display menu or overlay screens such as pause and win states.
+
+```mermaid
+
+flowchart TD
+    %% 1. CORE LOOP & INPUTS
+    subgraph EngineLoop [1. Main Game Loop]
+        direction TB
+        P5Events([p5.js Events: keyPressed, draw])
+        Engine{engine.js}
+        Sketch((sketch.js Orchestrator))
+        
+        P5Events -->|Triggers| Sketch
+        Sketch -->|Calls update| Engine
+    end
+
+    %% 2. DATA / ENTITIES
+    subgraph DataState [2. Entities & Shared Data]
+        direction LR
+        Player[(Player Object<br/>Pos, Vel, Intent, Power)]
+        RoomData[(Room State<br/>Walls, Items, Exits)]
+        GameState((gameState))
+    end
+
+    %% 3. UPDATE LOGIC (Executed in sequence by Engine)
+    subgraph UpdateSystems [3. Update Phase - Logic & Math]
+        direction TB
+        Input[inputSystem]
+        PlayerSys[playerSystem]
+        Physics[physicsSystem]
+        Resource[resourceSystem]
+        Torch[torchSystem]
+        Sonar[sonarSystem]
+        RoomSys[roomSystem]
+        Camera[cameraSystem]
+
+        Input -->|Sets Intent| PlayerSys
+        PlayerSys -->|Calculates Velocity| Physics
+        Physics -->|Resolves Walls| Resource
+        Resource -->|Drains Power or Heals| Torch
+        Torch -->|Checks Power limits| Sonar
+        Sonar -->|Creates Pulses| RoomSys
+        RoomSys -->|Triggers Exits| Camera
+    end
+
+    %% 4. RENDER PHASE
+    subgraph RenderSystems [4. Render Phase - Screen Drawing]
+        direction TB
+        Lighting[lightingSystem]
+        Render[renderSystem]
+        Menus[Menu / Pause / Win Screens]
+
+        Lighting -->|Provides Light Sources| Render
+        Render -->|Draws World| Menus
+    end
+
+    %% CROSS-LAYER CONNECTIONS
+    Engine -->|Iterates Systems| UpdateSystems
+    UpdateSystems -->|Reads & Mutates| DataState
+    
+    %% Specific Data Dependencies for Rendering
+    Player -.->|Pos, Power, Torch| Lighting
+    Sonar -.->|Revealed Walls, Lights| Lighting
+    Camera -.->|Offsets & Scale| Render
+    DataState -.->|Provides current state| Render
+    Sketch -->|Calls draw| RenderSystems
+
+	%% SUBGRAPH BACKGROUNDS
+    style EngineLoop fill:#FFDCDC,stroke:#333,stroke-width:0px
+    style DataState fill:#FFF2EB,stroke:#333,stroke-width:0px
+    style UpdateSystems fill:#FFE8CD,stroke:#333,stroke-width:0px
+    style RenderSystems fill:#FFD6BA,stroke:#333,stroke-width:0px
+
+```
+
+### 3.3 Behavioural Flow
 The **Engine + Systems + Input Bridge + Render Flow** diagram shows the **per-frame execution order:**
 
 ```jsx
@@ -463,103 +519,6 @@ The **Engine + Systems + Input Bridge + Render Flow** diagram shows the **per-fr
 - **Lighting and visibility** — LightingSystem and RenderSystem separation allows sonar and torch light to reveal the environment correctly while keeping draw code clean.
 
 The diagrams collectively **visualise the structure and runtime behaviour**, showing both **static responsibilities** and **dynamic per-frame interactions**. This provides clarity for team collaboration, future feature integration, and assessment of the game’s technical design.
-
-### 3.3 Class diagram
-
-As mentioned above, the structure of this project separates the container, the shared data/state, and the logic into different files. A traditional UML class diagram is useful for showing the static structure of software, such as classes, inheritance, and relationships. However, that kind of diagram does not represent this project particularly well, because the project is organised more around systems, shared state, and execution flow than around object-oriented inheritance.
-
-For that reason, this diagram is intended less as a traditional “who inherits from what” class diagram, and more as a structural overview of how data flows through the game and how different systems interact during execution.
-
-This diagram is divided into four parts:
-
-1. **Core loop and inputs**
-
-   This part shows how the game is driven at the highest level. It begins with p5.js event functions such as `keyPressed` and `draw`, which feed into `sketch.js`, the main orchestrator. `sketch.js` then triggers the engine, which runs the update sequence each frame.
-
-2. **Data / entities**
-
-   This section represents the shared game state that the systems read from and modify. It includes the player object, room state, and global game state. Rather than owning behaviour directly, these elements mainly store the data that the systems operate on.
-
-3. **Update phase / logic**
-
-   This part shows the ordered sequence of gameplay systems executed by the engine during each update cycle. Each system performs a specific responsibility, such as handling input, applying movement, resolving physics, updating resources, managing torch and sonar behaviour, processing room transitions, and updating the camera. Together, these systems implement the game logic by reading and mutating the shared state.
-
-4. **Render phase**
-
-   This section shows how the current game state is turned into what the player sees on screen. Rendering-related systems use the updated data to calculate lighting, draw the world, and display menu or overlay screens such as pause and win states.
-
-```mermaid
-
-flowchart TD
-    %% 1. CORE LOOP & INPUTS
-    subgraph EngineLoop [1. Main Game Loop]
-        direction TB
-        P5Events([p5.js Events: keyPressed, draw])
-        Engine{engine.js}
-        Sketch((sketch.js Orchestrator))
-        
-        P5Events -->|Triggers| Sketch
-        Sketch -->|Calls update| Engine
-    end
-
-    %% 2. DATA / ENTITIES
-    subgraph DataState [2. Entities & Shared Data]
-        direction LR
-        Player[(Player Object<br/>Pos, Vel, Intent, Power)]
-        RoomData[(Room State<br/>Walls, Items, Exits)]
-        GameState((gameState))
-    end
-
-    %% 3. UPDATE LOGIC (Executed in sequence by Engine)
-    subgraph UpdateSystems [3. Update Phase - Logic & Math]
-        direction TB
-        Input[inputSystem]
-        PlayerSys[playerSystem]
-        Physics[physicsSystem]
-        Resource[resourceSystem]
-        Torch[torchSystem]
-        Sonar[sonarSystem]
-        RoomSys[roomSystem]
-        Camera[cameraSystem]
-
-        Input -->|Sets Intent| PlayerSys
-        PlayerSys -->|Calculates Velocity| Physics
-        Physics -->|Resolves Walls| Resource
-        Resource -->|Drains Power or Heals| Torch
-        Torch -->|Checks Power limits| Sonar
-        Sonar -->|Creates Pulses| RoomSys
-        RoomSys -->|Triggers Exits| Camera
-    end
-
-    %% 4. RENDER PHASE
-    subgraph RenderSystems [4. Render Phase - Screen Drawing]
-        direction TB
-        Lighting[lightingSystem]
-        Render[renderSystem]
-        Menus[Menu / Pause / Win Screens]
-
-        Lighting -->|Provides Light Sources| Render
-        Render -->|Draws World| Menus
-    end
-
-    %% CROSS-LAYER CONNECTIONS
-    Engine -->|Iterates Systems| UpdateSystems
-    UpdateSystems -->|Reads & Mutates| DataState
-    
-    %% Specific Data Dependencies for Rendering
-    Player -.->|Pos, Power, Torch| Lighting
-    Sonar -.->|Revealed Walls, Lights| Lighting
-    Camera -.->|Offsets & Scale| Render
-    DataState -.->|Provides current state| Render
-    Sketch -->|Calls draw| RenderSystems
-
-	%% SUBGRAPH BACKGROUNDS
-    style EngineLoop fill:#FFDCDC,stroke:#333,stroke-width:0px
-    style DataState fill:#FFF2EB,stroke:#333,stroke-width:0px
-    style UpdateSystems fill:#FFE8CD,stroke:#333,stroke-width:0px
-    style RenderSystems fill:#FFD6BA,stroke:#333,stroke-width:0px
-
-```
 
 ---
 ## Week 7 - User & Heuristic Evaluation
