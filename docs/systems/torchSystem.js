@@ -58,11 +58,6 @@ export function createTorchSystem(torch, player, { getDifficulty = () => 'normal
    const upgradeBonusPerLevel = TORCH.UPGRADE_RADIUS_BONUS ?? 20;
    const reducedRadius = TORCH.MIN_RADIUS_WHEN_DRAINED ?? 50;
 
-   function getUpgradedRadius() {
-      const torchLevel = Math.max(1, player?.upgrades?.torch ?? 1);
-      return baseRadius + (torchLevel - 1) * upgradeBonusPerLevel;
-   }
-
    return {
       //---UPDATE---//
       update() {
@@ -88,9 +83,8 @@ export function createTorchSystem(torch, player, { getDifficulty = () => 'normal
          if (torch.isOn) {
             if (player.power.isEmpty()) {
                torch.isOn = false;
-               //torch.radius = reducedRadius;
             } else {
-               torch.radius = getUpgradedRadius();
+               torch.setUpgradeLevel(player?.upgrades?.torch ?? 1);
             }
          }
       }
