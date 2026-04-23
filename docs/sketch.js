@@ -43,6 +43,7 @@ import {
 } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
+import { createMainPageSystem } from "./systems/mainPageSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
 import { createShopSystem } from "./systems/shopSystem.js";
 import { createMissileSystem } from "./systems/missileSystem.js";
@@ -52,6 +53,8 @@ import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 import { createGameOverSystem } from "./systems/gameOverSystem.js";
 import { createMiniMapSystem } from "./systems/miniMapSystem.js";
 import { createSoundSystem } from "./systems/soundSystem.js";
+import { createStoryPageSystem } from "./systems/storyPageSystem.js";
+import { createControlsPageSystem } from "./systems/controlsPageSystem.js";
 
 let accumulator = 0;
 let alpha;
@@ -59,7 +62,11 @@ let alpha;
 let engine;
 let darknessLayer;
 let player;
-
+let mainPageSystem;
+let mainPageBg;
+let menuBg;
+let storyPageSystem;
+let controlsPageSystem;
 let inputSystem;
 let playerSystem;
 let physicsSystem;
@@ -78,7 +85,8 @@ let particleSystem;
 let cameraSystem;
 let miniMapSystem;
 let lastEnsuredRoom = null;
-let gameState = "MENU";
+//let gameState = "MENU";
+let gameState = "MAIN_PAGE";
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
 let gameVersion = "full"; // "demo" | "full"
 let menuSystem;
@@ -491,6 +499,10 @@ function preload() {
       );
     },
   );
+
+
+  mainPageBg = loadImage("assets/backgrounds/titleBackground.png");
+  menuBg = loadImage("assets/backgrounds/bg_black.png");
 }
 
 function setup() {
@@ -499,6 +511,9 @@ function setup() {
   textAlign(LEFT);
   applyDisplayScale();
 
+  mainPageSystem = createMainPageSystem();
+  storyPageSystem = createStoryPageSystem();
+  controlsPageSystem = createControlsPageSystem();
   menuSystem = createMenuSystem();
   winScreenSystem = createWinScreenSystem();
   gameOverSystem = createGameOverSystem();
@@ -690,8 +705,24 @@ function setup() {
 
 function draw() {
   frameRate(GAME.FPS);
+
+  if (gameState === "MAIN_PAGE") {
+    mainPageSystem.draw(mainPageBg);
+    return;
+  }
+
+  if (gameState === "STORY_PAGE") {
+    storyPageSystem.draw(menuBg);
+    return;
+  }
+
+  if (gameState === "CONTROLS") {
+  controlsPageSystem.draw(menuBg);
+  return;
+}
+
   if (gameState === "MENU") {
-    menuSystem.draw(null);
+    menuSystem.draw(menuBg);
     return;
   } else if (gameState === "SETTINGS") {
     pauseMenuSystem.draw();
@@ -817,6 +848,32 @@ function mousePressed() {
     return;
   }
 
+  if (gameState === "MAIN_PAGE") {
+    const selection = mainPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "PLAY") {
+      gameState = "STORY_PAGE";
+    }
+    return;
+  }
+
+  if (gameState === "STORY_PAGE") {
+    const selection = storyPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "CONTINUE") {
+      gameState = "CONTROLS";
+    }
+    return;
+  }
+
+  if (gameState === "CONTROLS") {
+    const selection = controlsPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "BACK") {
+      gameState = "STORY_PAGE";
+    } else if (selection === "NEXT") {
+      gameState = "MENU";
+    }
+    return;
+  }
+
   if (gameState === WIN_STATE) {
     const selection = winScreenSystem.checkClick(mouseX, mouseY);
     if (selection === "MENU") {
@@ -867,6 +924,8 @@ function mousePressed() {
       settingsReturnState = "MENU";
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
+    } else if (selection === "CONTROLS") {
+      gameState = "CONTROLS";
     }
     return;
   }
