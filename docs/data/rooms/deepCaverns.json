@@ -90,5 +90,10 @@
   "type": "map",
   "version": "1.10",
   "width": 20,
-  "tilesets": []
+  "tilesets": [
+    {
+      "firstgid": 1,
+      "source": "../tilesets/prototype-tileset/prototype-tileset.tsx"
+    }
+  ]
 }

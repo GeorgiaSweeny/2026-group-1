@@ -7,13 +7,13 @@ DESCRIPTION:
 - Manages shop UI overlay
 - Displays upgradeable abilities: power, torch, sonar
 - Displays purchasable items: missiles
-- Frontend-only: reads player coins, no mutations
+- Frontend-only: reads player credits, no mutations
 
 RULES:
 - No drawing inside update() function
 - No state changes inside draw() function
 - Mutations handled by other systems later
-- Only reads player.coins, does not modify player state directly
+- Only reads player.credits, does not modify player state directly
 
 DESIGN GOALS:
 - Decouple shop UI from gameplay systems
@@ -28,7 +28,7 @@ RESPONSIBILITIES:
 - Handle mouse clicks on upgrade/item cards
 
 DEPENDENCIES:
-- Player object (read-only: coins property)
+- Player object (read-only: credits property)
 - p5.js drawing functions (fill, rect, text, etc.)
 - Mouse events (mouseX, mouseY from p5.js)
 
@@ -47,7 +47,7 @@ if (shopSystem.isShopOpen()) {
 shopSystem.onKeyPressed?.(key, keyCode);
 ========================================
 NOTES:
-- Purchase attempts logged to console (no coins deducted yet)
+- Purchase attempts logged to console (no credits deducted yet)
 - Upgrades have levels and costs
 - Items have quantity tracking and per-unit costs
 - UI uses semi-transparent overlay like pauseMenuSystem
@@ -67,8 +67,11 @@ TODO / LIMITATIONS:
 // SHOP SYSTEM
 //======================================
 
-export function createShopSystem(player) {
+import { CONTROLS, keyLabel } from '../config.js';
+
+export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_MODE) {
   let shopOpen = false;
+  let controlMode = initialControlMode;
 
   const INITIAL_UPGRADE_COSTS = { power: 50, torch: 40, sonar: 60 };
 
@@ -222,8 +225,8 @@ export function createShopSystem(player) {
   }
 
   function drawUpgradeCard(name, upgrade, x, y) {
-    const playerCoins = player?.coins ?? 0;
-    const canAfford = playerCoins >= upgrade.cost;
+    const playerCredits = player?.credits ?? 0;
+    const canAfford = playerCredits >= upgrade.cost;
     const currentLevel = player?.upgrades?.[name] ?? upgrade.level;
 
     noStroke();
@@ -256,12 +259,12 @@ export function createShopSystem(player) {
     textAlign(RIGHT, TOP);
     textSize(10);
     fill(canAfford ? color(148, 252, 165) : color(129, 129, 129));
-    text(canAfford ? "CLICK TO UPGRADE" : "INSUFFICIENT COINS", x + CARD_W - 10, y + 100);
+    text(canAfford ? "CLICK TO UPGRADE" : "INSUFFICIENT CREDITS", x + CARD_W - 10, y + 100);
   }
 
   function drawItemCard(itemName, item, x, y) {
-    const playerCoins = player?.coins ?? 0;
-    const canAfford = playerCoins >= item.costPerUnit;
+    const playerCredits = player?.credits ?? 0;
+    const canAfford = playerCredits >= item.costPerUnit;
     const currentQuantity = itemName === 'missiles' ? (player?.missiles ?? 0) : (item.quantity ?? 0);
 
     noStroke();
@@ -293,7 +296,7 @@ export function createShopSystem(player) {
     textAlign(RIGHT, TOP);
     textSize(10);
     fill(canAfford ? color(148, 252, 165) : color(129, 129, 129));
-    text(canAfford ? "CLICK TO BUY +1" : "INSUFFICIENT COINS", x + CARD_W - 10, y + 100);
+    text(canAfford ? "CLICK TO BUY +1" : "INSUFFICIENT CREDITS", x + CARD_W - 10, y + 100);
   }
 
   //--------------------------------------
@@ -337,7 +340,7 @@ export function createShopSystem(player) {
     fill(190, 228, 236);
     textSize(13);
     textAlign(LEFT, TOP);
-    text(`Credits: ${player?.coins ?? 0}`, info.x + 20, info.y + 56);
+    text(`Credits: ${player?.credits ?? 0}`, info.x + 20, info.y + 56);
     text(`Missiles: ${player?.missiles ?? 0}`, info.x + 20, info.y + 82);
     text(`Power Lvl: ${player?.upgrades?.power ?? 1}`, info.x + 20, info.y + 108);
     text(`Torch Lvl: ${player?.upgrades?.torch ?? 1}`, info.x + 20, info.y + 134);
@@ -345,10 +348,11 @@ export function createShopSystem(player) {
 
     fill(116, 160, 171);
     textSize(11);
-    text("Click any card to buy. Press B or close to return.", info.x + 20, info.y + 204, info.w - 40, 80);
+    const shopKey = keyLabel(CONTROLS.MODES[controlMode].ACCEPT);
+    text(`Click any card to buy. Press ${shopKey} or close to return.`, info.x + 20, info.y + 204, info.w - 40, 80);
 
     drawButton(
-      "ACCEPT (B)",
+      `ACCEPT (${shopKey})`,
       layout.closeButton.x,
       layout.closeButton.y,
       layout.closeButton.w,
@@ -365,25 +369,25 @@ export function createShopSystem(player) {
     const upgrade = upgrades[upgradeName];
     if (!upgrade) return false;
 
-    const playerCoins = player?.coins ?? 0;
-    if (playerCoins < upgrade.cost) {
-      console.log(`❌ Not enough coins for ${upgradeName} upgrade. Need: ${upgrade.cost}, Have: ${playerCoins}`);
+    const playerCredits = player?.credits ?? 0;
+    if (playerCredits < upgrade.cost) {
+      console.log(`❌ Not enough credits for ${upgradeName} upgrade. Need: ${upgrade.cost}, Have: ${playerCredits}`);
       return false;
     }
 
-    // Deduct coins
-    player.coins -= upgrade.cost;
+    // Deduct credits
+    player.credits -= upgrade.cost;
     
     // Increment upgrade level
     if (player.upgrades && upgradeName in player.upgrades) {
       player.upgrades[upgradeName]++;
     }
-    
+
     // Update shop display
     upgrade.level++;
     upgrade.cost = Math.ceil(upgrade.cost * 1.5); // Increase cost for next level
     
-    console.log(`✓ Purchased ${upgradeName} upgrade! New level: ${upgrade.level}, Coins left: ${player.coins}`);
+    console.log(`✓ Purchased ${upgradeName} upgrade! New level: ${upgrade.level}, Credits left: ${player.credits}`);
     return true;
   }
 
@@ -392,14 +396,14 @@ export function createShopSystem(player) {
     if (!item) return false;
 
     const totalCost = item.costPerUnit * quantity;
-    const playerCoins = player?.coins ?? 0;
-    if (playerCoins < totalCost) {
-      console.log(`❌ Not enough coins for ${quantity}x ${itemName}. Need: ${totalCost}, Have: ${playerCoins}`);
+    const playerCredits = player?.credits ?? 0;
+    if (playerCredits < totalCost) {
+      console.log(`❌ Not enough credits for ${quantity}x ${itemName}. Need: ${totalCost}, Have: ${playerCredits}`);
       return false;
     }
 
-    // Deduct coins
-    player.coins -= totalCost;
+    // Deduct credits
+    player.credits -= totalCost;
     
     // Add to inventory
     if (itemName === 'missiles') {
@@ -409,7 +413,7 @@ export function createShopSystem(player) {
     // Update shop display
     item.quantity += quantity;
     
-    console.log(`✓ Purchased ${quantity}x ${itemName}! Total owned: ${item.quantity}, Coins left: ${player.coins}`);
+    console.log(`✓ Purchased ${quantity}x ${itemName}! Total owned: ${item.quantity}, Credits left: ${player.credits}`);
     return true;
   }
 
@@ -419,7 +423,7 @@ export function createShopSystem(player) {
   function handleClick() {
     if (!shopOpen) return;
 
-    console.log(`[shop] click detected at mouseX=${mouseX}, mouseY=${mouseY}, coins=${player?.coins ?? 0}`);
+    console.log(`[shop] click detected at mouseX=${mouseX}, mouseY=${mouseY}, credits=${player?.credits ?? 0}`);
 
     const layout = getLayout();
 
@@ -455,6 +459,10 @@ export function createShopSystem(player) {
     // STATE QUERIES
     isShopOpen() {
       return shopOpen;
+    },
+
+    setControlMode(mode) {
+      if (CONTROLS.MODES[mode]) controlMode = mode;
     },
 
     // STATE CONTROL

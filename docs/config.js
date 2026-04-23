@@ -32,28 +32,20 @@ export const GAME = {
 };
 
 //======================
-// KEY CODES CONFIG
+// GAME VERSIONS CONFIG
 //======================
-// Only system-level shortcuts that are always active regardless of control mode.
-export const INPUT = {
-  // MOVEMENT KEYS - function takes ascii
-  // WASD ASCII
-  W_KEY: 87,
-  A_KEY: 65,
-  S_KEY: 83,
-  D_KEY: 68,
-  // ARROW ASCII - can also use special keyCodes
-  UP_ARROW_KEY: 38,
-  DOWN_ARROW_KEY: 40,
-  LEFT_ARROW_KEY:  37,
-  RIGHT_ARROW_KEY: 39,
-  
-  // ACTION KEYS - functions take strings
-  TOGGLE_TORCH_KEY: ['L', 'l'],
-  SONAR_KEY: ['E', 'e'],
-  MISSILE_KEY: ['K', 'k'],
-  TOGGLE_FULLSCREEN_KEY: 70,  // F
+export const GAME_VERSIONS = {
+  demo: {
+    startRoom: "demoStart",
+    rooms: ["demoStart", "crabCaverns", "theSurface"],
+  },
+  full: {
+    startRoom: "startArea",
+    rooms: ["startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
+            "theDrop", "endlessAbyss", "theBiolume", "jellyfishAtrium", "theSurface"],
+  },
 };
+
 
 //======================
 // MAIN CANVAS CONFIG
@@ -154,7 +146,7 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  STARTING_COINS: 10000,  // 10000 for testing
+  STARTING_CREDITS: 0,
   MOVE_SPEED: 200,        // Pixels per second (scaled by TIME.fixedDeltaTime per frame)
   ACCELERATION: 4,        // Velocity increase per frame
   DRAG: 0.9  ,            // Higher = less friction (0.9-0.95 feels good)
@@ -169,7 +161,7 @@ export const POWER = {
   MAX_POWER: 100,
   CURRENT_POWER: 100,
   LOW_POWER_THRESHOLD: 0.15,
-  DRAIN_RATE: 0.5              
+  DRAIN_RATE: 0.5
   /* 
    (Tested Options)
       DRAIN_RATE: 1             
@@ -177,7 +169,9 @@ export const POWER = {
       DRAIN_RATE: 0.6667 ~[2/3] 
       (100 power = 150s| 1 power = 1.5s) - fast
       DRAIN_RATE: 0.5           
-      (100 power = 200s| 1 power = 2s) - feels most balanced
+      (100 power = 200s| 1 power = 2s) - feels balanced
+      DRAIN_RATE: 0.333 ~[1/3] 
+      (100 power = 300s| 1 power = 3s) - slow
       DRAIN_RATE: 0.25          
       (100 power = 400s| 1 power = 4s) - very slow
    
@@ -258,33 +252,65 @@ export const COMBAT = {
 //======================
 // CONTROLS CONFIG
 //======================
+// KEY LABEL UTILITY
+//======================
+// Converts a raw binding value to a short human-readable label for UI display.
+export function keyLabel(binding) {
+  if (typeof binding === 'string') return binding.toUpperCase();
+  const names = {
+    9:   'Tab',
+    27:  'ESC',
+    32:  'Space',
+    37:  '←',
+    38:  '↑',
+    39:  '→',
+    40:  '↓',
+    65:  'A',
+    68:  'D',
+    69:  'E',
+    70:  'F',
+    81:  'Q',
+    83:  'S',
+    87:  'W',
+    192: '`',
+  };
+  return names[binding] ?? `#${binding}`;
+}
+
+//======================
 // Each mode is a complete, independently customisable key map.
 // Number values are matched against keyCode; string values against key.toLowerCase().
 export const CONTROLS = {
   DEFAULT_MODE: 'wasd', // 'wasd' | 'arrows'
 
   MODES: {
+   /* Ergnomic one handed set-up */
     wasd: {
-      MOVE_UP:      87,   // W
-      MOVE_DOWN:    83,   // S
-      MOVE_LEFT:    65,   // A
-      MOVE_RIGHT:   68,   // D
-      TOGGLE_TORCH: 'l',
-      SONAR:        'e',
-      LAUNCH_MISSILE: 'k',
-      TOGGLE_PAUSE: 27,   // Escape
-      TOGGLE_SHOP:  66,   // B
+      MOVE_UP:      87,    // W
+      MOVE_DOWN:    83,    // S
+      MOVE_LEFT:    65,    // A
+      MOVE_RIGHT:   68,    // D
+      TOGGLE_TORCH: 70,    // F
+      SONAR:        69,    // E
+      LAUNCH_MISSILE: 32,  // Space
+      TOGGLE_PAUSE:      27,    // Escape
+      TOGGLE_SHOP:       9,     // Tab
+      ACCEPT:            81,    // Q
+      TOGGLE_FULLSCREEN: 192,   // Backtick
     },
+    /* Arrow-keys option for movement */
     arrows: {
-      MOVE_UP:      38,   // Up arrow
-      MOVE_DOWN:    40,   // Down arrow
-      MOVE_LEFT:    37,   // Left arrow
-      MOVE_RIGHT:   39,   // Right arrow
-      TOGGLE_TORCH: 'l',
-      SONAR:        'e',
-      LAUNCH_MISSILE: 'k',
-      TOGGLE_PAUSE: 27,   // Escape
-      TOGGLE_SHOP:  66,   // B
+      MOVE_UP:      38,    // Up arrow
+      MOVE_DOWN:    40,    // Down arrow
+      MOVE_LEFT:    37,    // Left arrow
+      MOVE_RIGHT:   39,    // Right arrow
+      TOGGLE_TORCH: 70,    // F
+      SONAR:        69,    // E
+      LAUNCH_MISSILE: 32,  // Space
+      TOGGLE_PAUSE:      27,    // Escape
+      TOGGLE_SHOP:       9,     // Tab
+      ACCEPT:            81,    // Q
+      TOGGLE_FULLSCREEN: 192,   // Backtick
     },
   },
 };

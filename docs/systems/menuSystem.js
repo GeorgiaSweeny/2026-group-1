@@ -1,6 +1,6 @@
 /*
 ========================================
-VERSION: 1.0
+VERSION: 1.1
 SYSTEM: MENU SYSTEM
 AUTHOR: jude
 DESCRIPTION:
@@ -15,32 +15,37 @@ import { CANVAS } from "../config.js";
 export function createMenuSystem() {
   const btnWidth = 160;
   const btnHeight = 60;
-  const gap = 40; // Space between the two buttons
+  const gap = 40;
 
-  // Calculate coordinates to perfectly center them side-by-side
   const totalWidth = btnWidth * 2 + gap;
   const startX = CANVAS.WIDTH / 2 - totalWidth / 2;
 
   const btnEasyX = startX;
   const btnHardX = startX + btnWidth + gap;
 
-  const btnY = CANVAS.HEIGHT / 2;
+  // DEMO button sits at original center Y; EASY/HARD pushed down below it
+  const demoY = CANVAS.HEIGHT / 2;
+  const btnY = demoY + btnHeight + gap;
   const settingsY = btnY + btnHeight + 20;
-  const hoverSettings =
-    mouseX > startX &&
-    mouseX < startX + totalWidth &&
-    mouseY > settingsY &&
-    mouseY < settingsY + btnHeight;
 
-  fill(hoverSettings ? color(60, 140, 220) : color(30, 100, 180));
-  rect(startX, settingsY, totalWidth, btnHeight, 10);
+  // "main" shows mode select; "demo_difficulty" shows difficulty for demo mode
+  let screen = "main";
 
-  fill(255);
-  text("SETTINGS", startX + totalWidth / 2, settingsY + btnHeight / 2);
+  function isHover(x, y, w, h) {
+    return mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h;
+  }
+
+  function drawBtn(x, y, w, h, label, hoverCol, normalCol) {
+    fill(isHover(x, y, w, h) ? hoverCol : normalCol);
+    rect(x, y, w, h, 10);
+    fill(255);
+    textSize(24);
+    text(label, x + w / 2, y + h / 2);
+  }
 
   return {
     draw(titleImage) {
-      // 1. Draw Background & Overlay
+      // 1. Draw background & Overlay
       if (titleImage) {
         image(titleImage, 0, 0, CANVAS.WIDTH, CANVAS.HEIGHT);
       } else {
@@ -55,81 +60,63 @@ export function createMenuSystem() {
       textSize(48);
       text("The Abyss", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 - 40);
 
-      textSize(20);
-      text("Select Difficulty", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 + 10);
 
-      // 3. EASY Button
-      const hoverEasy =
-        mouseX > btnEasyX &&
-        mouseX < btnEasyX + btnWidth &&
-        mouseY > btnY &&
-        mouseY < btnY + btnHeight;
-      if (hoverEasy)
-        fill(60, 100, 180); // Lighter deep blue
-      else fill(25, 50, 120); // Deep ocean blue
+      if (screen === "main") {
+        textSize(20);
+        text("Select Mode", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 + 10);
 
-      rect(btnEasyX, btnY, btnWidth, btnHeight, 10);
+        // DEMO button (full width, at original btnY)
+        drawBtn(startX, demoY, totalWidth, btnHeight, "DEMO",
+          color(60, 160, 100), color(20, 100, 60));
 
-      fill(255);
-      textSize(24);
-      text("EASY", btnEasyX + btnWidth / 2, btnY + btnHeight / 2);
+        // EASY / HARD buttons below
+        drawBtn(btnEasyX, btnY, btnWidth, btnHeight, "EASY",
+          color(60, 100, 180), color(25, 50, 120));
+        drawBtn(btnHardX, btnY, btnWidth, btnHeight, "HARD",
+          color(180, 60, 60), color(120, 25, 25));
 
-      // 4. HARD Button
-      const hoverHard =
-        mouseX > btnHardX &&
-        mouseX < btnHardX + btnWidth &&
-        mouseY > btnY &&
-        mouseY < btnY + btnHeight;
-      if (hoverHard)
-        fill(180, 60, 60); // Lighter red for hard mode hover
-      else fill(120, 25, 25); // Deep red for hard mode normal
+        // SETTINGS button
+        drawBtn(startX, settingsY, totalWidth, btnHeight, "SETTINGS",
+          color(60, 140, 220), color(30, 100, 180));
 
-      rect(btnHardX, btnY, btnWidth, btnHeight, 10);
-      fill(255);
-      text("HARD", btnHardX + btnWidth / 2, btnY + btnHeight / 2);
+      } else {
+        // Demo difficulty sub-screen
+        textSize(20);
+        text("Demo Mode — Select Difficulty", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 + 10);
 
-      const hoverSettings =
-        mouseX > startX &&
-        mouseX < startX + totalWidth &&
-        mouseY > settingsY &&
-        mouseY < settingsY + btnHeight;
-      fill(hoverSettings ? color(60, 140, 220) : color(30, 100, 180));
-      rect(startX, settingsY, totalWidth, btnHeight, 10);
+        drawBtn(btnEasyX, btnY, btnWidth, btnHeight, "EASY",
+          color(60, 100, 180), color(25, 50, 120));
+        drawBtn(btnHardX, btnY, btnWidth, btnHeight, "HARD",
+          color(180, 60, 60), color(120, 25, 25));
 
-      fill(255);
-      text("SETTINGS", startX + totalWidth / 2, settingsY + btnHeight / 2);
+        // BACK button
+        drawBtn(startX, settingsY, totalWidth, btnHeight, "BACK",
+          color(100, 100, 100), color(60, 60, 60));
+      }
     },
 
     checkClick(mX, mY) {
-      // Check if clicked inside EASY
-      if (
-        mX > btnEasyX &&
-        mX < btnEasyX + btnWidth &&
-        mY > btnY &&
-        mY < btnY + btnHeight
-      ) {
-        return "EASY";
+      if (screen === "main") {
+        if (mX > startX && mX < startX + totalWidth && mY > demoY && mY < demoY + btnHeight)
+          return "DEMO";
+        if (mX > btnEasyX && mX < btnEasyX + btnWidth && mY > btnY && mY < btnY + btnHeight)
+          return "EASY";
+        if (mX > btnHardX && mX < btnHardX + btnWidth && mY > btnY && mY < btnY + btnHeight)
+          return "HARD";
+        if (mX > startX && mX < startX + totalWidth && mY > settingsY && mY < settingsY + btnHeight)
+          return "SETTINGS";
+      } else {
+        if (mX > btnEasyX && mX < btnEasyX + btnWidth && mY > btnY && mY < btnY + btnHeight)
+          return "DEMO_EASY";
+        if (mX > btnHardX && mX < btnHardX + btnWidth && mY > btnY && mY < btnY + btnHeight)
+          return "DEMO_HARD";
+        if (mX > startX && mX < startX + totalWidth && mY > settingsY && mY < settingsY + btnHeight)
+          return "BACK";
       }
-      // Check if clicked inside HARD
-      if (
-        mX > btnHardX &&
-        mX < btnHardX + btnWidth &&
-        mY > btnY &&
-        mY < btnY + btnHeight
-      ) {
-        return "HARD";
-      }
-
-      const settingsY = btnY + btnHeight + 20;
-      if (
-        mX > startX &&
-        mX < startX + totalWidth &&
-        mY > settingsY &&
-        mY < settingsY + btnHeight
-      ) {
-        return "SETTINGS";
-      }
-      return null; // Clicked somewhere else on the screen
+      return null;
     },
+
+    setScreen(s) { screen = s; },
+    getScreen() { return screen; },
   };
 }

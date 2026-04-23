@@ -35,11 +35,11 @@ import {
   PLAYER,
   TIME,
   GAME,
-  INPUT,
   CONTROLS,
   GAMEPLAY_OVERLAY,
   MINIMAP,
   HUD_DIALS,
+  GAME_VERSIONS,
 } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
@@ -80,6 +80,7 @@ let miniMapSystem;
 let lastEnsuredRoom = null;
 let gameState = "MENU";
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
+let gameVersion = "full"; // "demo" | "full"
 let menuSystem;
 let winScreenSystem;
 let gameOverSystem;
@@ -89,11 +90,12 @@ const WIN_STATE = "WIN";
 const GAME_OVER_STATE = "GAME_OVER";
 
 let assets = {};
-const INITIAL_ROOM_ID = "startArea";
 // NOTE: Some rooms are placeholders (see docs/data/rooms/*.json) so the build runs end-to-end.
-const ROOM_IDS = [/* test maps */ "roomA", "roomB",
-                  /* game maps */ "startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
-                  "theDrop", "endlessAbyss", "theBiolume", "jellyfishAtrium", "theSurface"];
+// Prototype rooms are preloaded for testing but not part of any game version.
+const ROOM_IDS = [
+  "roomA", "roomB",
+  ...new Set(Object.values(GAME_VERSIONS).flatMap(v => v.rooms)),
+];
 const roomData = {};
 const FIT_CANVAS_TO_ROOM = false;
 let useDevResolution = false;
@@ -503,7 +505,7 @@ function setup() {
 
   player = new Player(PLAYER);
 
-  const initialRoom = INITIAL_ROOM_ID;
+  const initialRoom = GAME_VERSIONS.demo.startRoom;
   roomSystem = createRoomSystem({
     initialRoom,
     roomData,
@@ -524,6 +526,8 @@ function setup() {
     onWin: () => {
       gameState = WIN_STATE;
     },
+    getAllowedRooms: () => GAME_VERSIONS[gameVersion].rooms,
+    getGameVersion: () => gameVersion,
   });
   roomSystem.goToRoom(initialRoom, { spawnId: "default" });
   syncCanvasToCurrentRoom();
@@ -660,11 +664,11 @@ function setup() {
       useDevResolution = isDev;
       applyDisplayScale();
     },
-    onControlModeChange: (mode) => inputSystem.setControlMode(mode),
+    onControlModeChange: (mode) => { inputSystem.setControlMode(mode); shopSystem?.setControlMode(mode); },
     initialControlMode: CONTROLS.DEFAULT_MODE,
   });
 
-  shopSystem = createShopSystem(player);
+  shopSystem = createShopSystem(player, CONTROLS.DEFAULT_MODE);
 
   engine = new Engine();
   engine.register(inputSystem);
@@ -777,7 +781,7 @@ function keyPressed() {
   tryUnlockAudioContext();
 
   // Fullscreen toggle — works from any game state
-  if (keyCode === INPUT.TOGGLE_FULLSCREEN_KEY) {
+  if (keyCode === CONTROLS.MODES[CONTROLS.DEFAULT_MODE].TOGGLE_FULLSCREEN) {
     fullscreen(!fullscreen());
     return;
   }
@@ -790,10 +794,14 @@ function keyPressed() {
     player.actionIntent.togglePause = false;
   }
 
-  // Always process shop toggle (B)
   if (player?.actionIntent?.toggleShop) {
     shopSystem?.toggleShop();
     player.actionIntent.toggleShop = false;
+  }
+
+  if (player?.actionIntent?.accept) {
+    if (shopSystem?.isShopOpen()) shopSystem.toggleShop();
+    player.actionIntent.accept = false;
   }
 
   // Only process other actions if not paused
@@ -813,6 +821,8 @@ function mousePressed() {
     const selection = winScreenSystem.checkClick(mouseX, mouseY);
     if (selection === "MENU") {
       resetGameToStart();
+      gameVersion = "full";
+      menuSystem.setScreen("main");
       gameState = "MENU";
     }
     return;
@@ -825,6 +835,8 @@ function mousePressed() {
       gameState = "PLAYING";
     } else if (selection === "NO") {
       resetGameToStart();
+      gameVersion = "full";
+      menuSystem.setScreen("main");
       gameState = "MENU";
     } else if (selection === "SETTINGS") {
       settingsReturnState = GAME_OVER_STATE;
@@ -837,8 +849,19 @@ function mousePressed() {
   if (gameState === "MENU") {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
-    if (selection === "EASY" || selection === "HARD") {
+    if (selection === "DEMO") {
+      menuSystem.setScreen("demo_difficulty");
+    } else if (selection === "BACK") {
+      menuSystem.setScreen("main");
+    } else if (selection === "DEMO_EASY" || selection === "DEMO_HARD") {
+      gameVersion = "demo";
+      applyDifficultyConfig(selection === "DEMO_EASY" ? "EASY" : "HARD");
+      resetGameToStart();
+      gameState = "PLAYING";
+    } else if (selection === "EASY" || selection === "HARD") {
+      gameVersion = "full";
       applyDifficultyConfig(selection);
+      resetGameToStart();
       gameState = "PLAYING";
     } else if (selection === "SETTINGS") {
       settingsReturnState = "MENU";
@@ -912,7 +935,8 @@ function applyDisplayScale() {
 
 function resetGameToStart() {
   // 1. Send the player back to the first room
-  roomSystem.goToRoom(INITIAL_ROOM_ID, { spawnId: "default" });
+  const startRoom = GAME_VERSIONS[gameVersion].startRoom;
+  roomSystem.goToRoom(startRoom, { spawnId: "default" });
 
   // 2. Snap the player's physical coordinates to the spawn point
   const playerStart = roomSystem.getPlayerStart();
@@ -931,10 +955,10 @@ function resetGameToStart() {
     player.torch.isOn = false;
   }
 
-  // 5. Reset upgrades, inventory, and coins
+  // 5. Reset upgrades, inventory, and credits
   player.upgrades = { power: 1, torch: 1, sonar: 1 };
   player.missiles = 0;
-  player.coins = PLAYER.STARTING_COINS;
+  player.credits = PLAYER.STARTING_CREDITS;
 
   // 6. Reset shop internal state (costs, levels, open state)
   shopSystem?.reset();

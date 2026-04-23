@@ -13,7 +13,7 @@ DESCRIPTION:
 HIERARCHY:
 - type: "resource" (main category)
   - resourceType: "power" (specific resource)
-  - resourceType: "health" (specific resource)
+  - resourceType: "credits" (specific resource)
 
 RULES:
 - Runs in update()
@@ -71,8 +71,8 @@ export function createResourceManagementSystem(
     if (!best) return null;
 
     const localTileId = gid - best.firstgid;
-    if (localTileId === 20) return "power";
-    if (localTileId === 41 || localTileId === 53) return "health";
+    if (localTileId === 20) return "credits";
+    if (localTileId === 41) return "power";
     return null;
   }
 
@@ -89,21 +89,15 @@ export function createResourceManagementSystem(
   // Moved game logic from sketch.js to here
   //======================================
   const handlers = {
-    power(player, item) {
+    power(player) {
       const difficulty = getDifficulty?.() ?? "normal";
       const amount = difficulty === "hard" ? 5 : 10;
-      player.power.current = Math.max(
-        0,
-        Math.min(player.power.current + amount, player.power.maxPower),
-      );
+      player.power.current = Math.min(player.power.current + amount, player.power.maxPower);
     },
-    health(player, item) {
+    credits(player, _item) {
       const difficulty = getDifficulty?.() ?? "normal";
-      const amount = difficulty === "hard" ? 2 : 5;
-      player.power.current = Math.max(
-        0,
-        Math.min(player.power.current + amount, player.power.maxPower),
-      );
+      const amount = difficulty === "hard" ? 50 : 100;
+      player.credits = (player.credits ?? 0) + amount;
     },
   };
 

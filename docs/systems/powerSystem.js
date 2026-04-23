@@ -57,12 +57,11 @@ export class PowerSystem {
       this.maxPower = config.MAX_POWER;
       this.current = config.CURRENT_POWER;
       this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
-      this.drainRate = config.DRAIN_RATE
+      this.drainRate = config.DRAIN_RATE;
    }
 
    drain(rate = this.drainRate) {
-      this.current -= rate * TIME.fixedDeltaTime;
-      this.current = Math.max(0, Math.min(this.current, this.maxPower));
+      this.current = Math.max(0, Math.min(this.current - rate * TIME.fixedDeltaTime, this.maxPower));
    }
 
    isEmpty() {
