@@ -72,7 +72,6 @@ export function createTorchSystem(torch, player, { soundSystem = null } = {}) {
                torch.isOn = false;
             } else {
                torch.setUpgradeLevel(player?.upgrades?.torch ?? 1);
-               torch.setUpgradeLevel(player?.upgrades?.torch ?? 1);
             }
          }
       }
