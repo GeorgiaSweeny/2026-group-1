@@ -35,7 +35,7 @@
         {
          "draworder":"topdown",
          "id":10,
-         "name":"interactable",
+         "name":"glow",
          "objects":[
                 {
                  "gid":34,
@@ -219,19 +219,14 @@
                  "name":"",
                  "properties":[
                         {
-                         "name":"gameVersion",
-                         "type":"string",
-                         "value":"demo"
-                        }, 
-                        {
                          "name":"targetRoom",
                          "type":"string",
                          "value":"crabCaverns"
-                        }, 
+                        },
                         {
                          "name":"targetSpawn",
                          "type":"string",
-                         "value":""
+                         "value":"bottomLeftEnterance"
                         }],
                  "rotation":0,
                  "type":"",
@@ -315,7 +310,7 @@
                         {
                          "name":"targetSpawn",
                          "type":"string",
-                         "value":"topLeftEnterance"
+                         "value":"topRightEnterance"
                         }],
                  "rotation":0,
                  "type":"",

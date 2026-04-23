@@ -572,7 +572,10 @@ function setup() {
     player,
     () => roomSystem.getPlatforms(),
     () => roomSystem.getHazards(),
-    () => roomSystem.getCollectables(),
+    () =>
+      roomSystem
+        .getCollectables()
+        .filter((c) => !resourceManagementSystem?.isCollected(c)),
     soundSystem,
   );
 

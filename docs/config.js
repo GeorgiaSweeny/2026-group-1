@@ -37,7 +37,7 @@ export const GAME = {
 export const GAME_VERSIONS = {
   demo: {
     startRoom: "demoStart",
-    rooms: ["demoStart", "tunnel", "crabCaverns", "theSurface"],
+    rooms: ["demoStart", "tunnel", "crabCaverns", "theSurface", "theDrop", "endlessAbyss"],
   },
   full: {
     startRoom: "startArea",

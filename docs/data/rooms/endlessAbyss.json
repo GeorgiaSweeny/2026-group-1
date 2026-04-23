@@ -173,7 +173,7 @@
                          "name":"targetRoom",
                          "type":"string",
                          "value":"theDrop"
-                        }, 
+                        },
                         {
                          "name":"targetSpawn",
                          "type":"string",
