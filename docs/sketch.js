@@ -43,6 +43,7 @@ import {
 } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
+import { createMainPageSystem } from "./systems/mainPageSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
 import { createShopSystem } from "./systems/shopSystem.js";
 import { createMissileSystem } from "./systems/missileSystem.js";
@@ -59,7 +60,8 @@ let alpha;
 let engine;
 let darknessLayer;
 let player;
-
+let mainPageSystem;
+let mainPageBg;
 let inputSystem;
 let playerSystem;
 let physicsSystem;
@@ -78,7 +80,8 @@ let particleSystem;
 let cameraSystem;
 let miniMapSystem;
 let lastEnsuredRoom = null;
-let gameState = "MENU";
+//let gameState = "MENU";
+let gameState = "MAIN_PAGE";
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
 let gameVersion = "full"; // "demo" | "full"
 let menuSystem;
@@ -491,6 +494,9 @@ function preload() {
       );
     },
   );
+
+
+  mainPageBg = loadImage("assets/backgrounds/titleBackground.png");
 }
 
 function setup() {
@@ -499,6 +505,7 @@ function setup() {
   textAlign(LEFT);
   applyDisplayScale();
 
+  mainPageSystem = createMainPageSystem();
   menuSystem = createMenuSystem();
   winScreenSystem = createWinScreenSystem();
   gameOverSystem = createGameOverSystem();
@@ -690,6 +697,12 @@ function setup() {
 
 function draw() {
   frameRate(GAME.FPS);
+
+  if (gameState === "MAIN_PAGE") {
+    mainPageSystem.draw(mainPageBg);
+    return;
+  }
+
   if (gameState === "MENU") {
     menuSystem.draw(null);
     return;
@@ -814,6 +827,14 @@ function mousePressed() {
   // Shop overlay blocks all clicks
   if (shopSystem?.isShopOpen()) {
     shopSystem?.onMousePressed();
+    return;
+  }
+
+  if (gameState === "MAIN_PAGE") {
+    const selection = mainPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "PLAY") {
+      gameState = "MENU";
+    }
     return;
   }
 
