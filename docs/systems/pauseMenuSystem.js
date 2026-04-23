@@ -22,7 +22,6 @@ RULES:
 import { CONTROLS, keyLabel } from '../config.js';
 
 export function createPauseMenuSystem({
-  onDifficultyChange,
   onResolutionChange,
   onControlModeChange,
   initialControlMode = 'wasd',
@@ -31,7 +30,7 @@ export function createPauseMenuSystem({
   let currentPage = "main"; // 'main' | 'settings' | 'debug'
 
   // Difficulty: 'normal' | 'hard'
-  let difficulty = "normal";
+  let difficulty = "easy";
 
   // Settings (UI only — values stored but not wired to audio etc.)
   let volume = 80; // 0–100
@@ -290,8 +289,7 @@ export function createPauseMenuSystem({
       } else if (isOver(cx - BUTTON_W / 2, settingsY, BUTTON_W, BUTTON_H)) {
         currentPage = "settings";
       } else if (isOver(cx - BUTTON_W / 2, diffY, BUTTON_W, BUTTON_H)) {
-        difficulty = difficulty === "normal" ? "hard" : "normal";
-        onDifficultyChange?.(difficulty);
+        difficulty = difficulty === "easy" ? "hard" : "easy";
       }
     } else if (currentPage === "settings") {
       const baseY = height / 2 - 100;

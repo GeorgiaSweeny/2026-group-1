@@ -35,6 +35,7 @@ export function createRenderSystem({
    getSonarReveals,
    getSonarHazardReveals,
    getSonarCollectableReveals,
+   getSonarEnemyReveals,
    getSonarCooldown,
    assets,
    darknessLayer,
@@ -47,6 +48,7 @@ export function createRenderSystem({
    getMissiles,
    getParticles,
    getPiranhas,
+   getGlowObjects,
    drawMiniMap,
    getHudDialSettings,
    getGameplayOverlay,
@@ -243,6 +245,21 @@ export function createRenderSystem({
          const collectableType = getCollectableType(item);
          fill(getCollectableColorByType(collectableType, 220));
          ellipse(item.x, item.y, Math.max(8, item.w), Math.max(8, item.h));
+      }
+   }
+
+   //=== GLOW OBJECTS ===//
+   function drawInteractables() {
+      const items = getGlowObjects?.() ?? [];
+      if (!items.length) return;
+
+      noStroke();
+      for (const obj of items) {
+         if (obj.visible === false) continue;
+         if (drawSpriteFromTileset(obj)) continue;
+         const intensity = obj._glow?.intensity ?? 0;
+         fill(80, 200 + intensity * 55, 180, 160 + intensity * 60);
+         ellipse(obj.x, obj.y, Math.max(8, obj.w), Math.max(8, obj.h));
       }
    }
 
@@ -447,20 +464,19 @@ export function createRenderSystem({
 
          if (elapsed < duration) {
             noStroke();
-
             const whitePhase = duration * 0.25;
 
             if (elapsed < whitePhase) {
-               // Phase 1: white flash
-               fill(255, 255, 255, 180);
-            } else {
-               // Phase 2: red fade out
-               const t = (elapsed - whitePhase) / whitePhase; // 0 → 1
-               const alpha = 150 * (1 - t);
-               fill(255, 50, 50, alpha);
+               // Phase 1: white flash — subtler for glow hits
+               const flashAlpha = player.damageFlashColor === 'white' ? 100 : 180;
+               fill(255, 255, 255, flashAlpha);
+               ellipse(0, 0, player.w * 1.4, player.h * 1.1);
+            } else if (player.damageFlashColor !== 'white') {
+               // Phase 2: red fade out (skipped for glow hits)
+               const t = (elapsed - whitePhase) / whitePhase;
+               fill(255, 50, 50, 150 * (1 - t));
+               ellipse(0, 0, player.w * 1.4, player.h * 1.1);
             }
-
-            ellipse(0, 0, player.w * 1.4, player.h * 1.1);
          }
       }
 
@@ -539,7 +555,22 @@ export function createRenderSystem({
             screenX, screenY, scaledRadius * 0.1,
             screenX, screenY, scaledRadius
          );
-         if (kind === 'ambient') {
+         if (kind === 'glow') {
+            // inner ring — distinct
+            gradient.addColorStop(0,    'rgba(255,255,255,1)');
+            gradient.addColorStop(0.08, 'rgba(255,255,255,0.68)');
+            gradient.addColorStop(0.22, 'rgba(255,255,255,0.85)');
+            // mid ring — moderate
+            gradient.addColorStop(0.33, 'rgba(255,255,255,0.42)');
+            gradient.addColorStop(0.55, 'rgba(255,255,255,0.72)');
+            // outer ring — soft fade
+            gradient.addColorStop(0.68, 'rgba(255,255,255,0.28)');
+            gradient.addColorStop(0.82, 'rgba(255,255,255,0.32)');
+            gradient.addColorStop(0.88, 'rgba(255,255,255,0.15)');
+            gradient.addColorStop(0.94, 'rgba(255,255,255,0.05)');
+            gradient.addColorStop(0.98, 'rgba(255,255,255,0.01)');
+            gradient.addColorStop(1,    'rgba(0,0,0,0)');
+         } else if (kind === 'ambient') {
             gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
             gradient.addColorStop(0.15, 'rgba(255,255,255,0.45)');
             gradient.addColorStop(0.25, 'rgba(255,255,255,0.25)');
@@ -570,7 +601,32 @@ export function createRenderSystem({
          ctx.fill();
       }
 
+      // Bioluminescent colour tint — drawn source-over the punched darkness layer.
+      // Only the transparent (lit) areas pick up the colour; opaque dark areas are unaffected.
       ctx.globalCompositeOperation = 'source-over';
+      for (const light of lightSources) {
+         if (light.kind !== 'glow') continue;
+         const { x, y, radius, intensity = 1 } = light;
+         const screenX = (x - cam.x) * camScale;
+         const screenY = (y - cam.y) * camScale;
+         const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius) || scaledRadius <= 0) continue;
+
+         const tint = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, scaledRadius);
+         const peak = 0.4 * intensity;
+         // centre is near-white so suppress colour there; tint peaks in the mid-ring zone
+         tint.addColorStop(0,    'rgba(40, 230, 180, 0)');
+         tint.addColorStop(0.2,  `rgba(20, 220, 170, ${peak * 0.3})`);
+         tint.addColorStop(0.45, `rgba(10, 200, 160, ${peak})`);
+         tint.addColorStop(0.7,  `rgba(0,  170, 140, ${peak * 0.4})`);
+         tint.addColorStop(1,    'rgba(0, 0, 0, 0)');
+
+         ctx.fillStyle = tint;
+         ctx.beginPath();
+         ctx.arc(screenX, screenY, scaledRadius, 0, Math.PI * 2);
+         ctx.fill();
+      }
+
       image(darknessLayer, 0, 0);
    }
 
@@ -722,6 +778,7 @@ export function createRenderSystem({
       }
    }
 
+   
    function drawSonarCollectableReveals() {
       if (player?.torch?.isOn) return;
       const reveals = getSonarCollectableReveals?.() ?? [];
@@ -729,15 +786,22 @@ export function createRenderSystem({
 
       for (const r of reveals) {
          const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
-         noStroke();
          const collectableType = getCollectableType(r);
-         if (collectableType === 'credits') {
-            fill(80, 220, 120, alpha);
-         } else if (collectableType === 'power') {
-            fill(255, 225, 80, alpha);
-         } else {
-            fill(getCollectableColorByType(null, alpha));
-         }
+         noStroke();
+         fill(getCollectableColorByType(collectableType, alpha));
+         ellipse(r.x + r.w / 2, r.y + r.h / 2, Math.max(8, r.w), Math.max(8, r.h));
+      }
+   }
+
+   function drawSonarEnemyReveals() {
+      if (player?.torch?.isOn) return;
+      const reveals = getSonarEnemyReveals?.() ?? [];
+      if (!reveals.length) return;
+
+      for (const r of reveals) {
+         const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
+         noStroke();
+         fill(225, 5, 49, alpha); // red
          ellipse(r.x + r.w / 2, r.y + r.h / 2, Math.max(8, r.w), Math.max(8, r.h));
       }
    }
@@ -841,6 +905,7 @@ function renderInterpolate(oldState, newState, alpha){
             drawHazards();
             drawEnemies(alpha);
             drawCollectables();
+            drawInteractables();
             drawTriggers();
             drawEntities(); //- will need interpolation
             drawSpawnPoints();
@@ -864,6 +929,7 @@ function renderInterpolate(oldState, newState, alpha){
          drawSonarReveals();
          drawSonarHazardReveals();
          drawSonarCollectableReveals();
+         drawSonarEnemyReveals();
          pop();
          
          // --- World Space UI overlays (drawn above everything) --- //

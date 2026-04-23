@@ -52,6 +52,7 @@ import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 import { createGameOverSystem } from "./systems/gameOverSystem.js";
 import { createMiniMapSystem } from "./systems/miniMapSystem.js";
+import { createGlowSystem } from "./systems/glowSystem.js";
 import { createSoundSystem } from "./systems/soundSystem.js";
 import { createStoryPageSystem } from "./systems/storyPageSystem.js";
 import { createControlsPageSystem } from "./systems/controlsPageSystem.js";
@@ -84,6 +85,7 @@ let missileSystem;
 let particleSystem;
 let cameraSystem;
 let miniMapSystem;
+let glowSystem;
 let lastEnsuredRoom = null;
 //let gameState = "MENU";
 let gameState = "MAIN_PAGE";
@@ -147,6 +149,19 @@ function getPathDir(path) {
     .filter(Boolean);
   parts.pop();
   return parts.join("/");
+}
+
+function normalizeTilesetSource(source, mapDir) {
+  if (!source) return source;
+  const resolved = normalizeRelativePath(mapDir, source);
+  if (resolved.startsWith("data/tilesets/")) return source;
+  const idx = source.indexOf("tilesets/");
+  if (idx !== -1) {
+    const fixed = `../${source.slice(idx)}`;
+    console.warn(`[preload] Fixed tileset source: "${source}" → "${fixed}"`);
+    return fixed;
+  }
+  return source;
 }
 
 function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
@@ -418,6 +433,7 @@ function preload() {
   for (const [roomId, room] of Object.entries(roomData)) {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
+      tileset.source = normalizeTilesetSource(tileset.source, mapDir);
       const sourcePath = normalizeRelativePath(mapDir, tileset?.source ?? "");
       if (!sourcePath.toLowerCase().endsWith(".tsx")) continue;
       if (tsxMetaBySourcePath[sourcePath]) continue;
@@ -559,19 +575,21 @@ function setup() {
   cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
   // Snap camera to player's initial position
   cameraSystem.snapTo(player.position.x, player.position.y);
-  powerSystem = createPowerSystem(player);
-  torchSystem = createTorchSystem(player.torch, player, {
-    getDifficulty: () =>
-      pauseMenuSystem ? pauseMenuSystem.getDifficulty() : "normal",
-    soundSystem,
+  powerSystem = createPowerSystem(player, {
+    getDifficulty: () => pauseMenuSystem?.getDifficulty() ?? "easy",
   });
+  torchSystem = createTorchSystem(player.torch, player, { soundSystem });
 
   sonarSystem = createSonarSystem(
     player,
     () => roomSystem.getPlatforms(),
     () => roomSystem.getHazards(),
-    () => roomSystem.getCollectables(),
+    () =>
+      roomSystem
+        .getCollectables()
+        .filter((c) => !resourceManagementSystem?.isCollected(c)),
     soundSystem,
+    () => enemySystem?.getEnemies() ?? [],
   );
 
   missileSystem = createMissileSystem(
@@ -583,9 +601,15 @@ function setup() {
 
   particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 
+  glowSystem = createGlowSystem(
+    player,
+    () => roomSystem.getGlowObjects(),
+  );
+
   lightingSystem = createLightingSystem(
     player,
     () => sonarSystem?.getSonarLights?.() ?? [],
+    () => glowSystem.getGlowLights(),
   );
 
   resourceManagementSystem = createResourceManagementSystem(
@@ -631,6 +655,7 @@ function setup() {
     getJellyfish: () => enemySystem.getJellyfish(),
     getPiranhas: () => enemySystem.getPiranhas(),
     getTriggers: () => roomSystem.getTriggers(),
+    getGlowObjects: () => roomSystem.getGlowObjects(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),
     getTilesets: () => roomSystem.getTilesets(),
@@ -641,6 +666,7 @@ function setup() {
     getSonarReveals: () => sonarSystem?.getRevealedWalls?.(),
     getSonarHazardReveals: () => sonarSystem?.getRevealedHazards?.(),
     getSonarCollectableReveals: () => sonarSystem?.getRevealedCollectables?.(),
+    getSonarEnemyReveals: () => sonarSystem?.getRevealedEnemies?.(),
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),
@@ -674,7 +700,6 @@ function setup() {
   });
 
   pauseMenuSystem = createPauseMenuSystem({
-    onDifficultyChange: (diff) => {},
     onResolutionChange: (isDev) => {
       useDevResolution = isDev;
       applyDisplayScale();
@@ -698,6 +723,7 @@ function setup() {
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
+  engine.register(glowSystem);
   engine.register(enemySystem);
   engine.register(pauseMenuSystem);
   engine.register(shopSystem);
@@ -907,12 +933,8 @@ function mousePressed() {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
     if (selection === "DEMO") {
-      menuSystem.setScreen("demo_difficulty");
-    } else if (selection === "BACK") {
-      menuSystem.setScreen("main");
-    } else if (selection === "DEMO_EASY" || selection === "DEMO_HARD") {
       gameVersion = "demo";
-      applyDifficultyConfig(selection === "DEMO_EASY" ? "EASY" : "HARD");
+      applyDifficultyConfig(GAME_VERSIONS.demo.difficulty);
       resetGameToStart();
       gameState = "PLAYING";
     } else if (selection === "EASY" || selection === "HARD") {
@@ -943,7 +965,7 @@ function mousePressed() {
 }
 
 function applyDifficultyConfig(selection) {
-  const diffLevel = selection === "EASY" ? "normal" : "hard";
+  const diffLevel = selection === "EASY" ? "easy" : "hard";
 
   if (pauseMenuSystem) {
     pauseMenuSystem.setDifficulty(diffLevel);

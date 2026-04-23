@@ -37,7 +37,8 @@ export const GAME = {
 export const GAME_VERSIONS = {
   demo: {
     startRoom: "demoStart",
-    rooms: ["demoStart", "crabCaverns", "theSurface"],
+    rooms: ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "theSurface"],
+    difficulty: "EASY",
   },
   full: {
     startRoom: "startArea",
@@ -228,6 +229,22 @@ export const LIGHTING = {
 };
 
 //======================
+// GLOW INTERACTABLE CONFIG
+//======================
+export const GLOW = {
+  BASE_RADIUS: 30,         // resting light radius (px)
+  ACTIVE_RADIUS: 72,       // peak light radius when activated (px)
+  BASE_INTENSITY: 0.3,     // resting brightness (always emitted)
+  DECAY_RATE: 1.8,         // intensity lost per second after contact ends (back to base)
+  PULSE_SPEED: 2.5,        // Hz of brightness pulse while active
+  PULSE_AMPLITUDE: 0.12,   // ±intensity variation during pulse
+  KNOCKBACK_STRENGTH: 160, // weaker than COMBAT (400)
+  KNOCKBACK_LIFT: 50,
+  IFRAME_DURATION_MS: 800,
+  DAMAGE_FLASH_DURATION_MS: 300,
+};
+
+//======================
 // SONAR CONFIG
 //======================
 export const SONAR = {
@@ -255,6 +272,24 @@ export const COMBAT = {
 
   // (optional: default for centralised damage via PlayerHitResponse util)
   HIT_DAMAGE: 10, // (not in use!) all damage set to this default
+};
+
+//======================
+// DIFFICULTY CONFIG
+//======================
+export const DIFFICULTY = {
+  easy: {
+    POWER_PICKUP:    10,
+    CREDIT_PICKUP:  100,
+    POWER_DRAIN:    0.5,
+    TORCH_DRAIN:    1.0,
+  },
+  hard: {
+    POWER_PICKUP:    5,
+    CREDIT_PICKUP:  50,
+    POWER_DRAIN:    0.75,
+    TORCH_DRAIN:    1.5,
+  },
 };
 
 //======================

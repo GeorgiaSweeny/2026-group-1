@@ -34,6 +34,11 @@
    <property name="type" value="enemy"/>
   </properties>
  </tile>
+ <tile id="33">
+  <properties>
+   <property name="type" value="glow"/>
+  </properties>
+ </tile>
  <tile id="41">
   <properties>
    <property name="collectableType" value="power"/>

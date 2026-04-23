@@ -50,7 +50,7 @@ TODO / LIMITATIONS:
 //======================================
 // POWER CLASS
 //======================================
-import { POWER, TORCH, TIME } from '../config.js';
+import { POWER, TIME, DIFFICULTY } from '../config.js';
 
 export class PowerSystem {
    constructor(config = POWER) {
@@ -85,9 +85,7 @@ export class PowerSystem {
 // POWER SYSTEM
 //======================================
 
-export function createPowerSystem(entity, config = POWER) {
-   // Use the power instance already on the entity (Player sets this.power in constructor).
-   // Fallback: create one if the entity has none.
+export function createPowerSystem(entity, { getDifficulty = () => "easy", config = POWER } = {}) {
    if (!entity.power) {
       entity.power = new PowerSystem(config);
    }
@@ -98,10 +96,11 @@ export function createPowerSystem(entity, config = POWER) {
 
       //---UPDATE HOOK---//
       update() {
-         let rate = power.drainRate;
+         const diff = DIFFICULTY[getDifficulty()] ?? DIFFICULTY.easy;
+         let rate = diff.POWER_DRAIN;
 
          if (entity.torch?.isOn) {
-            rate *= TORCH.DRAIN_RATE;
+            rate *= diff.TORCH_DRAIN;
          }
 
          power.drain(rate);

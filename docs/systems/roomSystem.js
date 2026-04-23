@@ -105,6 +105,15 @@ function getTilesetForGid(tilesets, gid) {
   return best;
 }
 
+function getTileTypeFromGid(tilesets, gid) {
+  const tileset = getTilesetForGid(tilesets, Number(gid));
+  if (!tileset) return null;
+  const localTileId = Number(gid) - Number(tileset.firstgid);
+  if (!Number.isFinite(localTileId) || localTileId < 0) return null;
+  const tileProps = tileset?.tilePropertiesById?.[localTileId] ?? null;
+  return String(tileProps?.type ?? '').toLowerCase() || null;
+}
+
 function getCollectableTypeFromGid(tilesets, gid) {
   const tileset = getTilesetForGid(tilesets, Number(gid));
   if (!tileset) return null;
@@ -144,6 +153,7 @@ function normalizeTiledRoom(roomKey, mapData) {
     exits: [],
     foreground: [],
     enemies: [],
+    glowObjects: [],
   };
 
   for (const layer of mapData?.layers ?? []) {
@@ -221,6 +231,13 @@ function normalizeTiledRoom(roomKey, mapData) {
       continue;
     }
 
+    if (layer?.type === 'objectgroup' && layerName === 'glow') {
+      normalized.glowObjects = (layer.objects ?? []).map((obj) =>
+        normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
+      );
+      continue;
+    }
+
     if (layer?.type === 'objectgroup' && layerName === 'triggers') {
       normalized.triggers = (layer.objects ?? []).map((obj) =>
         normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
@@ -256,6 +273,18 @@ function normalizeTiledRoom(roomKey, mapData) {
 
     if (layer?.type === 'imagelayer' && !normalized.background.image && layer?.image) {
       normalized.background.image = layer.image;
+    }
+
+    // Fallback: scan any unrecognised objectgroup for glow-typed tiles so
+    // glow objects are found even if the layer name in Tiled is wrong.
+    if (layer?.type === 'objectgroup') {
+      for (const obj of layer.objects ?? []) {
+        if (getTileTypeFromGid(normalized.tilesets, obj.gid) === 'glow') {
+          normalized.glowObjects.push(
+            normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
+          );
+        }
+      }
     }
   }
 
@@ -369,6 +398,7 @@ export function createRoomSystem({
   let exits = [];
   let spawnPoints = [];
   let foreground = [];
+  let glowObjects = [];
   let tilesets = [];
   let tileWidth = CANVAS.TILE_SIZE;
   let tileHeight = CANVAS.TILE_SIZE;
@@ -394,6 +424,7 @@ export function createRoomSystem({
     spawnPoints = [...(normalized.spawnPoints ?? [])];
     foreground = [...(normalized.foreground ?? [])];
     entities = [...(normalized.entities ?? [])];
+    glowObjects = [...(normalized.glowObjects ?? [])];
     tilesets = [...(normalized.tilesets ?? [])];
     tileWidth = normalized.tileWidth ?? CANVAS.TILE_SIZE;
     tileHeight = normalized.tileHeight ?? CANVAS.TILE_SIZE;
@@ -535,6 +566,10 @@ export function createRoomSystem({
 
     getForeground() {
       return foreground;
+    },
+
+    getGlowObjects() {
+      return glowObjects;
     },
 
     getTilesets() {

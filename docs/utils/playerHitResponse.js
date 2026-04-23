@@ -7,6 +7,9 @@ DESCRIPTION:
   with any damaging entity (enemy, hazard, etc.)
 - Treats all sources generically — no type-specific logic
 - Enforces an invulnerability window to prevent repeated rapid hits
+- If the source exposes w/h bounds, also resolves the player's
+  position out of the source every frame (before i-frame check)
+  so the player can never enter solid objects.
 
 RULES:
 - No rendering or drawing
@@ -24,35 +27,7 @@ handlePlayerHit(player, sourceEntity, COMBAT);
 //======================================
 import { TIME } from '../config.js';
 
-/**
- * Applies damage and knockback to the player on contact with a source entity.
- *
- * @param {Player}  player  - The player instance.
- * @param {object}  source  - Damaging entity; must have a center position
- *                            via source.position.x/y (Hitbox) or source.x/y (plain object).
- * @param {object}  config  - Tuning values (see COMBAT in config.js).
- **/
-
 export function handlePlayerHit(player, source, config) {
-   // --- i-frame check --- //
-   // Exit early if the player was hit within the invulnerability window.
-   const now = millis();
-   if (player.lastHitTime != null && now - player.lastHitTime < config.IFRAME_DURATION_MS) {
-      return;
-   }
-
-   /*
-   // --- Apply hit/contact damage (hazrds & enemies)--- //
-   // Uses the same direct power reduction pattern
- 
-   player.power.current = Math.max(0, player.power.current - config.HIT_DAMAGE); 
-   //replace with encapsulated damage per hazard/enemy type or remove and damage behaviour 
-   */
-
-   // --- Compute knockback direction --- //
-   /* Resolve source centre from either a Hitbox instance (position.x/y) or a
-      plain room object (x/y already at centre after roomSystem normalisation).
-   */
    const srcX = source.position?.x ?? source.x;
    const srcY = source.position?.y ?? source.y;
 
@@ -60,9 +35,33 @@ export function handlePlayerHit(player, source, config) {
    const dy = player.position.y - srcY;
    const dist = Math.sqrt(dx * dx + dy * dy);
 
-   // Default push direction if the centres coincide exactly (edge case).
    const normX = dist > 0 ? dx / dist : 1;
    const normY = dist > 0 ? dy / dist : 0;
+
+   // --- Position correction (runs every frame, ignores i-frames) --- //
+   // Pushes the player out of any source that exposes its bounds (w/h),
+   // preventing the player from entering hazards or glow objects.
+   const srcW = source.w ?? source.width ?? source.getWidth?.() ?? null;
+   const srcH = source.h ?? source.height ?? source.getHeight?.() ?? null;
+   if (srcW && srcH) {
+      const pw = player.w ?? 16;
+      const ph = player.h ?? 16;
+      const overlapX = (pw / 2 + srcW / 2) - Math.abs(dx);
+      const overlapY = (ph / 2 + srcH / 2) - Math.abs(dy);
+      if (overlapX > 0 && overlapY > 0) {
+         if (overlapX < overlapY) {
+            player.position.x += overlapX * (Math.sign(dx) || 1);
+         } else {
+            player.position.y += overlapY * (Math.sign(dy) || 1);
+         }
+      }
+   }
+
+   // --- i-frame check --- //
+   const now = millis();
+   if (player.lastHitTime != null && now - player.lastHitTime < config.IFRAME_DURATION_MS) {
+      return;
+   }
 
    // --- Apply knockback velocity --- //
    player.velocity.x = normX * config.KNOCKBACK_STRENGTH * TIME.fixedDeltaTime;
@@ -70,11 +69,9 @@ export function handlePlayerHit(player, source, config) {
       - config.KNOCKBACK_LIFT * TIME.fixedDeltaTime;
 
    // --- Record hit timestamp --- //
-   // lastHitTime gates the i-frame window.
-   // damageFlashTime is read by the render system to drive the visual flash;
-   // kept separate so flash duration and i-frame duration can be tuned independently.
    player.lastHitTime = now;
    player.damageFlashTime = now;
+   player.damageFlashColor = 'red';
 }
 
 //======================================
