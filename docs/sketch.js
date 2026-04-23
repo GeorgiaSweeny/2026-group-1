@@ -53,6 +53,8 @@ import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 import { createGameOverSystem } from "./systems/gameOverSystem.js";
 import { createMiniMapSystem } from "./systems/miniMapSystem.js";
 import { createSoundSystem } from "./systems/soundSystem.js";
+import { createStoryPageSystem } from "./systems/storyPageSystem.js";
+import { createControlsPageSystem } from "./systems/controlsPageSystem.js";
 
 let accumulator = 0;
 let alpha;
@@ -63,6 +65,8 @@ let player;
 let mainPageSystem;
 let mainPageBg;
 let menuBg;
+let storyPageSystem;
+let controlsPageSystem;
 let inputSystem;
 let playerSystem;
 let physicsSystem;
@@ -508,6 +512,8 @@ function setup() {
   applyDisplayScale();
 
   mainPageSystem = createMainPageSystem();
+  storyPageSystem = createStoryPageSystem();
+  controlsPageSystem = createControlsPageSystem();
   menuSystem = createMenuSystem();
   winScreenSystem = createWinScreenSystem();
   gameOverSystem = createGameOverSystem();
@@ -705,6 +711,16 @@ function draw() {
     return;
   }
 
+  if (gameState === "STORY_PAGE") {
+    storyPageSystem.draw(menuBg);
+    return;
+  }
+
+  if (gameState === "CONTROLS") {
+  controlsPageSystem.draw(menuBg);
+  return;
+}
+
   if (gameState === "MENU") {
     menuSystem.draw(menuBg);
     return;
@@ -835,6 +851,24 @@ function mousePressed() {
   if (gameState === "MAIN_PAGE") {
     const selection = mainPageSystem.checkClick(mouseX, mouseY);
     if (selection === "PLAY") {
+      gameState = "STORY_PAGE";
+    }
+    return;
+  }
+
+  if (gameState === "STORY_PAGE") {
+    const selection = storyPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "CONTINUE") {
+      gameState = "CONTROLS";
+    }
+    return;
+  }
+
+  if (gameState === "CONTROLS") {
+    const selection = controlsPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "BACK") {
+      gameState = "STORY_PAGE";
+    } else if (selection === "NEXT") {
       gameState = "MENU";
     }
     return;
@@ -890,6 +924,8 @@ function mousePressed() {
       settingsReturnState = "MENU";
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
+    } else if (selection === "CONTROLS") {
+      gameState = "CONTROLS";
     }
     return;
   }

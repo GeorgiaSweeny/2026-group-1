@@ -22,6 +22,28 @@ export function createMainPageSystem() {
         return mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h;
     }
 
+    function drawPlayButton() {
+        const hover = isHover(playButtonX, playButtonY, playButtonWidth, playButtonHeight);
+
+        noStroke();
+        fill(0, 0, 0, 120);
+        rect(playButtonX + 3, playButtonY + 4, playButtonWidth, playButtonHeight, 10);
+
+        fill(hover ? color(0, 210, 190) : color(0, 140, 130));
+        rect(playButtonX, playButtonY, playButtonWidth, playButtonHeight, 10);
+
+        fill(255, 255, 255, 40);
+        rect(playButtonX, playButtonY, playButtonWidth, playButtonHeight * 0.35, 10);
+
+        fill(255);
+        textAlign(CENTER, CENTER);
+        textStyle(BOLD);
+        textSize(32);
+        text("PLAY", CANVAS.WIDTH / 2, playButtonY + playButtonHeight / 2);
+        textStyle(NORMAL);
+    }
+
+
     return {
 
         draw(mainPageBg) {
@@ -32,13 +54,15 @@ export function createMainPageSystem() {
                 background(10, 15, 40);
             }
 
-            const hovered = isHover(playButtonX, playButtonY, playButtonWidth, playButtonHeight);
-            fill(hovered ? color(0, 200, 180) : color(0, 130, 120));
-            rect(playButtonX, playButtonY, playButtonWidth, playButtonHeight, 10);
-            fill(255);
-            textAlign(CENTER, CENTER);
-            textSize(32);
-            text("PLAY", CANVAS.WIDTH / 2, playButtonY + playButtonHeight / 2);
+            // const hover = isHover(playButtonX, playButtonY, playButtonWidth, playButtonHeight);
+            // fill(hover ? color(0, 200, 180) : color(0, 130, 120));
+            // rect(playButtonX, playButtonY, playButtonWidth, playButtonHeight, 10);
+            // fill(255);
+            // textAlign(CENTER, CENTER);
+            // textSize(32);
+            // text("PLAY", CANVAS.WIDTH / 2, playButtonY + playButtonHeight / 2);
+
+            drawPlayButton();
         },
 
 

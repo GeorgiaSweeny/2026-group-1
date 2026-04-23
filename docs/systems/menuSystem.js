@@ -28,6 +28,8 @@ export function createMenuSystem() {
   const btnY = demoY + btnHeight + gap;
   const settingsY = btnY + btnHeight + 20;
 
+  const backToControlsY = settingsY + btnHeight + 20;
+
   // "main" shows mode select; "demo_difficulty" shows difficulty for demo mode
   let screen = "main";
 
@@ -79,6 +81,9 @@ export function createMenuSystem() {
         drawBtn(startX, settingsY, totalWidth, btnHeight, "SETTINGS",
           color(60, 140, 220), color(30, 100, 180));
 
+        drawBtn(startX, backToControlsY, totalWidth, btnHeight, "BACK",
+          color(80, 80, 80), color(50, 50, 50));
+
       } else {
         // Demo difficulty sub-screen
         textSize(20);
@@ -105,6 +110,8 @@ export function createMenuSystem() {
           return "HARD";
         if (mX > startX && mX < startX + totalWidth && mY > settingsY && mY < settingsY + btnHeight)
           return "SETTINGS";
+        if (mX > startX && mX < startX + totalWidth && mY > backToControlsY && mY < backToControlsY + btnHeight)
+          return "CONTROLS";
       } else {
         if (mX > btnEasyX && mX < btnEasyX + btnWidth && mY > btnY && mY < btnY + btnHeight)
           return "DEMO_EASY";
