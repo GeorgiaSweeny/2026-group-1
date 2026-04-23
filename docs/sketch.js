@@ -577,6 +577,7 @@ function setup() {
         .getCollectables()
         .filter((c) => !resourceManagementSystem?.isCollected(c)),
     soundSystem,
+    () => enemySystem?.getEnemies() ?? [],
   );
 
   missileSystem = createMissileSystem(
@@ -653,6 +654,7 @@ function setup() {
     getSonarReveals: () => sonarSystem?.getRevealedWalls?.(),
     getSonarHazardReveals: () => sonarSystem?.getRevealedHazards?.(),
     getSonarCollectableReveals: () => sonarSystem?.getRevealedCollectables?.(),
+    getSonarEnemyReveals: () => sonarSystem?.getRevealedEnemies?.(),
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),

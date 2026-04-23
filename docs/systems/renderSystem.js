@@ -35,6 +35,7 @@ export function createRenderSystem({
    getSonarReveals,
    getSonarHazardReveals,
    getSonarCollectableReveals,
+   getSonarEnemyReveals,
    getSonarCooldown,
    assets,
    darknessLayer,
@@ -777,6 +778,7 @@ export function createRenderSystem({
       }
    }
 
+   
    function drawSonarCollectableReveals() {
       if (player?.torch?.isOn) return;
       const reveals = getSonarCollectableReveals?.() ?? [];
@@ -784,15 +786,22 @@ export function createRenderSystem({
 
       for (const r of reveals) {
          const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
-         noStroke();
          const collectableType = getCollectableType(r);
-         if (collectableType === 'credits') {
-            fill(255, 225, 80, alpha);
-         } else if (collectableType === 'power') {
-            fill(80, 220, 120, alpha);
-         } else {
-            fill(getCollectableColorByType(null, alpha));
-         }
+         noStroke();
+         fill(getCollectableColorByType(collectableType, alpha));
+         ellipse(r.x + r.w / 2, r.y + r.h / 2, Math.max(8, r.w), Math.max(8, r.h));
+      }
+   }
+
+   function drawSonarEnemyReveals() {
+      if (player?.torch?.isOn) return;
+      const reveals = getSonarEnemyReveals?.() ?? [];
+      if (!reveals.length) return;
+
+      for (const r of reveals) {
+         const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
+         noStroke();
+         fill(225, 5, 49, alpha); // red
          ellipse(r.x + r.w / 2, r.y + r.h / 2, Math.max(8, r.w), Math.max(8, r.h));
       }
    }
@@ -920,6 +929,7 @@ function renderInterpolate(oldState, newState, alpha){
          drawSonarReveals();
          drawSonarHazardReveals();
          drawSonarCollectableReveals();
+         drawSonarEnemyReveals();
          pop();
          
          // --- World Space UI overlays (drawn above everything) --- //
