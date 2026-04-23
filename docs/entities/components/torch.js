@@ -105,7 +105,7 @@ export class Torch {
          : 0;
 
       // Above blackout threshold: slow gentle flicker; below: rapid dying-bulb speed
-      const gentleSpeedBase = 5;
+      const gentleSpeedBase = 10;
       const gentleSpeedRange = 5;
       const dyingSpeedBase = 8;
       const dyingSpeedRange = 20;
