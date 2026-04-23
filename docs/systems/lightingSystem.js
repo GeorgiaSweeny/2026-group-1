@@ -48,7 +48,7 @@ TODO / LIMITATIONS:
 //======================================
 import { LIGHTING, TORCH } from '../config.js';
 
-export function createLightingSystem(player = null, getSonarLights = () => []) {
+export function createLightingSystem(player = null, getSonarLights = () => [], getGlowLights = () => []) {
    return {
 
       //--- GET LIGHT SOURCES ---//
@@ -84,6 +84,12 @@ export function createLightingSystem(player = null, getSonarLights = () => []) {
          // Sonar lights
          const sonarLights = getSonarLights?.() ?? [];
          for (const light of sonarLights) {
+            lightSources.push(light);
+         }
+
+         // Glow object lights
+         const glowLights = getGlowLights?.() ?? [];
+         for (const light of glowLights) {
             lightSources.push(light);
          }
 

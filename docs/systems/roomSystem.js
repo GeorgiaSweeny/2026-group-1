@@ -144,6 +144,7 @@ function normalizeTiledRoom(roomKey, mapData) {
     exits: [],
     foreground: [],
     enemies: [],
+    glowObjects: [],
   };
 
   for (const layer of mapData?.layers ?? []) {
@@ -218,6 +219,13 @@ function normalizeTiledRoom(roomKey, mapData) {
         e.speed = Number(e.properties?.speed ?? 0.8);
         return e;
       });
+      continue;
+    }
+
+    if (layer?.type === 'objectgroup' && layerName === 'glow') {
+      normalized.glowObjects = (layer.objects ?? []).map((obj) =>
+        normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
+      );
       continue;
     }
 
@@ -369,6 +377,7 @@ export function createRoomSystem({
   let exits = [];
   let spawnPoints = [];
   let foreground = [];
+  let glowObjects = [];
   let tilesets = [];
   let tileWidth = CANVAS.TILE_SIZE;
   let tileHeight = CANVAS.TILE_SIZE;
@@ -394,6 +403,7 @@ export function createRoomSystem({
     spawnPoints = [...(normalized.spawnPoints ?? [])];
     foreground = [...(normalized.foreground ?? [])];
     entities = [...(normalized.entities ?? [])];
+    glowObjects = [...(normalized.glowObjects ?? [])];
     tilesets = [...(normalized.tilesets ?? [])];
     tileWidth = normalized.tileWidth ?? CANVAS.TILE_SIZE;
     tileHeight = normalized.tileHeight ?? CANVAS.TILE_SIZE;
@@ -535,6 +545,10 @@ export function createRoomSystem({
 
     getForeground() {
       return foreground;
+    },
+
+    getGlowObjects() {
+      return glowObjects;
     },
 
     getTilesets() {

@@ -52,6 +52,7 @@ import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 import { createGameOverSystem } from "./systems/gameOverSystem.js";
 import { createMiniMapSystem } from "./systems/miniMapSystem.js";
+import { createGlowSystem } from "./systems/glowSystem.js";
 import { createSoundSystem } from "./systems/soundSystem.js";
 import { createStoryPageSystem } from "./systems/storyPageSystem.js";
 import { createControlsPageSystem } from "./systems/controlsPageSystem.js";
@@ -84,6 +85,7 @@ let missileSystem;
 let particleSystem;
 let cameraSystem;
 let miniMapSystem;
+let glowSystem;
 let lastEnsuredRoom = null;
 //let gameState = "MENU";
 let gameState = "MAIN_PAGE";
@@ -583,9 +585,15 @@ function setup() {
 
   particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 
+  glowSystem = createGlowSystem(
+    player,
+    () => roomSystem.getGlowObjects(),
+  );
+
   lightingSystem = createLightingSystem(
     player,
     () => sonarSystem?.getSonarLights?.() ?? [],
+    () => glowSystem.getGlowLights(),
   );
 
   resourceManagementSystem = createResourceManagementSystem(
@@ -631,6 +639,7 @@ function setup() {
     getJellyfish: () => enemySystem.getJellyfish(),
     getPiranhas: () => enemySystem.getPiranhas(),
     getTriggers: () => roomSystem.getTriggers(),
+    getGlowObjects: () => roomSystem.getGlowObjects(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),
     getTilesets: () => roomSystem.getTilesets(),
@@ -698,6 +707,7 @@ function setup() {
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
+  engine.register(glowSystem);
   engine.register(enemySystem);
   engine.register(pauseMenuSystem);
   engine.register(shopSystem);

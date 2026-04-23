@@ -37,7 +37,7 @@ export const GAME = {
 export const GAME_VERSIONS = {
   demo: {
     startRoom: "demoStart",
-    rooms: ["demoStart", "crabCaverns", "theSurface"],
+    rooms: ["demoStart", "tunnel", "crabCaverns", "theSurface"],
   },
   full: {
     startRoom: "startArea",
@@ -225,6 +225,22 @@ export const LIGHTING = {
     RADIUS: PLAYER.WIDTH * 2.5, // looks best, doesnt make easy
     BRIGHTNESS: 0.2
   }
+};
+
+//======================
+// GLOW INTERACTABLE CONFIG
+//======================
+export const GLOW = {
+  BASE_RADIUS: 30,         // resting light radius (px)
+  ACTIVE_RADIUS: 72,       // peak light radius when activated (px)
+  BASE_INTENSITY: 0.3,     // resting brightness (always emitted)
+  DECAY_RATE: 1.8,         // intensity lost per second after contact ends (back to base)
+  PULSE_SPEED: 2.5,        // Hz of brightness pulse while active
+  PULSE_AMPLITUDE: 0.12,   // ±intensity variation during pulse
+  KNOCKBACK_STRENGTH: 160, // weaker than COMBAT (400)
+  KNOCKBACK_LIFT: 50,
+  IFRAME_DURATION_MS: 800,
+  DAMAGE_FLASH_DURATION_MS: 300,
 };
 
 //======================
