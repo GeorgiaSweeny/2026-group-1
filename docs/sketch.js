@@ -561,12 +561,10 @@ function setup() {
   cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
   // Snap camera to player's initial position
   cameraSystem.snapTo(player.position.x, player.position.y);
-  powerSystem = createPowerSystem(player);
-  torchSystem = createTorchSystem(player.torch, player, {
-    getDifficulty: () =>
-      pauseMenuSystem ? pauseMenuSystem.getDifficulty() : "normal",
-    soundSystem,
+  powerSystem = createPowerSystem(player, {
+    getDifficulty: () => pauseMenuSystem?.getDifficulty() ?? "easy",
   });
+  torchSystem = createTorchSystem(player.torch, player, { soundSystem });
 
   sonarSystem = createSonarSystem(
     player,
@@ -688,7 +686,6 @@ function setup() {
   });
 
   pauseMenuSystem = createPauseMenuSystem({
-    onDifficultyChange: (diff) => {},
     onResolutionChange: (isDev) => {
       useDevResolution = isDev;
       applyDisplayScale();
@@ -922,12 +919,8 @@ function mousePressed() {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
     if (selection === "DEMO") {
-      menuSystem.setScreen("demo_difficulty");
-    } else if (selection === "BACK") {
-      menuSystem.setScreen("main");
-    } else if (selection === "DEMO_EASY" || selection === "DEMO_HARD") {
       gameVersion = "demo";
-      applyDifficultyConfig(selection === "DEMO_EASY" ? "EASY" : "HARD");
+      applyDifficultyConfig(GAME_VERSIONS.demo.difficulty);
       resetGameToStart();
       gameState = "PLAYING";
     } else if (selection === "EASY" || selection === "HARD") {
@@ -958,7 +951,7 @@ function mousePressed() {
 }
 
 function applyDifficultyConfig(selection) {
-  const diffLevel = selection === "EASY" ? "normal" : "hard";
+  const diffLevel = selection === "EASY" ? "easy" : "hard";
 
   if (pauseMenuSystem) {
     pauseMenuSystem.setDifficulty(diffLevel);

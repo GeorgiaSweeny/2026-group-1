@@ -37,7 +37,8 @@ export const GAME = {
 export const GAME_VERSIONS = {
   demo: {
     startRoom: "demoStart",
-    rooms: ["demoStart", "tunnel", "crabCaverns", "theSurface", "theDrop", "endlessAbyss"],
+    rooms: ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "theSurface"],
+    difficulty: "EASY",
   },
   full: {
     startRoom: "startArea",
@@ -271,6 +272,24 @@ export const COMBAT = {
 
   // (optional: default for centralised damage via PlayerHitResponse util)
   HIT_DAMAGE: 10, // (not in use!) all damage set to this default
+};
+
+//======================
+// DIFFICULTY CONFIG
+//======================
+export const DIFFICULTY = {
+  easy: {
+    POWER_PICKUP:    10,
+    CREDIT_PICKUP:  100,
+    POWER_DRAIN:    0.5,
+    TORCH_DRAIN:    1.0,
+  },
+  hard: {
+    POWER_PICKUP:    5,
+    CREDIT_PICKUP:  50,
+    POWER_DRAIN:    0.75,
+    TORCH_DRAIN:    1.5,
+  },
 };
 
 //======================
