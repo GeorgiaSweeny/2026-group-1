@@ -44,15 +44,33 @@ import { TIME } from '../../config.js';
 export class Torch {
    constructor(config) {
       // Config-driven defaults
+      this.baseRadius = config.RADIUS;
       this.radius = config.RADIUS;
+      this.upgradeBonusPerLevel = config.UPGRADE_RADIUS_BONUS ?? 20;
 
       // Runtime state
       this.flickerTimer = 0;
       this.isOn = false;
 
       // Flicker behavior tuning
-      this.flickerSpeed = 0.01; // how fast flicker oscillates
-      this.flickerThreshold = config.FLICKER_POWER_THRESHOLD; // power % trigger
+      this.flickerSpeed = config.FLICKER_SPEED;
+      this.flickerThreshold = config.FLICKER_POWER_THRESHOLD;   // flicker starts below this
+      this.blackoutThreshold = config.BLACKOUT_POWER_THRESHOLD; // blackouts start below this
+
+      // Intensity ranges (base is implicit: 1.0 - range), clamped to [0, 1]
+      this.gentleIntensityRange = Math.max(0, Math.min(1, config.GENTLE_INTENSITY_RANGE));
+      this.dyingIntensityRange  = Math.max(0, Math.min(1, config.DYING_INTENSITY_RANGE));
+
+      // Dropout thresholds (deterministic sine wave cutoffs, not random chances)
+      this.sputterBaseThreshold = config.SPUTTER_BASE_THRESHOLD;
+      this.sputterScaling = config.SPUTTER_SCALING;
+      this.burstBaseThreshold = config.BURST_BASE_THRESHOLD;
+      this.burstScaling = config.BURST_SCALING;
+   }
+
+   // Set radius based on upgrade level (level 1 = base radius)
+   setUpgradeLevel(level) {
+      this.radius = this.baseRadius + (Math.max(1, level) - 1) * this.upgradeBonusPerLevel;
    }
 
    // Toggle torch on/off
@@ -82,24 +100,49 @@ export class Torch {
       // Low power: "dying bulb" flicker with jitter and dropouts
       const safePower = Math.max(0, Math.min(powerPercent ?? 0, this.flickerThreshold));
       const lowPowerRatio = 1 - safePower / this.flickerThreshold; // 0..1, higher = lower power
-      const flickerSpeed = this.flickerSpeed * (8 + lowPowerRatio * 20);
+      const blackoutRatio = powerPercent <= this.blackoutThreshold
+         ? 1 - Math.max(0, powerPercent) / this.blackoutThreshold
+         : 0;
+
+      // Above blackout threshold: slow gentle flicker; below: rapid dying-bulb speed
+      const gentleSpeedBase = 5;
+      const gentleSpeedRange = 5;
+      const dyingSpeedBase = 8;
+      const dyingSpeedRange = 20;
+      const flickerSpeed = powerPercent > this.blackoutThreshold
+         ? this.flickerSpeed * (gentleSpeedBase + lowPowerRatio * gentleSpeedRange)
+         : this.flickerSpeed * (dyingSpeedBase + blackoutRatio * dyingSpeedRange);
+
       const t = this.flickerTimer * flickerSpeed;
       const baseWave = (Math.sin(t) + 1) / 2;
-      const jitterWave = (Math.sin(t * 2.7 + Math.sin(t * 0.31) * 1.8) + 1) / 2;
-      const combined = 0.45 * baseWave + 0.55 * jitterWave;
+      const jitterFreq = 2.7;
+      const jitterMod = 0.31;
+      const jitterDepth = 1.8;
+      const jitterWave = (Math.sin(t * jitterFreq + Math.sin(t * jitterMod) * jitterDepth) + 1) / 2;
+      const baseWaveWeight = 0.45;
+      const jitterWaveWeight = 0.55;
+      const combined = baseWaveWeight * baseWave + jitterWaveWeight * jitterWave;
 
-      // Create blackout bursts that happen more often as power gets lower
-      const burstGate = (Math.sin(t * 0.7 + Math.sin(t * 0.13) * 2.0) + 1) / 2;
-      const burstThreshold = 0.18 + lowPowerRatio * 0.42;
+      // Micro-dropouts begin at flicker threshold
+      const sputterFreq = 5.9;
+      const sputterGate = (Math.sin(t * sputterFreq) + 1) / 2;
+      if (sputterGate < this.sputterBaseThreshold + lowPowerRatio * this.sputterScaling) return 0;
 
-      if (burstGate < burstThreshold) return 0;
+      // Blackout bursts only begin below the blackout threshold
+      if (powerPercent <= this.blackoutThreshold) {
+         const burstFreq = 0.7;
+         const burstModFreq = 0.13;
+         const burstModDepth = 2.0;
+         const burstGate = (Math.sin(t * burstFreq + Math.sin(t * burstModFreq) * burstModDepth) + 1) / 2;
+         if (burstGate < this.burstBaseThreshold + blackoutRatio * this.burstScaling) return 0;
+      }
 
-      // Additional short micro-dropouts for a sputtering effect
-      const sputterGate = (Math.sin(t * 5.9) + 1) / 2;
-      if (sputterGate < 0.12 + lowPowerRatio * 0.18) return 0;
-
-      // Uneven brightness when lit
-      return 0.35 + 0.65 * combined;
+      // Above blackout threshold: subtle flicker keeps radius close to full
+      // Below blackout threshold: full dying-bulb range lets radius shrink
+      if (powerPercent > this.blackoutThreshold) {
+         return (1.0 - this.gentleIntensityRange) + this.gentleIntensityRange * combined;
+      }
+      return (1.0 - this.dyingIntensityRange) + this.dyingIntensityRange * combined;
    }
 }
 //======================================

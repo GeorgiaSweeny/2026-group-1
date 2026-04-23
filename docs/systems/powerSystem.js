@@ -55,9 +55,14 @@ import { POWER, TORCH, TIME } from '../config.js';
 export class PowerSystem {
    constructor(config = POWER) {
       this.maxPower = config.MAX_POWER;
+      this.initialPower = config.CURRENT_POWER;
       this.current = config.CURRENT_POWER;
       this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
       this.drainRate = config.DRAIN_RATE;
+   }
+
+   reset() {
+      this.current = this.initialPower;
    }
 
    drain(rate = this.drainRate) {

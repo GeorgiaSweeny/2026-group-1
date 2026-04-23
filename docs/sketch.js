@@ -949,7 +949,7 @@ function resetGameToStart() {
 
   // 4. Reset Player stats
   if (player.power) {
-    player.power.current = player.power.maxPower;
+    player.power.reset();
   }
   if (player.torch) {
     player.torch.isOn = false;
