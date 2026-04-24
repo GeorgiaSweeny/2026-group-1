@@ -106,6 +106,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
   const collectableAlpha = new WeakMap();
   const enemyAlpha = new WeakMap();
   let cooldownTimer = 0;
+  let prevCollectableSet = new Set();
 
   return {
     update() {
@@ -132,6 +133,15 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
       const inputHazards = getNormalisedObjects(getHazards);
       const inputCollectables = getNormalisedObjects(getCollectables);
       const inputEnemies = getNormalisedObjects(getEnemies);
+
+      const currentCollectableSet = new Set(inputCollectables);
+      for (const item of prevCollectableSet) {
+        if (!currentCollectableSet.has(item)) {
+          collectableAlpha.delete(item);
+        }
+      }
+      prevCollectableSet = currentCollectableSet;
+
       const wallData = [];
       const hazardData = [];
       const collectableData = [];

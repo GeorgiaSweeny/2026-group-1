@@ -180,9 +180,9 @@ export function createRenderSystem({
    }
 
    function getCollectableColorByType(collectableType, alpha = 220) {
-      if (collectableType === 'credits') return color(80, 220, 120, alpha);
-      if (collectableType === 'power') return color(255, 225, 80, alpha);
-      return color(255, 225, 80, alpha);
+      if (collectableType === 'credits') return color(255, 225, 80, alpha);
+      if (collectableType === 'power') return color(80, 220, 120, alpha);
+      return color(80, 220, 120, alpha);
    }
 
 //===BACKGROUND===//
