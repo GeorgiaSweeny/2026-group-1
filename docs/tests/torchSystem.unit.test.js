@@ -133,8 +133,6 @@ describe('TorchSystem — sound', () => {
       const system = createTorchSystem(torch, player, { soundSystem: null });
       expect(() => system.update()).not.toThrow();
    });
-
-   it.todo('does not call play if toggle fails');
 });
 
 //======================================
