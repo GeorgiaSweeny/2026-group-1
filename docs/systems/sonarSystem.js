@@ -99,12 +99,14 @@ function readCenterRect(objectLike) {
   return { x: x - w / 2, y: y - h / 2, w, h };
 }
 
-export function createSonarSystem(player, getWalls, getHazards = () => [], getCollectables = () => [], soundSystem = null) {
+export function createSonarSystem(player, getWalls, getHazards = () => [], getCollectables = () => [], soundSystem = null, getEnemies = () => []) {
   let pulses = [];
   const wallAlpha = new WeakMap();
   const hazardAlpha = new WeakMap();
   const collectableAlpha = new WeakMap();
+  const enemyAlpha = new WeakMap();
   let cooldownTimer = 0;
+  let prevCollectableSet = new Set();
 
   return {
     update() {
@@ -130,9 +132,20 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
       const inputWalls = getNormalisedWalls(getWalls);
       const inputHazards = getNormalisedObjects(getHazards);
       const inputCollectables = getNormalisedObjects(getCollectables);
+      const inputEnemies = getNormalisedObjects(getEnemies);
+
+      const currentCollectableSet = new Set(inputCollectables);
+      for (const item of prevCollectableSet) {
+        if (!currentCollectableSet.has(item)) {
+          collectableAlpha.delete(item);
+        }
+      }
+      prevCollectableSet = currentCollectableSet;
+
       const wallData = [];
       const hazardData = [];
       const collectableData = [];
+      const enemyData = [];
       
       for (const wall of inputWalls) {
         const rect = readWallRect(wall);
@@ -185,9 +198,26 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
         }
       }
 
+      for (const enemy of inputEnemies) {
+        const rect = readWallRect(enemy);
+        if (rect) {
+          enemyData.push({ enemy, rect });
+        }
+
+        const currentAlpha = enemyAlpha.get(enemy);
+        if (currentAlpha != null) {
+          const nextAlpha = Math.max(0, currentAlpha - REVEAL_FADE_PER_MS);
+          if (nextAlpha <= 0) {
+            enemyAlpha.delete(enemy);
+          } else {
+            enemyAlpha.set(enemy, nextAlpha);
+          }
+        }
+      }
+
       for (let i = pulses.length - 1; i >= 0; i--) {
         const p = pulses[i];
-        p.update(wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha);
+        p.update(wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha, enemyData, enemyAlpha);
 
         if (p.isFinished()) {
           pulses.splice(i, 1);
@@ -259,6 +289,20 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
       return reveals;
     },
 
+    getRevealedEnemies() {
+      const inputEnemies = getNormalisedObjects(getEnemies);
+      const reveals = [];
+      for (const enemy of inputEnemies) {
+        const alpha = enemyAlpha.get(enemy);
+        if (!alpha) continue;
+        const rect = readWallRect(enemy);
+        if (rect) {
+          reveals.push({ ...rect, alpha: Math.max(0, Math.min(255, alpha)) });
+        }
+      }
+      return reveals;
+    },
+
     getActivePulses() {
       return pulses;
     }
@@ -279,7 +323,7 @@ class Pulse {
     }
   }
 
-  update(wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha) {
+  update(wallData, wallAlpha, hazardData, hazardAlpha, collectableData, collectableAlpha, enemyData = [], enemyAlpha = null) {
     for (const p of this.particles) {
       if (p.life <= 0) {
         continue;
@@ -328,6 +372,20 @@ class Pulse {
           ) {
             const current = collectableAlpha.get(collectable) ?? 0;
             collectableAlpha.set(collectable, Math.min(255, current + REVEAL_BONUS));
+            collided = true;
+            break;
+          }
+        }
+      }
+
+      if (!collided && enemyAlpha) {
+        for (const { enemy, rect } of enemyData) {
+          if (
+            nextX >= rect.x && nextX <= rect.x + rect.w &&
+            nextY >= rect.y && nextY <= rect.y + rect.h
+          ) {
+            const current = enemyAlpha.get(enemy) ?? 0;
+            enemyAlpha.set(enemy, Math.min(255, current + REVEAL_BONUS));
             collided = true;
             break;
           }
