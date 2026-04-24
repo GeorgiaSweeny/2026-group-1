@@ -135,3 +135,54 @@ describe('createPowerSystem — no power = no torch', () => {
       expect(() => system.update()).not.toThrow();
    });
 });
+
+//======================================
+// STABILITY
+//======================================
+
+describe('createPowerSystem — stability', () => {
+   it('repeated update() drains by a consistent amount each frame', () => {
+      const { entity, system } = makeSystem({}, { CURRENT_POWER: 100, MAX_POWER: 100, DRAIN_RATE: 0.5 });
+
+      const before = entity.power.current;
+      system.update();
+      const deltaOne = before - entity.power.current;
+
+      const after = entity.power.current;
+      system.update();
+      const deltaTwo = after - entity.power.current;
+
+      expect(deltaOne).toBeCloseTo(deltaTwo);
+   });
+
+   it('two identical systems drain identically — no hidden randomness', () => {
+      const cfg = { CURRENT_POWER: 100, MAX_POWER: 100, DRAIN_RATE: 0.5 };
+      const { entity: eA, system: sA } = makeSystem({}, cfg);
+      const { entity: eB, system: sB } = makeSystem({}, cfg);
+
+      for (let i = 0; i < 20; i++) {
+         sA.update();
+         sB.update();
+      }
+
+      expect(eA.power.current).toBeCloseTo(eB.power.current);
+   });
+});
+
+//======================================
+// EDGE CASES
+//======================================
+
+describe('createPowerSystem — edge cases', () => {
+   it('entity.power already present is reused, not replaced', () => {
+      const existing = makePower();
+      const entity = { power: existing };
+      createPowerSystem(entity);
+      expect(entity.power).toBe(existing);
+   });
+
+   it('handles entity.torch being undefined without throwing', () => {
+      const { system } = makeSystem({ torch: undefined });
+      expect(() => system.update()).not.toThrow();
+   });
+});
