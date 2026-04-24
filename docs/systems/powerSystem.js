@@ -48,42 +48,12 @@ TODO / LIMITATIONS:
 */
 
 //======================================
-// POWER CLASS
-//======================================
-import { POWER, TIME, DIFFICULTY } from '../config.js';
-
-export class PowerSystem {
-   constructor(config = POWER) {
-      this.maxPower = config.MAX_POWER;
-      this.initialPower = config.CURRENT_POWER;
-      this.current = config.CURRENT_POWER;
-      this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
-      this.drainRate = config.DRAIN_RATE;
-   }
-
-   reset() {
-      this.current = this.initialPower;
-   }
-
-   drain(rate = this.drainRate) {
-      this.current = Math.max(0, Math.min(this.current - rate * TIME.fixedDeltaTime, this.maxPower));
-   }
-
-   isEmpty() {
-      return this.current <= 0;
-   }
-
-   isLow(threshold = this.lowPowerThreshold) {
-      return this.current <= this.maxPower * threshold;
-   }
-
-   getPercent() {
-      return this.current / this.maxPower;
-   }
-}
-//======================================
 // POWER SYSTEM
 //======================================
+import { POWER, DIFFICULTY } from '../config.js';
+import { PowerSystem } from '../entities/components/power.js';
+
+export { PowerSystem };
 
 export function createPowerSystem(entity, { getDifficulty = () => "easy", config = POWER } = {}) {
    if (!entity.power) {
