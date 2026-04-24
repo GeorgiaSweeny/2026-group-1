@@ -8,19 +8,24 @@ AUTHOR: Georgia Sweeny
 import { jest } from '@jest/globals';
 import { PowerSystem } from '../entities/components/power.js';
 import { createPowerSystem } from '../systems/powerSystem.js';
-import { POWER, TORCH } from '../config.js';
+import { POWER, DIFFICULTY } from '../config.js';
 
 //======================================
 // HELPERS
 //======================================
 
+const EASY = DIFFICULTY.easy;
+
 function makePower(overrides = {}) {
    return new PowerSystem({ ...POWER, ...overrides });
 }
 
-function makeSystem(entityOverrides = {}, configOverrides = {}) {
+function makeSystem(entityOverrides = {}, configOverrides = {}, getDifficulty = () => 'easy') {
    const entity = { ...entityOverrides };
-   const system = createPowerSystem(entity, { ...POWER, ...configOverrides });
+   const system = createPowerSystem(entity, {
+      getDifficulty,
+      config: { ...POWER, ...configOverrides },
+   });
    return { entity, system };
 }
 
@@ -61,28 +66,28 @@ describe('createPowerSystem — update()', () => {
       expect(spy).toHaveBeenCalledTimes(1);
    });
 
-   it('uses base drain rate when no torch exists on entity', () => {
+   it('uses DIFFICULTY.easy.POWER_DRAIN when no torch exists', () => {
       const { entity, system } = makeSystem();
       const spy = jest.spyOn(entity.power, 'drain');
       system.update();
-      expect(spy).toHaveBeenCalledWith(entity.power.drainRate);
+      expect(spy).toHaveBeenCalledWith(EASY.POWER_DRAIN);
    });
 
-   it('uses base drain rate when torch exists but is off', () => {
+   it('uses DIFFICULTY.easy.POWER_DRAIN when torch exists but is off', () => {
       const { entity, system } = makeSystem({ torch: { isOn: false } });
       const spy = jest.spyOn(entity.power, 'drain');
       system.update();
-      expect(spy).toHaveBeenCalledWith(entity.power.drainRate);
+      expect(spy).toHaveBeenCalledWith(EASY.POWER_DRAIN);
    });
 
-   it('multiplies drain rate by TORCH.DRAIN_RATE when torch is on', () => {
+   it('multiplies drain rate by TORCH_DRAIN when torch is on', () => {
       const { entity, system } = makeSystem({ torch: { isOn: true } });
       const spy = jest.spyOn(entity.power, 'drain');
       system.update();
-      expect(spy).toHaveBeenCalledWith(entity.power.drainRate * TORCH.DRAIN_RATE);
+      expect(spy).toHaveBeenCalledWith(EASY.POWER_DRAIN * EASY.TORCH_DRAIN);
    });
 
-   it('drain rate does not stack across frames — resets to drainRate each update', () => {
+   it('drain rate does not stack across frames — resets each update', () => {
       const { entity, system } = makeSystem({ torch: { isOn: true } });
       const spy = jest.spyOn(entity.power, 'drain');
 
@@ -90,7 +95,7 @@ describe('createPowerSystem — update()', () => {
       system.update();
       system.update();
 
-      const expectedRate = entity.power.drainRate * TORCH.DRAIN_RATE;
+      const expectedRate = EASY.POWER_DRAIN * EASY.TORCH_DRAIN;
       spy.mock.calls.forEach(([rate]) => {
          expect(rate).toBeCloseTo(expectedRate);
       });
