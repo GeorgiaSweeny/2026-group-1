@@ -215,6 +215,17 @@
         }, 
         {
          "draworder":"topdown",
+         "id":5,
+         "name":"collectables",
+         "objects":[],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
          "id":4,
          "name":"entities",
          "objects":[
@@ -294,7 +305,7 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":5,
+ "nextlayerid":6,
  "nextobjectid":8,
  "orientation":"orthogonal",
  "renderorder":"right-down",
