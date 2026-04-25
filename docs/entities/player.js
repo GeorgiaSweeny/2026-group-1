@@ -40,7 +40,7 @@ engine.register(playerSystem); // playerSystem consumes this class
 //======================
 import { TORCH, LIGHTING, PLAYER, POWER } from '../config.js';
 import { Torch } from './components/torch.js';  // torch class in same folder
-import { PowerSystem } from '../systems/powerSystem.js';
+import { PowerSystem } from './components/power.js';
 import { Hitbox } from '../systems/hitboxSystem.js';
 
 export class Player extends Hitbox{
