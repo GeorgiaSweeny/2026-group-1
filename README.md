@@ -46,8 +46,8 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 |Name|Email|Role|
 |:-|:-|:-|
 |Archie Brown|cq25988@bristol.ac.uk| Co-developer; Lead UI Developer |
-|Monal Gupta|ta25702@bristol.ac.uk| Co-developer; Report contributor |
-|Ben Mounce|wv25183@bristol.ac.uk| Co-developer; Report contributor |
+|Monal Gupta|ta25702@bristol.ac.uk| Co-developer; Report contributor; Video Production |
+|Ben Mounce|wv25183@bristol.ac.uk| Co-developer; Report contributor; Video Production |
 |Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer; System Architect; Code reviewer |
 |Nick Jankov|ve21144@bristol.ac.uk| Co-developer & Code Reviewer |
 |Jude Hsu|ca20853@bristol.ac.uk| Report contributor; Co-developer |
@@ -101,32 +101,6 @@ The game concept was developed collaboratively through group discussions and pit
   </tr>
 </table>
 
-In addition to the inital concept proposals, the lead developer documented discussion points from the ideation stage and produced sevearal early room sketches and map layouts. These note and drawings helped the team make abstract ideas more concrete, compare possible structures, and visualise how exploration and progression might work in practice. Selectd examples of the notes and maps are included below.
-
-***Georgia, can we put some of your maps and notes here?***
-
-<table align="center">
-  <tr>
-    <td align="center">
-      <img src="IMAGE1_PATH" alt="Figure 3" width="300"><br>
-      <sub>Figure 3: Game Idea Note</sub>
-    </td>
-    <td align="center">
-      <img src="IMAGE2_PATH" alt="Figure 4" width="300"><br>
-      <sub>Figure 4: Game Idea Note</sub>
-    </td>
-    <td align="center">
-      <img src="IMAGE2_PATH" alt="Figure 5" width="300"><br>
-      <sub>Figure 5: Game Map</sub>
-    </td>
-    <td align="center">
-      <img src="IMAGE2_PATH" alt="Figure 6" width="300"><br>
-      <sub>Figure 6: Game Map</sub>
-    </td>
-  </tr>
-</table>
-
-
 ### 2.2 Paper Prototypes
 In the early stage of development, we created a paper prototype to visualise and test the flow of the game’s core mechanics. This stage allowed the team to explore the overall layout of the game and discuss key design elements such as enemies, player objectives, setting, and what would make the game engaging. Paper prototyping also provided a low-cost way to experiment with ideas before moving into implementation.
 
@@ -134,9 +108,7 @@ We later asked testers to play through the prototype and share feedback. Their r
 
 Based on this feedback, the team shaped the game around exploration, tension, and careful resource use. A Metroidvania-inspired structure was chosen to support these goals, allowing progression through interconnected spaces, restricted areas, and gradual access to new abilities. This worked well with the sonar mechanic, as players needed to decide when to reveal their surroundings and when to conserve resources. Overall, the paper prototyping stage helped clarify the game’s direction and confirmed that its main appeal lies in atmosphere, uncertainty, and controlled exploration.
 
-
 ![Descriptive Alt Text](docs/paper-prototype/SubGame.gif)
-
 
 ### 2.3 Stakeholders - Onion Model
 <p align="center">
@@ -175,6 +147,32 @@ For repo readibility, we listed two representative examples below. The full set 
   
 **Acceptance Criteria:** Resources drain continuously and predictably; Game Over triggers if any resource reaches zero; UI displays all resources clearly.
 
+In addition to the inital concept proposals, the lead developer documented discussion points from the ideation stage and produced sevearal early room sketches and map layouts. These note and drawings helped the team make abstract ideas more concrete, compare possible structures, and visualise how exploration and progression might work in practice. Selectd examples of the notes and maps are included below.
+
+***Georgia, can we put some of your maps and notes here?***
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="IMAGE1_PATH" alt="Figure 3" width="300"><br>
+      <sub>Figure 3: Game Idea Note</sub>
+    </td>
+    <td align="center">
+      <img src="IMAGE2_PATH" alt="Figure 4" width="300"><br>
+      <sub>Figure 4: Game Idea Note</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="IMAGE3_PATH" alt="Figure 5" width="300"><br>
+      <sub>Figure 5: Game Map</sub>
+    </td>
+    <td align="center">
+      <img src="IMAGE4_PATH" alt="Figure 6" width="300"><br>
+      <sub>Figure 6: Game Map</sub>
+    </td>
+  </tr>
+</table>
 
 ### 2.6 Prioritised Feature Breakdown
 To keep the development manageable and technically feasible, this project followed a risk-managed development approach prioritisation strategy. Core mechanics were given priority over feature breadth so that the team members could first deliver a stable and playable MVP. The breakdown below is based on our user stories derived from our game Epics.
@@ -207,7 +205,7 @@ To keep the development manageable and technically feasible, this project follow
 ---
 </br>
 
-## 3. Design  
+## 3. Design (DL: 25 Apr 2026)
 ### 3.1 System Architecture
 The project is built using a **modular, state-driven architecture** that separates **logic, rendering, input, and game world state.** Each system has a clear responsibility and communicates only via defined interfaces, which simplifies debugging, allows independent testing, and reduces unintended side-effects when new features are added.
 
@@ -338,119 +336,7 @@ flowchart TD
 ### 3.3 Behavioural Flow
 The **Engine + Systems + Input Bridge + Render Flow** diagram shows the **per-frame execution order:**
 
-```jsx
-        ┌──────────────────────┐
-        │        p5.js         │
-        │   (runtime / DOM)    │
-        └───────────┬──────────┘
-                    │ keyPressed() / keyIsDown()
-                    ▼
-        ┌────────────────────-──┐
-        │     Input Bridge      │  ← Lives in sketch.js
-        │ (global p5 callbacks) │
-        └───────────┬──────-────┘
-                    │ forwards events
-                    ▼
-        ┌─────────────────────-─┐
-        │     Input System      │
-        │  - update(deltaTime)  │
-        │  - onKeyPressed()     │
-        │  - sets player.intent │
-        └───────────┬────────-──┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Player System    │
-        │  - reads intent...   │
-        │  - apply movement    │
-        │  - jump logic        │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌────────────────────-──┐
-        │    Physics System     │
-        │  - apply gravity      │
-        │  - resolve collisions │
-        │  - clamp to room      │
-        └───────────┬─────────-─┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Resource System  │
-        │  - drain power       │
-        │  - handle pickups    │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌────────────────────---──┐
-        │     Sonar System        │
-        │  - drain power          |
-        │  - expand pulse         │
-        │  - reveal environment   │
-        │  - alert nearby enemies │
-        └───────────┬─────────---─┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Enemy System     │
-        │  - update AI         │
-        │  - move enemies      │
-        │  - respond to sonar  │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Torch System     │
-        │  - drain power       │
-        │  - flicker timing    │
-        │  - active state      │
-        │  - exposes light     │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌────────────────────--──┐
-        │   Lighting System      │
-        │  - collects lights     │
-        │  - calculates radius   │
-        │  - prepares light      │
-        │    data for render     │
-        │  (prepare light mask)  │
-        └───────────┬────────--──┘
-                    │
-                    ▼
-        ┌────────────────────--──┐
-        │     Room System        │
-        │  - manage room state   │
-        │  - handle transitions  │
-        │  - expose active room  │
-        └───────────┬───────-───-┘
-                    │
-                    ▼
-        ┌──────────────────---────┐
-        │    Camera System        │
-        │  - follow player        │
-        │  - clamp to active room │
-        │  - compute offsets      │
-        └───────────┬────────---──┘
-                    │
-                    ▼
-        ┌───────────────────-───┐
-        │     Render System     │
-        │  - draw background    │
-        │  - draw platforms     │
-        │  - draw player        │
-        │  - draw enemies       │
-        │  - draw darknessLayer │
-        │  - apply lights       │
-        │  - draw UI            │
-        └───────────┬───────-───┘
-                    │
-                    ▼
-        ┌────────────────────-──┐
-        │        Canvas         │
-        │    (visual output)    │
-        └───────────────────-───┘
-```
+```jude: i removed the charts which is closer to a high level feature diagram rather than a behaviour flow in a conventional UML sense. i'm still thinking how to reframe this.```
 
 **This flow demonstrates:**
 
@@ -472,8 +358,24 @@ The **Engine + Systems + Input Bridge + Render Flow** diagram shows the **per-fr
 
 The diagrams collectively **visualise the structure and runtime behaviour**, showing both **static responsibilities** and **dynamic per-frame interactions**. This provides clarity for team collaboration, future feature integration, and assessment of the game’s technical design.
 
----
-## Week 7 - User & Heuristic Evaluation
+### 3.4 UI Designation
+```jude: Archie, could you please provide a few reference game images which influenced your UI design please. these can be screenshots from games. I will add a few description. Thanks.```
+
+
+### 4. Implementation (DL: 26 Apr 2026)
+
+- 15% ~750 words
+
+- Describe implementation of your game, in particular highlighting the TWO areas of *technical challenge* in developing your game. 
+
+### 5. Evaluation (DL: 27 Apr 2026)
+
+- 15% ~750 words
+- One qualitative evaluation (of your choice) 
+- One quantitative evaluation (of your choice) 
+- Description of how code was tested. 
+
+## User & Heuristic Evaluation
 
 One participant was recruited from an adjacent group. Two observers recorded critical moments while the participant played through the prototype, verbalising their thoughts. Two tasks were set:
 - Navigate from the starting room to the next area using the sonar mechanic
@@ -512,45 +414,29 @@ fewer or no pickups.
 
 ---
 
-### Implementation
-
-- 15% ~750 words
-
-- Describe implementation of your game, in particular highlighting the TWO areas of *technical challenge* in developing your game. 
-
-### Evaluation
-
-- 15% ~750 words
-
-- One qualitative evaluation (of your choice) 
-
-- One quantitative evaluation (of your choice) 
-
-- Description of how code was tested. 
-
-### Process 
+### 6. Process (DL: 26 Apr 2026)
 
 - 15% ~750 words
 
 - Teamwork. How did you work together, what tools and methods did you use? Did you define team roles? Reflection on how you worked together. Be honest, we want to hear about what didn't work as well as what did work, and importantly how your team adapted throughout the project.
 
-### Sustainability
+### 7. Sustainability (DL: 26 Apr 2026)
 
 - 10% ~750 words
 
 - Evidence of the impact of your game across the environment
 
-### Conclusion
+### 8. Conclusion (DL: 27 Apr 2026)
 
 - 10% ~500 words
 
 - Reflect on the project as a whole. Lessons learnt. Reflect on challenges. Future work, describe both immediate next steps for your current game and also what you would potentially do if you had chance to develop a sequel.
 
-### Contribution Statement
+### 9. Contribution Statement (DL: 25 Apr 2026)
 
 - Provide a table of everyone's contribution, which *may* be used to weight individual grades. We expect that the contribution will be split evenly across team-members in most cases. Please let us know as soon as possible if there are any issues with teamwork as soon as they are apparent and we will do our best to help your team work harmoniously together.
 
-### AI Statement
+### 10. AI Statement (DL: 25 Apr 2026)
 ~250 words
 
 - summarise your teams use of AI so we know where to give you credit for work done.
@@ -567,7 +453,7 @@ You can delete this section in your own repo, it's just here for information. in
   - Is your repo clearly organised? Is code well commented throughout?
 
 
-------
+------ 
 ### 2.5 Use Case Diagram
 
 the following is not a correct use case diagram in UML. A high-level feature diagram only. Re-think where to put it.
