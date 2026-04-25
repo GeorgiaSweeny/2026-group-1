@@ -91,6 +91,8 @@ let lastEnsuredRoom = null;
 let gameState = "MAIN_PAGE";
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
 let gameVersion = "full"; // "demo" | "full"
+let sessionVersion = "full";   // locked-in version for the current session
+let sessionDifficulty = null;  // locked-in difficulty for the current session ("EASY"|"HARD")
 let menuSystem;
 let winScreenSystem;
 let gameOverSystem;
@@ -791,12 +793,11 @@ function draw() {
     return;
   }
 
-  accumulator += deltaTime / 1000;
-
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
   } else {
+    accumulator += deltaTime / 1000;
     // if accumulator gained enough frames
     while (accumulator >= TIME.fixedDeltaTime) {
       engine.update();
@@ -902,7 +903,10 @@ function mousePressed() {
 
   if (gameState === WIN_STATE) {
     const selection = winScreenSystem.checkClick(mouseX, mouseY);
-    if (selection === "MENU") {
+    if (selection === "RESTART") {
+      restartCurrentSession();
+      gameState = "PLAYING";
+    } else if (selection === "MENU") {
       resetGameToStart();
       gameVersion = "full";
       menuSystem.setScreen("main");
@@ -914,7 +918,7 @@ function mousePressed() {
   if (gameState === GAME_OVER_STATE) {
     const selection = gameOverSystem.checkClick(mouseX, mouseY);
     if (selection === "YES") {
-      resetGameToStart();
+      restartCurrentSession();
       gameState = "PLAYING";
     } else if (selection === "NO") {
       resetGameToStart();
@@ -934,11 +938,15 @@ function mousePressed() {
 
     if (selection === "DEMO") {
       gameVersion = "demo";
-      applyDifficultyConfig(GAME_VERSIONS.demo.difficulty);
+      sessionVersion = "demo";
+      sessionDifficulty = GAME_VERSIONS.demo.difficulty;
+      applyDifficultyConfig(sessionDifficulty);
       resetGameToStart();
       gameState = "PLAYING";
     } else if (selection === "EASY" || selection === "HARD") {
       gameVersion = "full";
+      sessionVersion = "full";
+      sessionDifficulty = selection;
       applyDifficultyConfig(selection);
       resetGameToStart();
       gameState = "PLAYING";
@@ -966,10 +974,8 @@ function mousePressed() {
 
 function applyDifficultyConfig(selection) {
   const diffLevel = selection === "EASY" ? "easy" : "hard";
-
   if (pauseMenuSystem) {
     pauseMenuSystem.setDifficulty(diffLevel);
-    console.log(`Game started on ${diffLevel} difficulty.`);
   }
 }
 
@@ -1014,6 +1020,14 @@ function applyDisplayScale() {
   }
 }
 
+function restartCurrentSession() {
+  gameVersion = sessionVersion;
+  if (sessionDifficulty) {
+    applyDifficultyConfig(sessionDifficulty);
+  }
+  resetGameToStart();
+}
+
 function resetGameToStart() {
   // 1. Send the player back to the first room
   const startRoom = GAME_VERSIONS[gameVersion].startRoom;
@@ -1026,7 +1040,9 @@ function resetGameToStart() {
   }
 
   // 3. Snap the camera back to the start
-  cameraSystem.snapTo(playerStart.x, playerStart.y);
+  if (playerStart) {
+    cameraSystem.snapTo(playerStart.x, playerStart.y);
+  }
 
   // 4. Reset Player stats
   if (player.power) {

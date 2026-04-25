@@ -37,7 +37,7 @@ export const GAME = {
 export const GAME_VERSIONS = {
   demo: {
     startRoom: "demoStart",
-    rooms: ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "theSurface"],
+    rooms: ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "spikeMaze", "jellyfishAtrium", "theSurface"],
     difficulty: "EASY",
   },
   full: {
@@ -163,7 +163,7 @@ export const POWER = {
   CURRENT_POWER: 100,
   LOW_POWER_THRESHOLD: 0.15,
   DRAIN_RATE: 0.5
-  /* 
+  /*
    (Tested Options)
       DRAIN_RATE: 1             
       (100 power = 100s| 1 power = 1s) - very fast
@@ -281,14 +281,14 @@ export const DIFFICULTY = {
   easy: {
     POWER_PICKUP:    10,
     CREDIT_PICKUP:  100,
-    POWER_DRAIN:    0.5,
-    TORCH_DRAIN:    1.0,
+    POWER_DRAIN:    0.5,  // 0.5/s torch off: ~200s (~3m 20s)
+    TORCH_DRAIN:    1.75, // 0.5 × 1.75 = 0.875/s torch on: ~114s (~1m 54s)
   },
   hard: {
     POWER_PICKUP:    5,
     CREDIT_PICKUP:  50,
-    POWER_DRAIN:    0.75,
-    TORCH_DRAIN:    1.5,
+    POWER_DRAIN:    0.75, // 0.75/s torch off: ~133s (~2m 13s)
+    TORCH_DRAIN:    2.0,  // 0.75 × 2.0 = 1.5/s torch on: ~67s (~1m 7s)
   },
 };
 
