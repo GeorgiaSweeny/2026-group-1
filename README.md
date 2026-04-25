@@ -45,12 +45,12 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 
 |Name|Email|Role|
 |:-|:-|:-|
-|Archie Brown|cq25988@bristol.ac.uk| Co-developer |
-|Monal Gupta|ta25702@bristol.ac.uk| Co-developer |
-|Ben Mounce|wv25183@bristol.ac.uk| Co-developer |
-|Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer, System Architect & Code reviewer |
-|Nick Jankov|ve21144@bristol.ac.uk| Co-developer & Code reviewer |
-|Jude Hsu|ca20853@bristol.ac.uk| Co-developer |
+|Archie Brown|cq25988@bristol.ac.uk| Co-developer; Lead UI Developer |
+|Monal Gupta|ta25702@bristol.ac.uk| Co-developer; Report contributor |
+|Ben Mounce|wv25183@bristol.ac.uk| Co-developer; Report contributor |
+|Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer; System Architect; Code reviewer |
+|Nick Jankov|ve21144@bristol.ac.uk| Co-developer & Code Reviewer |
+|Jude Hsu|ca20853@bristol.ac.uk| Report contributor; Co-developer |
 
 </br>
 
@@ -87,17 +87,45 @@ seeking depth, immersion, and discovery in an underwater setting**.
 The game concept was developed collaboratively through group discussions and pitch proposals. During the early design phase, we used Notion to document and refine ideas. Each team member proposed a concept [Figure 1: Game Ideas], and the team then voted on their preferred option [Figure 2: Poll Results for Game Ideas]. Two of the proposed concepts were centred on echolocation, which helped establish it as the foundation of the project. Through further discussion, the selected concept evolved into an underwater exploration game, where limited visibility creates tension and supports the overall atmosphere. The game’s core differentiator is its sonar-based mechanic, supported by darkness and resource management systems.
 
 [Figure 1: Game Ideas / Figure 2: Poll Results for Game Ideas]
-<p align="center">
-    <img src=""
-    alt="Figure 1: Game Ideas" width="300" />
-</p>
 
-<p align="center">
-    <img src=""
-    alt="Figure 2: Poll Results for Game Ideas" width="300" />
-</p>
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="IMAGE1_PATH" alt="Figure 1" width="300"><br>
+      <sub>Figure 1: Game Ideas</sub>
+    </td>
+    <td align="center">
+      <img src="IMAGE2_PATH" alt="Figure 2" width="300"><br>
+      <sub>Figure 2: Poll Results for Game Ideas</sub>
+    </td>
+  </tr>
+</table>
 
-We also have 
+In addition to the inital concept proposals, the lead developer documented discussion points from the ideation stage and produced sevearal early room sketches and map layouts. These note and drawings helped the team make abstract ideas more concrete, compare possible structures, and visualise how exploration and progression might work in practice. Selectd examples of the notes and maps are included below.
+
+***Georgia, can we put some of your maps and notes here?***
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="IMAGE1_PATH" alt="Figure 3" width="300"><br>
+      <sub>Figure 3: Game Idea Note</sub>
+    </td>
+    <td align="center">
+      <img src="IMAGE2_PATH" alt="Figure 4" width="300"><br>
+      <sub>Figure 4: Game Idea Note</sub>
+    </td>
+    <td align="center">
+      <img src="IMAGE2_PATH" alt="Figure 5" width="300"><br>
+      <sub>Figure 5: Game Map</sub>
+    </td>
+    <td align="center">
+      <img src="IMAGE2_PATH" alt="Figure 6" width="300"><br>
+      <sub>Figure 6: Game Map</sub>
+    </td>
+  </tr>
+</table>
+
 
 ### 2.2 Paper Prototypes
 In the early stage of development, we created a paper prototype to visualise and test the flow of the game’s core mechanics. This stage allowed the team to explore the overall layout of the game and discuss key design elements such as enemies, player objectives, setting, and what would make the game engaging. Paper prototyping also provided a low-cost way to experiment with ideas before moving into implementation.
@@ -109,11 +137,13 @@ Based on this feedback, the team shaped the game around exploration, tension, an
 
 ![Descriptive Alt Text](docs/paper-prototype/SubGame.gif)
 
+
 ### 2.3 Stakeholders - Onion Model
 <p align="center">
     <img src="https://github.com/user-attachments/assets/b768743b-cfa2-456d-9c32-e7780289a064"
     alt="Stakeholders Onion Model" width="500" />
 </p>
+
 
 ### 2.4 Epics and User Stories
 We used epics and user stories to structure the game idea into a clearer and manageable development plan that the team could actually work with. At the start of the project, the overall concept was a bit too broad, so epics helped us organise the project into major areas of player experience and technical functionality, such as player movement, resource management, sonar and lighting, enemies, world progression, interface, and system architecture. 
@@ -124,11 +154,9 @@ We also used acceptance criteria to define what "completed" looked like. This he
 
 The main thing we learned from this process was that epics and user stories were most useful when they stayed practical. They helped the team focus on player experience, communicate implementation priorities more clearly.
 
-For repo readibility, we listed two representative examples below. The full set of epics, user stories, and acceptance criteria can be found in the following link: 
+For repo readibility, we listed two representative examples below. The full set of epics, user stories, and acceptance criteria can be found in the following link: [Full list](Epics_and_user_stories.md)
 
-[Full list](Epics_and_user_stories.md)
-
-### EPIC 1 – Core Player Interaction
+#### EPIC 1 – Core Player Interaction
 **Description:** The player must move, explore, and interact with the underwater world intuitively.  
 **User Stories:**  
 - As a competitive player, I want responsive movement, so that I feel in control underwater.
@@ -138,7 +166,7 @@ For repo readibility, we listed two representative examples below. The full set 
   
 **Acceptance Criteria:** Movement and physics are frame-rate independent; input is separated from logic; drag and capped fall speed applied consistently.
 
-### EPIC 2 – Resource & Survival Systems
+#### EPIC 2 – Resource & Survival Systems
 **Description:** Players manage limited resources to create tension and strategic decision-making.  
 **User Stories:**  
 - As a player, I want power to drain over time, so that exploration feels risky.
@@ -148,108 +176,33 @@ For repo readibility, we listed two representative examples below. The full set 
 **Acceptance Criteria:** Resources drain continuously and predictably; Game Over triggers if any resource reaches zero; UI displays all resources clearly.
 
 
-### 2.5 Use Case Diagram
-
-```mermaid
-
-graph TD
-    %% Actors
-    Player["Player"]:::actor
-    Enemy["Enemy AI"]:::actor
-
-    %% Menu / UI Layer
-    Menu["Menu System (Start, Settings)"]:::system
-    UI["In-Game UI (Resource Display, Settings Icon)"]:::system
-    Player --> Menu
-    Player --> UI
-    Menu --> UI
-    Menu -->|Pauses game while open| Movement
-    Menu -->|Pauses game while open| Torch
-    Menu -->|Pauses game while open| Sonar
-    Menu -->|Pauses game while open| Enemy_AI
-
-    %% Gameplay Systems
-    Movement["Player Movement System"]:::system
-    Physics["Underwater Physics (drag, reduced gravity, capped fall)"]:::system
-    Torch["Activate Torch"]:::system
-    Sonar["Activate Sonar"]:::system
-    Resource["Manage Power, Air, Health"]:::system
-    Lighting["Lighting & Visibility"]:::system
-    Room["Room Navigation & Transitions"]:::system
-    Camera["Camera Tracking"]:::system
-    Enemy_AI["Enemy Behavior (Room-local)"]:::system
-    GameOver["Game Over"]:::critical
-    Win["Reach Final Room Exit → Win"]:::critical
-
-    %% Player interactions
-    Player --> Movement
-    Player --> Torch
-    Player --> Sonar
-    Player --> Resource
-    Player --> Room
-
-    %% Physics integration
-    Movement --> Physics
-    Physics --> Camera
-    Torch --> Lighting
-    Sonar --> Lighting
-    Resource --> Torch
-    Resource --> Sonar
-    Resource --> Room
-    Resource --> UI
-
-    %% Enemy reactions (room-local)
-    Room --> Enemy_AI
-    Enemy --> Enemy_AI
-    Enemy_AI -->|React to Player Proximity| Movement
-    Enemy_AI -->|React to Sonar Pulse| Sonar
-    Enemy_AI -->|React to Torch Light| Torch
-
-    %% Enemy damages player
-    Enemy_AI -->|Damage on Contact| Resource
-
-    %% Resource drain → Game Over
-    Resource -->|Power 0| GameOver
-    Resource -->|Air 0| GameOver
-    Resource -->|Health 0| GameOver
-
-    %% Win condition
-    Room -->|Reach exit of final room| Win
-
-    %% Styling
-    classDef actor fill:#f9f,stroke:#333,stroke-width:1.5px
-    classDef system fill:#bbf,stroke:#333,stroke-width:1px
-    classDef critical fill:#f99,stroke:#900,stroke-width:2px,font-weight:bold
-
-
-```
-
 ### 2.6 Prioritised Feature Breakdown
-A risk-managed development approach prioritising core mechanics and technical feasibility over feature breadth.
-Based on user stories derived from our game Epics
+To keep the development manageable and technically feasible, this project followed a risk-managed development approach prioritisation strategy. Core mechanics were given priority over feature breadth so that the team members could first deliver a stable and playable MVP. The breakdown below is based on our user stories derived from our game Epics.
 
-| **Priority**            | **Systems / Features**                                                   | **Estimated Implementation Time** |
-| ----------------------- | ------------------------------------------------------------------------ | --------------------------------- |
-| **HIGH (MVP)**          | Player controls (intents: movement, sonar ping, torch toggle)            | 1-2 days (mostly done)            |
-|                         | Physics (underwater movement, drag, collisions, hitboxes)                | 4–5 days                          |
-|                         | Minimal gameplay UI (power meter, sonar cooldown, pause)                 | 1–2 days                          |
-|                         | Resource management (power drain + torch drain, replen)                  | 2–3 days (mostly done)            |
-|                         | Lighting system (darkness overlay + visibility masking)                  | 3–5 days                          |
-|                         | Echolocation / Sonar system (pulse, circular reveal, fade-out, cooldown) | 3–5 days (PoC exists)             |
-|                         | Core Metroidvania structure (3–5 rooms, 1 gate, basic traversal)         | 4–6 days                          |
-| **MEDIUM (Core Depth)** | Room system (room objects, transitions, bounds)                          | 3–5 days                          |
-|                         | Camera system (follow player, clamp to room)                             | 2–3 days                          |
-|                         | Torch visual enhancement (improved lighting radius)                      | 1–3 days                          |
-|                         | Enemy system (basic patrol / contact damage)                             | 3–5 days                          |
-|                         | Enemy awareness to sonar (alert state within pulse radius)               | 4–7 days                          |
-|                         | Exploration ability (double jump unlock, etc.)                           | 2–4 days                          |
-|                         | Simple upgrade system (increase sonar range or power capacity)           | 3–5 days                          |
-| **LOW (Stretch)**       | Save system (checkpoint-based)                                           | 2–4 days                          |
-|                         | Achievement system (internal milestone tracking)                         | 1–2 days                          |
-|                         | Advanced enemy AI (hunt behaviour, multi-state logic)                    | 4–8 days                          |
-|                         | Sonar-reactive mini-boss encounter                                       | 5–10 days                         |
-|                         | Environmental physics extensions (currents, pressure zones)              | 3–6 days                          |
-|                         | Public player database / leaderboard                                     | 7–14+ days                        |
+```jude: i removed the time estimates. Keeping them requires additional explanation.```
+
+| **Priority**            | **Systems / Features**                                                   |
+| ----------------------- | ------------------------------------------------------------------------ | 
+| **HIGH (MVP)**          | Player controls (intents: movement, sonar ping, torch toggle)            |
+|                         | Physics (underwater movement, drag, collisions, hitboxes)                |
+|                         | Minimal gameplay UI (power meter, sonar cooldown, pause)                 | 
+|                         | Resource management (power drain + torch drain, replen)                  |
+|                         | Lighting system (darkness overlay + visibility masking)                  | 
+|                         | Echolocation / Sonar system (pulse, circular reveal, fade-out, cooldown) | 
+|                         | Core Metroidvania structure (3–5 rooms, 1 gate, basic traversal)         | 
+| **MEDIUM (Core Depth)** | Room system (room objects, transitions, bounds)                          | 
+|                         | Camera system (follow player, clamp to room)                             | 
+|                         | Torch visual enhancement (improved lighting radius)                      | 
+|                         | Enemy system (basic patrol / contact damage)                             | 
+|                         | Enemy awareness to sonar (alert state within pulse radius)               | 
+|                         | Exploration ability (double jump unlock, etc.)                           | 
+|                         | Simple upgrade system (increase sonar range or power capacity)           | 
+| **LOW (Stretch)**       | Save system (checkpoint-based)                                           | 
+|                         | Achievement system (internal milestone tracking)                         | 
+|                         | Advanced enemy AI (hunt behaviour, multi-state logic)                    | 
+|                         | Sonar-reactive mini-boss encounter                                       | 
+|                         | Environmental physics extensions (currents, pressure zones)              | 
+|                         | Public player database / leaderboard                                     | 
 
 ---
 </br>
@@ -259,7 +212,6 @@ Based on user stories derived from our game Epics
 The project is built using a **modular, state-driven architecture** that separates **logic, rendering, input, and game world state.** Each system has a clear responsibility and communicates only via defined interfaces, which simplifies debugging, allows independent testing, and reduces unintended side-effects when new features are added.
 
 At an early stage, we expected the project to be described using more traditional object-oriented diagram, such as a class diagram showing relationships between classes. However, as development progressed, the codebase became organised more around runtime systems, shared state, and per-frame updates than around inheritance-heavy object structure.
-
 
 This **high-level architecture snapshot** illustrates the responsibilities of each system:
 
@@ -613,3 +565,82 @@ You can delete this section in your own repo, it's just here for information. in
 - **Documentation** of code (5% of report grade)
   - Organise your code so that it could easily be picked up by another team in the future and developed further.
   - Is your repo clearly organised? Is code well commented throughout?
+
+
+------
+### 2.5 Use Case Diagram
+
+the following is not a correct use case diagram in UML. A high-level feature diagram only. Re-think where to put it.
+
+```mermaid
+
+graph TD
+    %% Actors
+    Player["Player"]:::actor
+    Enemy["Enemy AI"]:::actor
+
+    %% Menu / UI Layer
+    Menu["Menu System (Start, Settings)"]:::system
+    UI["In-Game UI (Resource Display, Settings Icon)"]:::system
+    Player --> Menu
+    Player --> UI
+    Menu --> UI
+    Menu -->|Pauses game while open| Movement
+    Menu -->|Pauses game while open| Torch
+    Menu -->|Pauses game while open| Sonar
+    Menu -->|Pauses game while open| Enemy_AI
+
+    %% Gameplay Systems
+    Movement["Player Movement System"]:::system
+    Physics["Underwater Physics (drag, reduced gravity, capped fall)"]:::system
+    Torch["Activate Torch"]:::system
+    Sonar["Activate Sonar"]:::system
+    Resource["Manage Power, Air, Health"]:::system
+    Lighting["Lighting & Visibility"]:::system
+    Room["Room Navigation & Transitions"]:::system
+    Camera["Camera Tracking"]:::system
+    Enemy_AI["Enemy Behavior (Room-local)"]:::system
+    GameOver["Game Over"]:::critical
+    Win["Reach Final Room Exit → Win"]:::critical
+
+    %% Player interactions
+    Player --> Movement
+    Player --> Torch
+    Player --> Sonar
+    Player --> Resource
+    Player --> Room
+
+    %% Physics integration
+    Movement --> Physics
+    Physics --> Camera
+    Torch --> Lighting
+    Sonar --> Lighting
+    Resource --> Torch
+    Resource --> Sonar
+    Resource --> Room
+    Resource --> UI
+
+    %% Enemy reactions (room-local)
+    Room --> Enemy_AI
+    Enemy --> Enemy_AI
+    Enemy_AI -->|React to Player Proximity| Movement
+    Enemy_AI -->|React to Sonar Pulse| Sonar
+    Enemy_AI -->|React to Torch Light| Torch
+
+    %% Enemy damages player
+    Enemy_AI -->|Damage on Contact| Resource
+
+    %% Resource drain → Game Over
+    Resource -->|Power 0| GameOver
+    Resource -->|Air 0| GameOver
+    Resource -->|Health 0| GameOver
+
+    %% Win condition
+    Room -->|Reach exit of final room| Win
+
+    %% Styling
+    classDef actor fill:#f9f,stroke:#333,stroke-width:1.5px
+    classDef system fill:#bbf,stroke:#333,stroke-width:1px
+    classDef critical fill:#f99,stroke:#900,stroke-width:2px,font-weight:bold
+
+```
