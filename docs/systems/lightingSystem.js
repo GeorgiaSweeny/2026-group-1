@@ -52,11 +52,6 @@ import { LIGHTING, TORCH } from '../config.js';
 const SURFACE_BOTTOM_Y = 3184; // player spawn row — darkest point
 const SURFACE_TOP_Y    = 320;  // win trigger row  — brightest point
 
-function _surfaceT(playerY) {
-   const raw = (SURFACE_BOTTOM_Y - playerY) / (SURFACE_BOTTOM_Y - SURFACE_TOP_Y);
-   return Math.max(0, Math.min(1, raw));
-}
-
 export function createLightingSystem(player = null, getSonarLights = () => [], getGlowLights = () => [], getCurrentRoom = () => null) {
    return {
 
@@ -113,8 +108,6 @@ export function createLightingSystem(player = null, getSonarLights = () => [], g
 
          return lightSources;
       },
-
-      getSurfaceDarknessAlpha() { return 255; },
    };
 }
 //======================================

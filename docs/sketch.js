@@ -709,7 +709,12 @@ function setup() {
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),
-    getDarknessAlpha: () => lightingSystem.getSurfaceDarknessAlpha(),
+    getSkyBand: () => roomSystem?.getCurrentRoom?.() === 'theSurface'
+      ? {
+          y: 0, height: 320, width: 1440, color: '#87CEEB',
+          waterGradient: { topColor: '#1a5f8a', bottomColor: '#021B3A', worldTop: 320, worldBot: 950 },
+        }
+      : null,
     getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
     getCameraOffset: () => cameraSystem.getOffset(),
