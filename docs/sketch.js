@@ -734,8 +734,16 @@ function setup() {
 function draw() {
   frameRate(GAME.FPS);
 
-  if (!soundSystem?.isPlaying?.('introMusic')) {
+  const isMenuState = gameState === "MAIN_PAGE" || gameState === "STORY_PAGE"
+    || gameState === "CONTROLS" || gameState === "MENU"
+    || gameState === "SETTINGS";
+
+  if (audioUnlocked && isMenuState && !soundSystem?.isPlaying?.('introMusic')) {
     soundSystem?.loop?.('introMusic', 0.5);
+  }
+
+  if (!isMenuState) {
+    soundSystem?.stop?.('introMusic');
   }
 
   if (gameState === "MAIN_PAGE") {
@@ -947,7 +955,7 @@ function mousePressed() {
       soundSystem?.stop('introMusic');
       soundSystem?.play('buttonClick', 0.8);
       soundSystem?.play('waterSplash', 1.0);
-      soundSystem?.loop('gamebg1', 0.4);
+      soundSystem?.loop('gamebg1', 0.7);
       gameVersion = "demo";
       sessionVersion = "demo";
       sessionDifficulty = GAME_VERSIONS.demo.difficulty;
@@ -958,7 +966,7 @@ function mousePressed() {
       soundSystem?.stop('introMusic');
       soundSystem?.play('buttonClick', 0.8);
       soundSystem?.play('waterSplash', 1.0);
-      soundSystem?.loop('gamebg1', 0.4);
+      soundSystem?.loop('gamebg1', 0.7);
       gameVersion = "full";
       sessionVersion = "full";
       sessionDifficulty = selection;
