@@ -107,21 +107,16 @@ export const GAMEPLAY_OVERLAY = {
 // MINIMAP CONFIG
 //======================
 export const MINIMAP = {
-  ANCHOR: "top-right",
-  MARGIN_PX: 20,
-  WIDTH_PX: 200,
-  HEIGHT_PX: 150,
-  REVEAL_RADIUS_TILES: 3,
-  MAX_REVEAL_RADIUS_TILES: 10,
-  COLORS: {
-    FRAME:      "#1a2a3a",
-    BACKGROUND: "#0d1520",
-    REVEALED:   "#2a4a6a",
-    UNREVEALED: "#080e14",
-    GEOMETRY:   "#8aabcc",
-    OUTLINE:    "#ffffff",
-    PLAYER:     "#00ffcc",
-  },
+  ZOOM: 2,
+  PLAYER_MARKER_TILE_SCALE: 1.25,
+
+  // Absolute minimap center in screen space. Set to null to use top-right fallback.
+  CENTER_X: 960,
+  CENTER_Y: 935,
+
+  // If set, minimap radius is fitted to dialRadius - dialInset.
+  DIAL_RADIUS: null,
+  DIAL_INSET: 8,
 };
 
 //======================

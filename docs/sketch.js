@@ -632,10 +632,16 @@ function setup() {
 
   miniMapSystem = createMiniMapSystem({
     player,
-    getCurrentRoomId: () => roomSystem.getCurrentRoom(),
-    getCurrentRoomState: () => roomSystem.getRoomState(),
+    zoom: MINIMAP.ZOOM,
+    centerX: MINIMAP.CENTER_X,
+    centerY: MINIMAP.CENTER_Y,
+    dialRadius: MINIMAP.DIAL_RADIUS,
+    dialInset: MINIMAP.DIAL_INSET,
+    playerMarkerTileScale: MINIMAP.PLAYER_MARKER_TILE_SCALE,
+    getPlayer: () => player,
+    getRoomState: () => roomSystem.getRoomState(),
     getPlatforms: () => roomSystem.getPlatforms(),
-    config: MINIMAP,
+    getSonarReveals: () => sonarSystem?.getRevealedWalls?.() ?? [],
   });
   
   renderSystem = createRenderSystem({
