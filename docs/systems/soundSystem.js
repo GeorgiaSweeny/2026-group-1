@@ -24,6 +24,7 @@ export function createSoundSystem() {
       sounds.buttonClick = loadSound('assets/sounds/buttonClick.wav');
       sounds.waterSplash = loadSound('assets/sounds/waterSplash.mp3');
       sounds.gamebg1 = loadSound('assets/sounds/gamebg1.wav');
+      sounds.powerCollected = loadSound('assets/sounds/powerCollected.mp3');
     },
 
     setMasterVolume(zeroToHundred) {
