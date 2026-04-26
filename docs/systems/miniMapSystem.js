@@ -1,469 +1,363 @@
-import { MINIMAP } from "../config.js";
-import {
-   buildRevealNeighborhood,
-   clamp,
-   isTileInBounds,
-   parseTileKey,
-   projectWorldPointToFrame,
-   projectWorldRectToFrame,
-   resolveHudFrame,
-   tileKey,
-   worldToTile,
-} from "./minimapMath.js";
+/*
+========================================
+VERSION: 1.0
+SYSTEM: MINIMAP SYSTEM
+DESCRIPTION:
+- Circular minimap UI shell in top-right screen space
+- Invisible circular clip boundary for minimap contents
+========================================
+*/
 
-function getPlayerWorldPosition(player) {
-   const worldX = player?.position?.x ?? player?.x;
-   const worldY = player?.position?.y ?? player?.y;
-   if (!Number.isFinite(worldX) || !Number.isFinite(worldY)) return null;
-   return { worldX, worldY };
+
+const DEFAULT_MINIMAP_CONFIG = {
+    radius: 150,
+    padding: 20,
+    centerX: null,
+    centerY: null,
+    dialRadius: null,
+    dialInset: 8,
+    borderColor: 'white',
+    borderWidth: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    mapInset: 6,
+    zoom: 1,
+    discoveredTileColor: 'rgba(120, 170, 210, 0.85)',
+    playerColor: 'rgba(255, 120, 120, 0.95)',
+    playerMarkerTileScale: 1.25,
+    playerRadius: 4,
+};
+
+const MIN_TILE_SIZE = 1;
+
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
 }
 
-function getPlatformRect(platform) {
-   if (!platform) return null;
-
-   if (
-      typeof platform.getCornerX === "function" &&
-      typeof platform.getCornerY === "function" &&
-      typeof platform.getWidth === "function" &&
-      typeof platform.getHeight === "function"
-   ) {
-      return {
-         x: platform.getCornerX(),
-         y: platform.getCornerY(),
-         w: platform.getWidth(),
-         h: platform.getHeight(),
-      };
-   }
-
-   const w = platform?.w ?? platform?.width;
-   const h = platform?.h ?? platform?.height;
-   const centerX = platform?.x;
-   const centerY = platform?.y;
-
-   if (
-      !Number.isFinite(w) ||
-      !Number.isFinite(h) ||
-      !Number.isFinite(centerX) ||
-      !Number.isFinite(centerY)
-   ) {
-      return null;
-   }
-
-   return {
-      x: centerX - w / 2,
-      y: centerY - h / 2,
-      w,
-      h,
-   };
+function createMask(cols, rows) {
+    return new Uint8Array(cols * rows);
 }
 
-function mergeConfig(partialConfig = {}) {
-   const merged = {
-      anchor: partialConfig.anchor ?? MINIMAP.ANCHOR,
-      marginPx: partialConfig.marginPx ?? MINIMAP.MARGIN_PX,
-      widthPx: partialConfig.widthPx ?? MINIMAP.WIDTH_PX,
-      heightPx: partialConfig.heightPx ?? MINIMAP.HEIGHT_PX,
-      revealRadiusTiles:
-         partialConfig.revealRadiusTiles ?? MINIMAP.REVEAL_RADIUS_TILES,
-      maxRevealRadiusTiles:
-         partialConfig.maxRevealRadiusTiles ?? MINIMAP.MAX_REVEAL_RADIUS_TILES,
-      colors: {
-         ...MINIMAP.COLORS,
-         ...(partialConfig.colors ?? {}),
-      },
-   };
+function getWallRect(wall) {
+    if (!wall || typeof wall !== 'object') return null;
 
-   merged.revealRadiusTiles = clamp(
-      Math.floor(merged.revealRadiusTiles),
-      0,
-      Math.max(0, merged.maxRevealRadiusTiles),
-   );
+    if (typeof wall.getCornerX === 'function' && typeof wall.getCornerY === 'function') {
+        const w = wall.getWidth?.() ?? 0;
+        const h = wall.getHeight?.() ?? 0;
+        if (!w || !h) return null;
 
-   return merged;
+        return {
+            x: wall.getCornerX(),
+            y: wall.getCornerY(),
+            w,
+            h,
+        };
+    }
+
+    const w = Number(wall.w ?? wall.width ?? 0);
+    const h = Number(wall.h ?? wall.height ?? 0);
+    if (!w || !h) return null;
+
+    const cx = Number(wall.x ?? 0);
+    const cy = Number(wall.y ?? 0);
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null;
+
+    return {
+        x: cx - (w / 2),
+        y: cy - (h / 2),
+        w,
+        h,
+    };
 }
 
-function normalizeRoomMetrics(roomState) {
-   const roomWidthPx = Number(roomState?.width);
-   const roomHeightPx = Number(roomState?.height);
-   const tileWidthPx = Number(roomState?.tileWidth);
-   const tileHeightPx = Number(roomState?.tileHeight);
+function markMaskRect(mask, cols, rows, tileWidth, tileHeight, rect) {
+    if (!rect) return;
 
-   const valid =
-      Number.isFinite(roomWidthPx) &&
-      Number.isFinite(roomHeightPx) &&
-      Number.isFinite(tileWidthPx) &&
-      Number.isFinite(tileHeightPx) &&
-      roomWidthPx > 0 &&
-      roomHeightPx > 0 &&
-      tileWidthPx > 0 &&
-      tileHeightPx > 0;
+    const startTileX = clamp(Math.floor(rect.x / tileWidth), 0, cols - 1);
+    const endTileX = clamp(Math.ceil((rect.x + rect.w) / tileWidth) - 1, 0, cols - 1);
+    const startTileY = clamp(Math.floor(rect.y / tileHeight), 0, rows - 1);
+    const endTileY = clamp(Math.ceil((rect.y + rect.h) / tileHeight) - 1, 0, rows - 1);
 
-   if (!valid) {
-      return {
-         valid: false,
-         roomWidthPx: 0,
-         roomHeightPx: 0,
-         tileWidthPx: 0,
-         tileHeightPx: 0,
-         roomWidthTiles: 0,
-         roomHeightTiles: 0,
-      };
-   }
-
-   return {
-      valid: true,
-      roomWidthPx,
-      roomHeightPx,
-      tileWidthPx,
-      tileHeightPx,
-      roomWidthTiles: Math.max(1, Math.ceil(roomWidthPx / tileWidthPx)),
-      roomHeightTiles: Math.max(1, Math.ceil(roomHeightPx / tileHeightPx)),
-   };
+    for (let ty = startTileY; ty <= endTileY; ty++) {
+        for (let tx = startTileX; tx <= endTileX; tx++) {
+            mask[(ty * cols) + tx] = 1;
+        }
+    }
 }
 
-export function createMiniMapSystem({
-   player,
-   getCurrentRoomId,
-   getCurrentRoomState,
-   getPlatforms,
-   getViewportSize,
-   config,
-} = {}) {
-   const minimapConfig = mergeConfig(config);
-   const explorationByRoom = new Map();
-   const initializedRooms = new Set();
-   const warnedInvalidMetricsRooms = new Set();
-   const lastPlayerTileByRoom = new Map();
-   const skipRevealOnRoomEntry = new Set();
+function createRoomRevealState(roomId, roomState, platforms) {
+    const tileWidth = Math.max(MIN_TILE_SIZE, Number(roomState?.tileWidth ?? 16));
+    const tileHeight = Math.max(MIN_TILE_SIZE, Number(roomState?.tileHeight ?? 16));
+    const roomWidth = Math.max(tileWidth, Number(roomState?.width ?? tileWidth));
+    const roomHeight = Math.max(tileHeight, Number(roomState?.height ?? tileHeight));
 
-   let activeRoomId = null;
+    const cols = Math.max(1, Math.ceil(roomWidth / tileWidth));
+    const rows = Math.max(1, Math.ceil(roomHeight / tileHeight));
 
-   function ensureRoomSet(roomId) {
-      if (!explorationByRoom.has(roomId)) {
-         explorationByRoom.set(roomId, new Set());
-      }
-      return explorationByRoom.get(roomId);
-   }
+    const solidMask = createMask(cols, rows);
+    for (const wall of platforms ?? []) {
+        markMaskRect(solidMask, cols, rows, tileWidth, tileHeight, getWallRect(wall));
+    }
 
-   function onRoomChanged(roomId) {
-      if (!roomId) return;
-      activeRoomId = roomId;
-      ensureRoomSet(roomId);
-      if (initializedRooms.has(roomId)) {
-         skipRevealOnRoomEntry.add(roomId);
-      }
-   }
-
-   function revealAroundPlayer(metrics, radiusTiles) {
-      if (!activeRoomId || !metrics.valid) return 0;
-      const playerPos = getPlayerWorldPosition(player);
-      if (!playerPos) return 0;
-
-      const revealSet = ensureRoomSet(activeRoomId);
-      const playerTile = worldToTile(
-         playerPos.worldX,
-         playerPos.worldY,
-         metrics.tileWidthPx,
-         metrics.tileHeightPx,
-      );
-
-      let inserted = 0;
-      const candidates = buildRevealNeighborhood(
-         playerTile.tileX,
-         playerTile.tileY,
-         radiusTiles,
-      );
-
-      for (const candidate of candidates) {
-         if (
-            !isTileInBounds(
-               candidate.tileX,
-               candidate.tileY,
-               metrics.roomWidthTiles,
-               metrics.roomHeightTiles,
-            )
-         ) {
-            continue;
-         }
-
-         const key = tileKey(candidate.tileX, candidate.tileY);
-         if (!revealSet.has(key)) {
-            revealSet.add(key);
-            inserted += 1;
-         }
-      }
-
-      return inserted;
-   }
-
-   function getCurrentPlayerTile(metrics) {
-      if (!metrics.valid) return null;
-      const playerPos = getPlayerWorldPosition(player);
-      if (!playerPos) return null;
-
-      return worldToTile(
-         playerPos.worldX,
-         playerPos.worldY,
-         metrics.tileWidthPx,
-         metrics.tileHeightPx,
-      );
-   }
-
-   function getMetrics() {
-      const roomState = getCurrentRoomState?.() ?? null;
-      return {
-         roomState,
-         metrics: normalizeRoomMetrics(roomState),
-      };
-   }
-
-   function warnInvalidMetrics(roomId, roomState) {
-      if (!roomId || warnedInvalidMetricsRooms.has(roomId)) return;
-      warnedInvalidMetricsRooms.add(roomId);
-      console.warn("[miniMapSystem] Invalid room metrics, drawing fallback frame only", {
-         roomId,
-         width: roomState?.width,
-         height: roomState?.height,
-         tileWidth: roomState?.tileWidth,
-         tileHeight: roomState?.tileHeight,
-      });
-   }
-
-   function getFrame() {
-      const viewport = getViewportSize?.() ?? {
-         width: typeof width === "number" ? width : 640,
-         height: typeof height === "number" ? height : 360,
-      };
-
-      return resolveHudFrame({
-         anchor: minimapConfig.anchor,
-         marginPx: minimapConfig.marginPx,
-         widthPx: minimapConfig.widthPx,
-         heightPx: minimapConfig.heightPx,
-         viewportWidth: viewport.width,
-         viewportHeight: viewport.height,
-      });
-   }
-
-   function drawFrame(frame) {
-      noStroke();
-      fill(minimapConfig.colors.FRAME);
-      rect(frame.x, frame.y, frame.width, frame.height, 8);
-
-      const inset = 4;
-      fill(minimapConfig.colors.BACKGROUND);
-      rect(
-         frame.x + inset,
-         frame.y + inset,
-         frame.width - inset * 2,
-         frame.height - inset * 2,
-         6,
-      );
-   }
-
-   function drawRevealedTiles(frame, metrics, revealSet) {
-      if (!metrics.valid || !revealSet) return;
-      const tileW = frame.width / metrics.roomWidthTiles;
-      const tileH = frame.height / metrics.roomHeightTiles;
-
-      noStroke();
-      fill(minimapConfig.colors.REVEALED);
-
-      for (const key of revealSet) {
-         const parsed = parseTileKey(key);
-         if (!parsed) continue;
-         if (
-            !isTileInBounds(
-               parsed.tileX,
-               parsed.tileY,
-               metrics.roomWidthTiles,
-               metrics.roomHeightTiles,
-            )
-         ) {
-            continue;
-         }
-
-         rect(
-            frame.x + parsed.tileX * tileW,
-            frame.y + parsed.tileY * tileH,
-            Math.max(1, tileW),
-            Math.max(1, tileH),
-         );
-      }
-   }
-
-   function drawUnrevealedFog(frame, metrics, revealSet) {
-      if (!metrics.valid || !revealSet) return;
-      const maxTileCount = metrics.roomWidthTiles * metrics.roomHeightTiles;
-      if (revealSet.size >= maxTileCount) return;
-
-      const tileW = frame.width / metrics.roomWidthTiles;
-      const tileH = frame.height / metrics.roomHeightTiles;
-
-      noStroke();
-      fill(minimapConfig.colors.UNREVEALED);
-
-      for (let tileY = 0; tileY < metrics.roomHeightTiles; tileY += 1) {
-         for (let tileX = 0; tileX < metrics.roomWidthTiles; tileX += 1) {
-            const key = tileKey(tileX, tileY);
-            if (revealSet.has(key)) continue;
-
-            rect(
-               frame.x + tileX * tileW,
-               frame.y + tileY * tileH,
-               Math.max(1, tileW),
-               Math.max(1, tileH),
-            );
-         }
-      }
-   }
-
-   function drawGeometry(frame, metrics, revealSet) {
-      const platforms = getPlatforms?.() ?? [];
-      if (!Array.isArray(platforms) || platforms.length === 0) return;
-
-      noStroke();
-      fill(minimapConfig.colors.GEOMETRY);
-
-      for (const platform of platforms) {
-         const rectWorld = getPlatformRect(platform);
-         if (!rectWorld) continue;
-
-         const centerTile = worldToTile(
-            rectWorld.x + rectWorld.w / 2,
-            rectWorld.y + rectWorld.h / 2,
-            metrics.tileWidthPx,
-            metrics.tileHeightPx,
-         );
-         if (!revealSet.has(tileKey(centerTile.tileX, centerTile.tileY))) continue;
-
-         const projected = projectWorldRectToFrame({
-            rect: rectWorld,
-            roomWidthPx: metrics.roomWidthPx,
-            roomHeightPx: metrics.roomHeightPx,
-            frame,
-         });
-
-         rect(projected.x, projected.y, projected.w, projected.h);
-      }
-   }
-
-   function drawPlayerMarker(frame, metrics) {
-      const playerPos = getPlayerWorldPosition(player);
-      if (!playerPos || !metrics.valid) return;
-
-      const marker = projectWorldPointToFrame({
-         worldX: playerPos.worldX,
-         worldY: playerPos.worldY,
-         roomWidthPx: metrics.roomWidthPx,
-         roomHeightPx: metrics.roomHeightPx,
-         frame,
-      });
-
-      stroke(minimapConfig.colors.OUTLINE);
-      strokeWeight(1);
-      fill(minimapConfig.colors.PLAYER);
-      circle(marker.x, marker.y, 6);
-   }
-
-   return {
-      update() {
-         const roomId = getCurrentRoomId?.();
-         if (!roomId) return;
-
-         if (activeRoomId !== roomId) {
-            onRoomChanged(roomId);
-         }
-
-         const { metrics } = getMetrics();
-         if (!metrics.valid) return;
-
-         warnedInvalidMetricsRooms.delete(roomId);
-
-          const playerTile = getCurrentPlayerTile(metrics);
-          if (!playerTile) return;
-          const currentTileKey = tileKey(playerTile.tileX, playerTile.tileY);
-
-         if (!initializedRooms.has(roomId)) {
-            revealAroundPlayer(metrics, minimapConfig.revealRadiusTiles);
-            initializedRooms.add(roomId);
-            lastPlayerTileByRoom.set(roomId, currentTileKey);
-            return;
-         }
-
-         if (skipRevealOnRoomEntry.has(roomId)) {
-            lastPlayerTileByRoom.set(roomId, currentTileKey);
-            skipRevealOnRoomEntry.delete(roomId);
-            return;
-         }
-
-         if (lastPlayerTileByRoom.get(roomId) === currentTileKey) {
-            return;
-         }
-
-         lastPlayerTileByRoom.set(roomId, currentTileKey);
-         revealAroundPlayer(metrics, minimapConfig.revealRadiusTiles);
-      },
-
-      draw() {
-         if (typeof push !== "function") return;
-         const frame = getFrame();
-
-         const roomId = getCurrentRoomId?.() ?? activeRoomId;
-         if (!roomId) return;
-         const revealSet = ensureRoomSet(roomId);
-         const { roomState, metrics } = getMetrics();
-
-         push();
-         drawFrame(frame);
-
-         if (metrics.valid) {
-            drawRevealedTiles(frame, metrics, revealSet);
-            drawGeometry(frame, metrics, revealSet);
-            drawUnrevealedFog(frame, metrics, revealSet);
-            drawPlayerMarker(frame, metrics);
-         } else {
-            warnInvalidMetrics(roomId, roomState);
-         }
-
-         pop();
-      },
-
-      onRoomChanged,
-
-      getExplorationState(roomId) {
-         if (roomId) {
-            const roomSet = explorationByRoom.get(roomId) ?? new Set();
-            return {
-               roomId,
-               revealedTiles: new Set(roomSet),
-            };
-         }
-
-         const snapshot = {};
-         for (const [id, roomSet] of explorationByRoom.entries()) {
-            snapshot[id] = [...roomSet];
-         }
-         return snapshot;
-      },
-
-      restoreExplorationState(roomId, revealedTileKeys = []) {
-         if (!roomId) return;
-         const roomSet = new Set();
-         for (const key of revealedTileKeys) {
-            if (parseTileKey(key)) roomSet.add(key);
-         }
-         explorationByRoom.set(roomId, roomSet);
-      },
-
-      resetAllState() {
-         explorationByRoom.clear();
-         initializedRooms.clear();
-         warnedInvalidMetricsRooms.clear();
-         lastPlayerTileByRoom.clear();
-         skipRevealOnRoomEntry.clear();
-         activeRoomId = null;
-      },
-   };
+    return {
+        roomId,
+        cols,
+        rows,
+        tileWidth,
+        tileHeight,
+        width: roomWidth,
+        height: roomHeight,
+        solidMask,
+        discoveredMask: createMask(cols, rows),
+    };
 }
 
+function revealTile(state, tx, ty) {
+    if (!state) return;
+    if (tx < 0 || ty < 0 || tx >= state.cols || ty >= state.rows) return;
+
+    const index = (ty * state.cols) + tx;
+    if (!state.solidMask[index]) return;
+    state.discoveredMask[index] = 1;
+}
+
+function revealRect(state, rect) {
+    if (!state || !rect) return;
+
+    const startTileX = clamp(Math.floor(rect.x / state.tileWidth), 0, state.cols - 1);
+    const endTileX = clamp(Math.ceil((rect.x + rect.w) / state.tileWidth) - 1, 0, state.cols - 1);
+    const startTileY = clamp(Math.floor(rect.y / state.tileHeight), 0, state.rows - 1);
+    const endTileY = clamp(Math.ceil((rect.y + rect.h) / state.tileHeight) - 1, 0, state.rows - 1);
+
+    for (let ty = startTileY; ty <= endTileY; ty++) {
+        for (let tx = startTileX; tx <= endTileX; tx++) {
+            revealTile(state, tx, ty);
+        }
+    }
+}
+
+function applySonarReveal(state, sonarReveals) {
+    if (!state || !Array.isArray(sonarReveals)) return;
+
+    for (const reveal of sonarReveals) {
+        if (!reveal) continue;
+        revealRect(state, {
+            x: Number(reveal.x ?? 0),
+            y: Number(reveal.y ?? 0),
+            w: Number(reveal.w ?? 0),
+            h: Number(reveal.h ?? 0),
+        });
+    }
+}
+
+function applyTorchReveal(state, player) {
+    if (!state || !player?.torch?.isOn) return;
+
+    const radius = Number(player?.torch?.radius ?? 0);
+    const px = Number(player?.position?.x ?? player?.x ?? 0);
+    const py = Number(player?.position?.y ?? player?.y ?? 0);
+    if (!Number.isFinite(radius) || radius <= 0) return;
+    if (!Number.isFinite(px) || !Number.isFinite(py)) return;
+
+    const startTileX = clamp(Math.floor((px - radius) / state.tileWidth), 0, state.cols - 1);
+    const endTileX = clamp(Math.ceil((px + radius) / state.tileWidth) - 1, 0, state.cols - 1);
+    const startTileY = clamp(Math.floor((py - radius) / state.tileHeight), 0, state.rows - 1);
+    const endTileY = clamp(Math.ceil((py + radius) / state.tileHeight) - 1, 0, state.rows - 1);
+    const radiusSquared = radius * radius;
+
+    for (let ty = startTileY; ty <= endTileY; ty++) {
+        for (let tx = startTileX; tx <= endTileX; tx++) {
+            const cx = (tx + 0.5) * state.tileWidth;
+            const cy = (ty + 0.5) * state.tileHeight;
+            const dx = cx - px;
+            const dy = cy - py;
+            if ((dx * dx) + (dy * dy) <= radiusSquared) {
+                revealTile(state, tx, ty);
+            }
+        }
+    }
+}
+
+function getMapFrame(circle, revealState, player, options = {}) {
+    const config = { ...DEFAULT_MINIMAP_CONFIG, ...options };
+    const availableSize = Math.max(1, (circle.radius * 2) - (config.mapInset * 2));
+    const roomWidth = Math.max(1, Number(revealState?.width ?? 1));
+    const roomHeight = Math.max(1, Number(revealState?.height ?? 1));
+    const baseScale = Math.min(availableSize / roomWidth, availableSize / roomHeight);
+    const zoom = Math.max(0.05, Number(config.zoom ?? 1));
+    const scale = baseScale * zoom;
+
+    const playerX = Number(player?.position?.x ?? player?.x ?? roomWidth / 2);
+    const playerY = Number(player?.position?.y ?? player?.y ?? roomHeight / 2);
+
+    return {
+        x: circle.x - (playerX * scale),
+        y: circle.y - (playerY * scale),
+        scale,
+    };
+}
+
+function drawDiscoveredTiles(ctx, circle, revealState, player, options = {}) {
+    if (!revealState) return;
+    const mapFrame = getMapFrame(circle, revealState, player, options);
+    ctx.fillStyle = options.discoveredTileColor ?? DEFAULT_MINIMAP_CONFIG.discoveredTileColor;
+
+    for (let ty = 0; ty < revealState.rows; ty++) {
+        for (let tx = 0; tx < revealState.cols; tx++) {
+            const index = (ty * revealState.cols) + tx;
+            if (!revealState.discoveredMask[index]) continue;
+
+            const x = mapFrame.x + ((tx * revealState.tileWidth) * mapFrame.scale);
+            const y = mapFrame.y + ((ty * revealState.tileHeight) * mapFrame.scale);
+            const w = Math.max(1, revealState.tileWidth * mapFrame.scale);
+            const h = Math.max(1, revealState.tileHeight * mapFrame.scale);
+
+            ctx.fillRect(x, y, w, h);
+        }
+    }
+}
+
+function drawPlayerMarker(ctx, circle, revealState, player, options = {}) {
+    if (!revealState || !player) return;
+
+    const mapFrame = getMapFrame(circle, revealState, player, options);
+    const renderedTileSize = Math.max(
+        1,
+        Math.min(revealState.tileWidth, revealState.tileHeight) * mapFrame.scale,
+    );
+    const markerTileScale = Math.max(0.1, Number(options.playerMarkerTileScale ?? DEFAULT_MINIMAP_CONFIG.playerMarkerTileScale));
+    const markerDiameter = renderedTileSize * markerTileScale;
+    const markerRadius = Math.max(1, markerDiameter / 2);
+
+    ctx.beginPath();
+    ctx.arc(circle.x, circle.y, markerRadius, 0, 2 * Math.PI);
+    ctx.fillStyle = options.playerColor ?? DEFAULT_MINIMAP_CONFIG.playerColor;
+    ctx.fill();
+}
+
+export function getMiniMapCircle(canvas, options = {}) {
+    const config = { ...DEFAULT_MINIMAP_CONFIG, ...options };
+
+    const dialRadius = Number(config.dialRadius);
+    const dialInset = Math.max(0, Number(config.dialInset ?? 0));
+    const hasDialRadius = Number.isFinite(dialRadius) && dialRadius > 0;
+    const radius = hasDialRadius
+        ? Math.max(4, dialRadius - dialInset)
+        : config.radius;
+
+    const hasAbsoluteCenter = Number.isFinite(config.centerX) && Number.isFinite(config.centerY);
+    const x = hasAbsoluteCenter
+        ? Number(config.centerX)
+        : (canvas.width - config.padding - radius);
+    const y = hasAbsoluteCenter
+        ? Number(config.centerY)
+        : (config.padding + radius);
+
+    return {
+        x,
+        y,
+        radius,
+    };
+}
+
+function buildCirclePath(ctx, circle) {
+    ctx.beginPath();
+    ctx.arc(circle.x, circle.y, circle.radius, 0, 2 * Math.PI);
+}
+
+export function beginMiniMapClip(ctx, circle) {
+    ctx.save();
+    buildCirclePath(ctx, circle);
+    ctx.clip();
+}
+
+export function endMiniMapClip(ctx) {
+    ctx.restore();
+}
+
+export function drawMiniMapBorder(ctx, circle, options = {}) {
+    const config = { ...DEFAULT_MINIMAP_CONFIG, ...options };
+    buildCirclePath(ctx, circle);
+    ctx.strokeStyle = config.borderColor;
+    ctx.lineWidth = config.borderWidth;
+    ctx.stroke();
+}
+
+export function drawMiniMapContents(ctx, circle, options = {}, runtime = {}) {
+    const config = { ...DEFAULT_MINIMAP_CONFIG, ...options };
+
+    if (config.backgroundColor) {
+        buildCirclePath(ctx, circle);
+        ctx.fillStyle = config.backgroundColor;
+        ctx.fill();
+    }
+
+    drawDiscoveredTiles(ctx, circle, runtime.revealState, runtime.player, config);
+    drawPlayerMarker(ctx, circle, runtime.revealState, runtime.player, config);
+}
+
+export function drawMiniMap(ctx, canvas, options = {}, runtime = {}) {
+    const circle = getMiniMapCircle(canvas, options);
+
+    beginMiniMapClip(ctx, circle);
+    drawMiniMapContents(ctx, circle, options, runtime);
+    endMiniMapClip(ctx);
+
+    drawMiniMapBorder(ctx, circle, options);
+
+    return circle;
+}
+
+export function createMiniMapSystem(options = {}) {
+    const drawOptions = { ...options };
+    const roomRevealStateById = new Map();
+
+    const getPlayer = options.getPlayer ?? (() => options.player ?? null);
+    const getRoomState = options.getRoomState ?? (() => null);
+    const getPlatforms = options.getPlatforms ?? (() => []);
+    const getSonarReveals = options.getSonarReveals ?? (() => []);
+
+    function ensureRoomRevealState(roomState) {
+        const roomId = String(roomState?.currentRoom ?? 'unknown-room');
+        let state = roomRevealStateById.get(roomId);
+        if (state) return state;
+
+        state = createRoomRevealState(roomId, roomState, getPlatforms?.() ?? []);
+        roomRevealStateById.set(roomId, state);
+        return state;
+    }
+
+    function updateDiscoveryState() {
+        const roomState = getRoomState?.();
+        if (!roomState) return null;
+
+        const revealState = ensureRoomRevealState(roomState);
+        const player = getPlayer?.();
+
+        applySonarReveal(revealState, getSonarReveals?.() ?? []);
+        applyTorchReveal(revealState, player);
+
+        return revealState;
+    }
+
+    function draw() {
+        const ctx = globalThis?.drawingContext;
+        const canvas = globalThis?.canvas;
+        const player = getPlayer?.();
+        const revealState = updateDiscoveryState();
+
+        if (!ctx || !canvas) return;
+        drawMiniMap(ctx, canvas, drawOptions, {
+            revealState,
+            player,
+        });
+    }
+
+    function update() {
+        // Intentionally empty for scaffold phase.
+    }
+
+    return {
+        update,
+        draw,
+    };
+}

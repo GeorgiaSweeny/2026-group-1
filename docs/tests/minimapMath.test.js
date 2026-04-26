@@ -5,7 +5,9 @@ import {
   resolveHudFrame,
 } from "../systems/minimapMath.js";
 
-describe("minimapMath", () => {
+// DISABLED: minimapMath.js was a dependency of the old rectangular p5.js minimap implementation.
+// The minimap system has been replaced with the circular Canvas 2D version from minimap-feature.
+describe.skip("minimapMath", () => {
   it("projects world points into HUD frame bounds", () => {
 
     const frame = { x: 10, y: 20, width: 200, height: 100 };
