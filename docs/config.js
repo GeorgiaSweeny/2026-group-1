@@ -94,7 +94,7 @@ export const DISPLAY = {
 // GAMEPLAY OVERLAY CONFIG
 //======================
 export const GAMEPLAY_OVERLAY = {
-  ENABLED: false, // Set to true to enable the gameplay overlay for testing
+  ENABLED: false,
   CENTER_ON_SCREEN: true, // When true, overlay is centered before offsets are applied
   OFFSET_X: 0,
   OFFSET_Y: 30,
@@ -107,9 +107,7 @@ export const GAMEPLAY_OVERLAY = {
 // MINIMAP CONFIG
 //======================
 export const MINIMAP = {
-  // 1 = fit-to-room baseline scale, >1 zooms in, <1 zooms out.
   ZOOM: 2,
-  // Player marker diameter relative to rendered minimap tile size.
   PLAYER_MARKER_TILE_SCALE: 1.25,
 
   // Absolute minimap center in screen space. Set to null to use top-right fallback.
