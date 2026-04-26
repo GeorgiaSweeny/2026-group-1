@@ -26,6 +26,8 @@ export function createSoundSystem() {
       sounds.gamebg1 = loadSound('assets/sounds/gamebg1.wav');
       sounds.powerCollected = loadSound('assets/sounds/powerCollected.mp3');
       sounds.movement = loadSound('assets/sounds/movement1.mp3');
+      sounds.win = loadSound('assets/sounds/win.mp3');
+      sounds.achievementBell = loadSound('assets/sounds/achievementBell.wav');
     },
 
     setMasterVolume(zeroToHundred) {
@@ -52,7 +54,7 @@ export function createSoundSystem() {
 
     stop(key) {
       const s = sounds[key];
-      if (s && s.isPlaying()) {
+      if (s) {
         s.stop();
       }
     },

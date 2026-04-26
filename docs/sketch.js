@@ -557,10 +557,13 @@ function setup() {
       }
     },
     onWin: () => {
+      soundSystem?.stop('gamebg1');
+      soundSystem?.play('win', 0.9);
       gameState = WIN_STATE;
     },
     getAllowedRooms: () => GAME_VERSIONS[gameVersion].rooms,
     getGameVersion: () => gameVersion,
+    soundSystem,
   });
   roomSystem.goToRoom(initialRoom, { spawnId: "default" });
   syncCanvasToCurrentRoom();
@@ -745,6 +748,12 @@ function draw() {
 
   if (!isMenuState) {
     soundSystem?.stop?.('introMusic');
+  }
+
+  const isGameplayState = gameState === "PLAYING";
+  if (!isGameplayState) {
+    soundSystem?.stop('gamebg1');
+    soundSystem?.stop('movement');
   }
 
   if (gameState === "MAIN_PAGE") {
