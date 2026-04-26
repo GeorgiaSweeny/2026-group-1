@@ -907,9 +907,6 @@ function mousePressed() {
       restartCurrentSession();
       gameState = "PLAYING";
     } else if (selection === "MENU") {
-      resetGameToStart();
-      gameVersion = "full";
-      menuSystem.setScreen("main");
       gameState = "MENU";
     }
     return;
@@ -921,9 +918,6 @@ function mousePressed() {
       restartCurrentSession();
       gameState = "PLAYING";
     } else if (selection === "NO") {
-      resetGameToStart();
-      gameVersion = "full";
-      menuSystem.setScreen("main");
       gameState = "MENU";
     } else if (selection === "SETTINGS") {
       settingsReturnState = GAME_OVER_STATE;

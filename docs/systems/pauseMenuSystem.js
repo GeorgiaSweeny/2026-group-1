@@ -245,8 +245,8 @@ export function createPauseMenuSystem({
     noStroke();
     text("DEBUG", cx, baseY);
 
-    // Dev Resolution toggle
-    drawToggle("Dev Resolution (640x360)", devResolution, leftX, baseY + 60);
+    // Dev Resolution toggle — x offset pushes switch right of the long label
+    drawToggle("Dev Resolution (640x360)", devResolution, leftX + 40, baseY + 60, leftX);
 
     // Info text
     textAlign(LEFT, TOP);
@@ -295,7 +295,7 @@ export function createPauseMenuSystem({
       const baseY = height / 2 - 100;
       const leftX = cx - 120;
 
-      const togglesX = leftX + 160;
+      const togglesX = leftX + 190; // leftX + 30 (draw offset) + 160 (toggleX offset in drawToggle)
 
       // Show FPS toggle hit area
       if (isOver(togglesX, baseY + 110 - 12, 48, 24)) {
@@ -335,7 +335,7 @@ export function createPauseMenuSystem({
       const leftX = cx - 120;
 
       // Dev Resolution toggle hit area
-      const toggleX = leftX + 160;
+      const toggleX = leftX + 200; // leftX + 40 (draw offset) + 160 (toggleX offset in drawToggle)
       if (isOver(toggleX, baseY + 60 - 12, 48, 24)) {
         devResolution = !devResolution;
         onResolutionChange?.(devResolution);
