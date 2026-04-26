@@ -625,7 +625,7 @@ function setup() {
   darknessLayer = createGraphics(width, height);
 
   inputSystem = createInputSystem(player);
-  playerSystem = createPlayerSystem(player);
+  playerSystem = createPlayerSystem(player, soundSystem);
   physicsSystem = createPhysicsSystem(player, () => roomSystem.getRoomState());
   cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
   // Snap camera to player's initial position
