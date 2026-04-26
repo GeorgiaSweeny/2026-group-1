@@ -675,6 +675,7 @@ function setup() {
     () => roomSystem.getHazards(),
     () => pauseMenuSystem.getDifficulty(),
     () => enemySystem?.getEnemies() ?? [],
+    soundSystem,
   );
 
   enemySystem = createEnemySystem(
