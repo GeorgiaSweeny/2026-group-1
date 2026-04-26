@@ -12,7 +12,7 @@ DESCRIPTION:
 ========================================
 */
 
-import { DEBUG_COLOR, COMBAT } from "../config.js";
+import { DEBUG_COLOR, COMBAT, POWER, MISSILE, HUD_DIALS } from "../config.js";
 
 //======================================
 // RENDER SYSTEM
@@ -663,6 +663,10 @@ export function createRenderSystem({
       image(darknessLayer, 0, 0);
    }
 
+   // Animation state for scrap counter pickup flash
+   let _lastCredits = null;
+   let _scrapAnimStart = -9999;
+
    //===UI===//
    function drawDial({
       x,
@@ -677,10 +681,18 @@ export function createRenderSystem({
 
       push();
       noFill();
-      stroke(255, 255, 255, 90);
+
+      // Outer tech-frame ring (shop-style cyan border)
+      stroke(126, 220, 224, 100);
+      strokeWeight(1.5);
+      circle(x, y, size + 18);
+
+      // Background ring (empty portion) — dark shop tone
+      stroke(30, 50, 65, 200);
       strokeWeight(10);
       circle(x, y, size);
 
+      // Active fill arc
       stroke(ringColor);
       strokeWeight(10);
       strokeCap(ROUND);
@@ -694,10 +706,131 @@ export function createRenderSystem({
       );
 
       noStroke();
-      fill(labelColor ?? 255);
+      fill(labelColor ?? color(234, 246, 248));
       textAlign(CENTER, CENTER);
-      textSize(18);
+      textSize(16);
       text(centerLabel, x, y);
+      pop();
+   }
+
+   // Segmented upgrade bar — matches shop level-tick visual language
+   function drawSegmentBar(cx, y, level, maxLevel, segW, segH, segGap) {
+      const totalW = maxLevel * (segW + segGap) - segGap;
+      const startX = cx - totalW / 2;
+      for (let i = 0; i < maxLevel; i++) {
+         noStroke();
+         fill(i < level ? color(117, 250, 126) : color(53, 83, 65));
+         rect(startX + i * (segW + segGap), y - segH / 2, segW, segH, 1);
+      }
+   }
+
+   // Dot row — used for missiles (quantity, not upgrade level)
+   function drawDotRow(cx, y, count, maxCount, dotSize, dotGap) {
+      const totalW = maxCount * (dotSize + dotGap) - dotGap;
+      const startX = cx - totalW / 2;
+      for (let i = 0; i < maxCount; i++) {
+         noStroke();
+         fill(i < count ? color(117, 250, 126) : color(53, 83, 65));
+         circle(startX + i * (dotSize + dotGap) + dotSize / 2, y, dotSize);
+      }
+   }
+
+   function drawScrapCounter() {
+      const credits = player.credits ?? 0;
+
+      // Detect pickup — animate scale on increase
+      if (_lastCredits !== null && credits > _lastCredits) _scrapAnimStart = millis();
+      _lastCredits = credits;
+
+      const elapsed = millis() - _scrapAnimStart;
+      const animDuration = 500;
+      const animScale = elapsed < animDuration
+         ? 1 + 0.18 * Math.sin((elapsed / animDuration) * Math.PI)
+         : 1;
+
+      const panelX = 16, panelY = 16, panelW = 158, panelH = 42;
+
+      push();
+
+      // Panel background
+      noStroke();
+      fill(12, 23, 31, 220);
+      rect(panelX, panelY, panelW, panelH, 6);
+
+      // Cyan border
+      stroke(126, 220, 224, 160);
+      strokeWeight(1.5);
+      noFill();
+      rect(panelX, panelY, panelW, panelH, 6);
+      noStroke();
+
+      // Hex icon (metallic gold)
+      const ix = panelX + 22;
+      const iy = panelY + panelH / 2;
+      const is = 7;
+      fill(255, 200, 80);
+      beginShape();
+      for (let k = 0; k < 6; k++) {
+         const a = (k / 6) * TWO_PI - PI / 6;
+         vertex(ix + cos(a) * is, iy + sin(a) * is);
+      }
+      endShape(CLOSE);
+
+      // Label
+      fill(174, 205, 211);
+      textAlign(LEFT, CENTER);
+      textSize(10);
+      text('CREDITS', ix + 12, iy - 7);
+
+      // Value with pickup scale animation
+      push();
+      translate(ix + 12, iy + 6);
+      scale(animScale, animScale);
+      fill(255, 223, 136);
+      textAlign(LEFT, CENTER);
+      textSize(15);
+      text(credits, 0, 0);
+      pop();
+
+      pop();
+   }
+
+   function drawUpgradeBars() {
+      const rowY    = HUD_DIALS.BOTTOM_ROW_Y        ?? 1025;
+      const labelY  = HUD_DIALS.BOTTOM_ROW_LABEL_Y  ?? 1048;
+      const spacing = HUD_DIALS.BOTTOM_ROW_SPACING  ?? 150;
+      const centerX = HUD_DIALS.BOTTOM_ROW_CENTER_X ?? 960;
+
+      const MAX_UPGRADE = 8;
+      const MAX_MISSILES = MISSILE.MAX_CONCURRENT ?? 5;
+
+      const items = [
+         { label: 'POWER',   value: Math.min(player.upgrades?.power   ?? 1, MAX_UPGRADE), type: 'bar',  max: MAX_UPGRADE  },
+         { label: 'SONAR',   value: Math.min(player.upgrades?.sonar   ?? 1, MAX_UPGRADE), type: 'bar',  max: MAX_UPGRADE  },
+         { label: 'TORCH',   value: Math.min(player.upgrades?.torch   ?? 1, MAX_UPGRADE), type: 'bar',  max: MAX_UPGRADE  },
+         { label: 'MISSILES', value: Math.min(player.missiles ?? 0,   MAX_MISSILES),       type: 'dots', max: MAX_MISSILES },
+      ];
+
+      const startX = centerX - spacing * ((items.length - 1) / 2);
+
+      push();
+      for (let i = 0; i < items.length; i++) {
+         const item = items[i];
+         const cx = startX + i * spacing;
+
+         if (item.type === 'bar') {
+            drawSegmentBar(cx, rowY, item.value, item.max, 8, 12, 2);
+         } else {
+            drawDotRow(cx, rowY, item.value, item.max, 12, 3);
+         }
+
+         // Label
+         noStroke();
+         fill(174, 205, 211);
+         textAlign(CENTER, TOP);
+         textSize(10);
+         text(item.label, cx, labelY);
+      }
       pop();
    }
 
@@ -719,20 +852,23 @@ export function createRenderSystem({
       const fullPowerColor = color(80, 230, 120, 240);
       const powerStrokeColor = lerpColor(lowPowerColor, fullPowerColor, powerFillRatio);
 
+      // Low-power pulse: ring grows slightly and label brightens
+      const isPowerLow = powerFillRatio <= (POWER.LOW_POWER_THRESHOLD ?? 0.15);
+      const pulse = isPowerLow ? (1 + 0.06 * Math.abs(Math.sin(millis() * 0.005))) : 1;
+
       drawDial({
          x: powerDialX,
          y: powerDialY,
-         size: powerDialSize,
+         size: powerDialSize * pulse,
          fillRatio: powerFillRatio,
          centerLabel: `${powerPercent}%`,
          ringColor: powerStrokeColor,
-         labelColor: color(255),
+         labelColor: isPowerLow ? color(255, 160, 120) : color(234, 246, 248),
       });
 
       const sonarCooldown = getSonarCooldown?.() ?? 0;
       const isSonarCooling = Number.isFinite(sonarCooldown) && sonarCooldown > 0;
 
-      // Keep existing sonar cooldown logic.
       // Existing value is 0 when ready and >0 while cooling, so invert for "refill" visual.
       const sonarFillRatio = isSonarCooling
          ? Math.max(0, Math.min(1, 1 - sonarCooldown))
@@ -749,6 +885,8 @@ export function createRenderSystem({
       });
 
       drawMiniMap?.();
+      drawScrapCounter();
+      drawUpgradeBars();
    }
 
    function drawGameplayOverlay() {

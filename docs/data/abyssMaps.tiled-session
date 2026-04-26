@@ -11,16 +11,16 @@
     "fileStates": {
         "rooms/crabCaverns.json": {
             "expandedObjectLayers": [
-                2,
+                7,
                 6,
-                3,
-                7
+                2,
+                3
             ],
             "scale": 0.5122,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 851.2299882858258,
-                "y": 578.8754392815307
+                "x": 800.4685669660289,
+                "y": 639.3986723935963
             }
         },
         "rooms/deepCaverns.json": {
@@ -36,7 +36,7 @@
             "selectedLayer": 0,
             "viewCenter": {
                 "x": 1280.5555555555557,
-                "y": 704.1666666666665
+                "y": 720.8333333333333
             }
         },
         "rooms/endlessAbyss.json": {
@@ -53,8 +53,8 @@
         },
         "rooms/jellyfishAtrium.json": {
             "expandedObjectLayers": [
-                4,
                 2,
+                4,
                 3
             ],
             "scale": 0.2334,
@@ -90,17 +90,17 @@
         },
         "rooms/spikeMaze.json": {
             "expandedObjectLayers": [
+                5,
+                2,
                 9,
                 4,
-                2,
-                3,
-                5
+                3
             ],
             "scale": 0.6002,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 748.0839720093303,
-                "y": 563.9786737754083
+                "x": 1489.5034988337222,
+                "y": 841.3862045984673
             }
         },
         "rooms/startArea.json": {
@@ -108,7 +108,7 @@
             "selectedLayer": 1,
             "viewCenter": {
                 "x": 1279.7542871768621,
-                "y": 720.5016636805735
+                "y": 720.5016636805734
             }
         },
         "rooms/theDrop.json": {
@@ -116,13 +116,13 @@
             "selectedLayer": 0,
             "viewCenter": {
                 "x": 80,
-                "y": 1078.5714285714287
+                "y": 1081.4285714285716
             }
         },
         "rooms/theSurface.json": {
             "expandedObjectLayers": [
-                4,
-                2
+                2,
+                4
             ],
             "scale": 0.2931,
             "selectedLayer": 1,
@@ -139,7 +139,7 @@
             "selectedLayer": 7,
             "viewCenter": {
                 "x": 639.9594320486816,
-                "y": 64.40162271805269
+                "y": 64.40162271805275
             }
         },
         "tilesets/Atlantis/atlantis-tileset-1.tsx": {
