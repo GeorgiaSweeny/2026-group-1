@@ -40,6 +40,7 @@ export function createRenderSystem({
    assets,
    darknessLayer,
    getLightSources,
+   getDarknessAlpha,
    getActivePulses,
    getRevealedWalls,
    getCameraOffset,
@@ -539,7 +540,8 @@ export function createRenderSystem({
    //===LIGHTING===//
    function drawLighting(lightSources = [], cam = { x: 0, y: 0 }, camScale = 1) {
       darknessLayer.clear();
-      darknessLayer.background(0);
+      const darknessA = getDarknessAlpha?.() ?? 255;
+      darknessLayer.background(0, 0, 0, darknessA);
 
       const ctx = darknessLayer.drawingContext;
       ctx.globalCompositeOperation = 'destination-out';
@@ -551,8 +553,10 @@ export function createRenderSystem({
          const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
          // prevents crash when using PLAYER.WIDTH in config
          if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius) || scaledRadius <= 0) continue;
+         // surface/skyGlow use inner radius 0 for a fully soft diffuse wash
+         const innerRadius = (kind === 'surface' || kind === 'skyGlow') ? 0 : scaledRadius * 0.1;
          const gradient = ctx.createRadialGradient(
-            screenX, screenY, scaledRadius * 0.1,
+            screenX, screenY, innerRadius,
             screenX, screenY, scaledRadius
          );
          if (kind === 'glow') {
@@ -578,6 +582,21 @@ export function createRenderSystem({
             gradient.addColorStop(0.7, 'rgba(255,255,255,0.1)');
             gradient.addColorStop(0.8, 'rgba(255,255,255,0.05)');
             gradient.addColorStop(1, 'rgba(0,0,0,0)');
+         } else if (kind === 'surface') {
+            // Soft diffuse halo — grows as the player ascends theSurface room
+            gradient.addColorStop(0,    `rgba(255,255,255,${0.6 * intensity})`);
+            gradient.addColorStop(0.25, `rgba(255,255,255,${0.45 * intensity})`);
+            gradient.addColorStop(0.5,  `rgba(255,255,255,${0.25 * intensity})`);
+            gradient.addColorStop(0.75, `rgba(255,255,255,${0.1 * intensity})`);
+            gradient.addColorStop(0.9,  `rgba(255,255,255,${0.03 * intensity})`);
+            gradient.addColorStop(1,    'rgba(0,0,0,0)');
+         } else if (kind === 'skyGlow') {
+            // Sunlight flooding down from the surface — fades in during the top 40% of the climb
+            gradient.addColorStop(0,    `rgba(220,240,255,${0.55 * intensity})`);
+            gradient.addColorStop(0.35, `rgba(200,230,255,${0.3 * intensity})`);
+            gradient.addColorStop(0.65, `rgba(180,220,255,${0.1 * intensity})`);
+            gradient.addColorStop(0.85, `rgba(160,210,255,${0.03 * intensity})`);
+            gradient.addColorStop(1,    'rgba(0,0,0,0)');
          } else {
             //torch light
             gradient.addColorStop(0, 'rgba(255,255,255,1)');

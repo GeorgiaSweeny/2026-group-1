@@ -538,7 +538,7 @@ function setup() {
 
   player = new Player(PLAYER);
 
-  const initialRoom = GAME_VERSIONS.demo.startRoom;
+  const initialRoom = "theSurface"; // TEMP: playtesting surface lighting
   roomSystem = createRoomSystem({
     initialRoom,
     roomData,
@@ -562,7 +562,7 @@ function setup() {
     getAllowedRooms: () => GAME_VERSIONS[gameVersion].rooms,
     getGameVersion: () => gameVersion,
   });
-  roomSystem.goToRoom(initialRoom, { spawnId: "default" });
+  roomSystem.goToRoom(initialRoom, { spawnId: "bottomEnterance" }); // TEMP: playtesting surface lighting
   syncCanvasToCurrentRoom();
   const playerStart = roomSystem.getPlayerStart();
   if (playerStart) {
@@ -612,6 +612,7 @@ function setup() {
     player,
     () => sonarSystem?.getSonarLights?.() ?? [],
     () => glowSystem.getGlowLights(),
+    () => roomSystem?.getCurrentRoom?.() ?? null,
   );
 
   resourceManagementSystem = createResourceManagementSystem(
@@ -672,6 +673,7 @@ function setup() {
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),
+    getDarknessAlpha: () => lightingSystem.getSurfaceDarknessAlpha(),
     getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
     getCameraOffset: () => cameraSystem.getOffset(),
@@ -1024,8 +1026,8 @@ function restartCurrentSession() {
 
 function resetGameToStart() {
   // 1. Send the player back to the first room
-  const startRoom = GAME_VERSIONS[gameVersion].startRoom;
-  roomSystem.goToRoom(startRoom, { spawnId: "default" });
+  const startRoom = "theSurface"; // TEMP: playtesting surface lighting
+  roomSystem.goToRoom(startRoom, { spawnId: "bottomEnterance" }); // TEMP: playtesting surface lighting
 
   // 2. Snap the player's physical coordinates to the spawn point
   const playerStart = roomSystem.getPlayerStart();

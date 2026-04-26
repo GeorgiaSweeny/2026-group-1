@@ -48,7 +48,17 @@ TODO / LIMITATIONS:
 //======================================
 import { LIGHTING, TORCH } from '../config.js';
 
-export function createLightingSystem(player = null, getSonarLights = () => [], getGlowLights = () => []) {
+// theSurface room vertical bounds (world-space pixels)
+const SURFACE_BOTTOM_Y = 3184; // player spawn row — darkest point
+const SURFACE_TOP_Y    = 320;  // win trigger row  — brightest point
+const SURFACE_CENTER_X = 720;  // horizontal centre of the room
+
+function _surfaceT(playerY) {
+   const raw = (SURFACE_BOTTOM_Y - playerY) / (SURFACE_BOTTOM_Y - SURFACE_TOP_Y);
+   return Math.max(0, Math.min(1, raw));
+}
+
+export function createLightingSystem(player = null, getSonarLights = () => [], getGlowLights = () => [], getCurrentRoom = () => null) {
    return {
 
       //--- GET LIGHT SOURCES ---//
@@ -93,8 +103,44 @@ export function createLightingSystem(player = null, getSonarLights = () => [], g
             lightSources.push(light);
          }
 
+         // Surface room: growing ambient + sky glow as player climbs
+         if (getCurrentRoom?.() === 'theSurface') {
+            const t = _surfaceT(y);
+            const tSmooth = t * t;
+
+            // Expanding ambient halo around the player
+            lightSources.push({
+               kind: 'surface',
+               x,
+               y,
+               radius: 60 + tSmooth * 340,
+               intensity: 0.3 + tSmooth * 0.7,
+            });
+
+            // Sky glow bleeds in from above during the top 40% of the climb
+            if (t > 0.6) {
+               const glowT = (t - 0.6) / 0.4;
+               lightSources.push({
+                  kind: 'skyGlow',
+                  x: SURFACE_CENTER_X,
+                  y: SURFACE_TOP_Y,
+                  radius: 200 + glowT * 600,
+                  intensity: glowT,
+               });
+            }
+         }
+
          return lightSources;
-      }
+      },
+
+      // Returns darkness layer alpha (0-255) for the current frame.
+      // Full opacity everywhere except theSurface, where it fades as the player rises.
+      getSurfaceDarknessAlpha() {
+         if (getCurrentRoom?.() !== 'theSurface' || !player) return 255;
+         const y = player.position?.y ?? player.y ?? 0;
+         const tSmooth = _surfaceT(y) ** 2;
+         return Math.round(255 * (1 - tSmooth * 0.75));
+      },
    };
 }
 //======================================
