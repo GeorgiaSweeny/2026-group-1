@@ -329,7 +329,7 @@ export function createRenderSystem({
          const crabW = Number(crab?.w ?? crab?.width ?? 20) || 20;
          const crabH = Number(crab?.h ?? crab?.height ?? 14) || 14;
          //const facing = Number.isFinite(crab?.facing) && crab.facing !== 0 ? crab.facing : 1;
-         const dir = crab?.direction ?? 'down';
+         const dir = crab?.spriteDirection ?? 'down';
 
          let angle = 0;
 
@@ -342,7 +342,7 @@ export function createRenderSystem({
          translate(
             renderInterpolate(prevX, currX, alpha),
             renderInterpolate(prevY, currY, alpha));
-         scale(facing, 1);
+         //scale(facing, 1);
 
          rotate(angle);
 

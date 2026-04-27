@@ -36,7 +36,7 @@ export const GAME = {
 //======================
 export const GAME_VERSIONS = {
   demo: {
-    startRoom: "demoStart",
+    startRoom: "crabCaverns",
     rooms: ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "spikeMaze", "jellyfishAtrium", "theSurface"],
     difficulty: "EASY",
   },
