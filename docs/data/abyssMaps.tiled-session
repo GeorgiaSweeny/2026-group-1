@@ -12,15 +12,15 @@
         "rooms/crabCaverns.json": {
             "expandedObjectLayers": [
                 2,
-                6,
                 3,
-                7
+                7,
+                6
             ],
             "scale": 0.5122,
             "selectedLayer": 4,
             "viewCenter": {
-                "x": 851.2299882858258,
-                "y": 578.8754392815307
+                "x": 800.4685669660289,
+                "y": 640.3748535728231
             }
         },
         "rooms/deepCaverns.json": {
@@ -36,32 +36,32 @@
             "selectedLayer": 0,
             "viewCenter": {
                 "x": 1280.5555555555557,
-                "y": 704.1666666666665
+                "y": 702.7777777777777
             }
         },
         "rooms/endlessAbyss.json": {
             "expandedObjectLayers": [
-                6,
-                10
+                10,
+                6
             ],
             "scale": 0.4182,
             "selectedLayer": 4,
             "viewCenter": {
                 "x": 958.8713534194166,
-                "y": 720.9469153515064
+                "y": 719.7513151602103
             }
         },
         "rooms/jellyfishAtrium.json": {
             "expandedObjectLayers": [
-                4,
                 2,
+                4,
                 3
             ],
             "scale": 0.2334,
             "selectedLayer": 0,
             "viewCenter": {
                 "x": 801.1996572407884,
-                "y": 1278.9203084832905
+                "y": 1281.0625535561269
             }
         },
         "rooms/jellyfishAtrium.json.tmj": {
@@ -91,16 +91,16 @@
         "rooms/spikeMaze.json": {
             "expandedObjectLayers": [
                 9,
-                4,
+                5,
                 2,
-                3,
-                5
+                4,
+                3
             ],
-            "scale": 0.6002,
+            "scale": 0.4878,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 748.0839720093303,
-                "y": 563.9786737754083
+                "x": 670.3567035670355,
+                "y": 555.5555555555554
             }
         },
         "rooms/startArea.json": {
@@ -108,7 +108,7 @@
             "selectedLayer": 1,
             "viewCenter": {
                 "x": 1279.7542871768621,
-                "y": 720.5016636805735
+                "y": 719.2219093933965
             }
         },
         "rooms/theDrop.json": {
@@ -116,19 +116,19 @@
             "selectedLayer": 0,
             "viewCenter": {
                 "x": 80,
-                "y": 1078.5714285714287
+                "y": 1080
             }
         },
         "rooms/theSurface.json": {
             "expandedObjectLayers": [
-                4,
-                2
+                2,
+                4
             ],
             "scale": 0.2931,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 719.8908222449676,
-                "y": 1598.430569771409
+                "x": 719.8908222449675,
+                "y": 1600.1364721937905
             }
         },
         "rooms/tunnel.json": {
@@ -138,8 +138,8 @@
             "scale": 0.986,
             "selectedLayer": 7,
             "viewCenter": {
-                "x": 639.9594320486816,
-                "y": 64.40162271805269
+                "x": 639.9594320486815,
+                "y": 63.89452332657203
             }
         },
         "tilesets/Atlantis/atlantis-tileset-1.tsx": {
@@ -155,6 +155,7 @@
             "scaleInDock": 1
         }
     },
+    "last.externalTilesetPath": "/Users/archiebrown/2026-group-1/docs/data/tilesets/Atlantis",
     "map.height": 150,
     "map.lastUsedFormat": "json",
     "map.tileHeight": 16,
@@ -184,5 +185,6 @@
         "rooms/theSurface.json",
         "rooms/spikeMaze.json",
         "rooms/deepCaverns.json"
-    ]
+    ],
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)"
 }
