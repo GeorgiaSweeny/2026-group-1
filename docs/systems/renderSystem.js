@@ -54,6 +54,7 @@ export function createRenderSystem({
    getHudDialSettings,
    getGameplayOverlay,
    getGameplayOverlaySettings,
+   getSkyBand,
 }) {
 
 //======================================
@@ -185,6 +186,33 @@ export function createRenderSystem({
       if (collectableType === 'credits') return color(255, 225, 80, alpha);
       if (collectableType === 'power') return color(80, 220, 120, alpha);
       return color(80, 220, 120, alpha);
+   }
+
+//===SKY BAND===//
+   function drawSkyBand(band) {
+      if (!band) return;
+      noStroke();
+      fill(band.color ?? '#87CEEB');
+      rectMode(CORNER);
+      rect(0, band.y ?? 0, band.width ?? 10000, band.height);
+   }
+
+//===WATER GRADIENT===//
+   function drawWaterGradient(oldCam, cam, camScale, alpha, band) {
+      const wg = band?.waterGradient;
+      if (!wg) return;
+      const interpCamY = renderInterpolate(oldCam.y, cam.y, alpha);
+      const sTop = (wg.worldTop - interpCamY) * camScale;
+      const sBot = (wg.worldBot - interpCamY) * camScale;
+      const vTop = Math.max(0, sTop);
+      const vBot = Math.min(height, sBot);
+      if (vBot <= vTop) return;
+      const ctx = drawingContext;
+      const grad = ctx.createLinearGradient(0, sTop, 0, sBot);
+      grad.addColorStop(0, wg.topColor);
+      grad.addColorStop(1, wg.bottomColor);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, vTop, width, vBot - vTop);
    }
 
 //===BACKGROUND===//
@@ -551,11 +579,48 @@ export function createRenderSystem({
 
       for (const light of lightSources) {
          const { x, y, radius, intensity = 1, kind } = light;
+
+         /* Fixed-position zone lighting for theSurface room.
+            Stepped linear gradient in world space — zones stay put as the player climbs.
+         */
+         if (kind === 'surfaceAmbient') {
+            const screenTop = (light.topY    - cam.y) * camScale;
+            const screenBot = (light.bottomY - cam.y) * camScale;
+            if (screenBot <= screenTop) continue;
+            const grad = ctx.createLinearGradient(0, screenTop, 0, screenBot);
+            // Paired stops create smooth but distinct vertical steps - more towards top
+            grad.addColorStop(0,     'rgba(255,255,255,0.97)');
+            grad.addColorStop(0.040, 'rgba(255,255,255,0.97)');
+            grad.addColorStop(0.045, 'rgba(255,255,255,0.88)');
+            grad.addColorStop(0.090, 'rgba(255,255,255,0.88)');
+            grad.addColorStop(0.095, 'rgba(255,255,255,0.78)');
+            grad.addColorStop(0.150, 'rgba(255,255,255,0.78)');
+            grad.addColorStop(0.155, 'rgba(255,255,255,0.66)');
+            grad.addColorStop(0.220, 'rgba(255,255,255,0.66)');
+            grad.addColorStop(0.225, 'rgba(255,255,255,0.55)');
+            grad.addColorStop(0.300, 'rgba(255,255,255,0.55)');
+            grad.addColorStop(0.305, 'rgba(255,255,255,0.42)');
+            grad.addColorStop(0.390, 'rgba(255,255,255,0.42)');
+            grad.addColorStop(0.395, 'rgba(255,255,255,0.30)');
+            grad.addColorStop(0.510, 'rgba(255,255,255,0.30)');
+            grad.addColorStop(0.515, 'rgba(255,255,255,0.20)');
+            grad.addColorStop(0.640, 'rgba(255,255,255,0.20)');
+            grad.addColorStop(0.645, 'rgba(255,255,255,0.11)');
+            grad.addColorStop(0.780, 'rgba(255,255,255,0.11)');
+            grad.addColorStop(0.785, 'rgba(255,255,255,0.05)');
+            grad.addColorStop(0.900, 'rgba(255,255,255,0.05)');
+            grad.addColorStop(1,     'rgba(255,255,255,0)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, darknessLayer.width, darknessLayer.height);
+            continue;
+         }
+
          const screenX = (x - cam.x) * camScale;
          const screenY = (y - cam.y) * camScale;
          const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
          // prevents crash when using PLAYER.WIDTH in config
          if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius) || scaledRadius <= 0) continue;
+
          const gradient = ctx.createRadialGradient(
             screenX, screenY, scaledRadius * 0.1,
             screenX, screenY, scaledRadius
@@ -950,15 +1015,18 @@ function renderInterpolate(oldState, newState, alpha){
             const cam = getCameraOffset?.() ?? { x: 0, y: 0 };
             const oldCam = getOldCamPosition?.() ?? {x: 0, y: 0};
             const camScale = getCameraScale?.() ?? 1;
+            const skyBand = getSkyBand?.() ?? null;
 
             // --- Screen space: background fills viewport --- //
             drawBackground();
+            drawWaterGradient(oldCam, cam, camScale, alpha, skyBand);
 
             // --- World space (scaled + translated by camera) --- //
             push();
             scale(camScale);
             translate(renderInterpolate(-oldCam.x, -cam.x, alpha), renderInterpolate(-oldCam.y, -cam.y, alpha));
 
+            drawSkyBand(skyBand);
             // Comment out prototype visuals from render
             drawPlatforms();
             drawHazards();
