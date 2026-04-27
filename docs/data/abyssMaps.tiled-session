@@ -32,11 +32,11 @@
             }
         },
         "rooms/demoStart.json": {
-            "scale": 0.36,
-            "selectedLayer": 0,
+            "scale": 2.6672,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 1280.5555555555557,
-                "y": 702.7777777777777
+                "x": 326.5596880623876,
+                "y": 1296.1157768446312
             }
         },
         "rooms/endlessAbyss.json": {
@@ -99,7 +99,7 @@
             "scale": 0.4878,
             "selectedLayer": 6,
             "viewCenter": {
-                "x": 670.3567035670355,
+                "x": 574.0057400574005,
                 "y": 555.5555555555554
             }
         },
