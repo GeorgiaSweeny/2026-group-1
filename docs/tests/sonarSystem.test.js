@@ -203,3 +203,116 @@ describe('SonarSystem', () => {
     });
   });
 });
+
+//======================================
+// UPGRADE WIRING
+//======================================
+describe('SonarSystem — upgrade wiring', () => {
+  let mockSoundSystem;
+
+  beforeEach(() => {
+    mockSoundSystem = { play: jest.fn() };
+  });
+
+  const SONAR_RANGE = 250;
+  const RANGE_BONUS_PER_LEVEL = 50;
+  const BASE_RAY_LIFETIME = 255;
+  const RAY_DECAY = 2;
+
+  function effectiveRaySpeed(sonarLevel) {
+    const rangeBonus = Math.max(0, sonarLevel - 1) * RANGE_BONUS_PER_LEVEL;
+    const range = SONAR_RANGE + rangeBonus;
+    return range * RAY_DECAY / BASE_RAY_LIFETIME;
+  }
+
+  function makePlayerWithSonarLevel(sonarLevel) {
+    return {
+      x: 640, y: 360,
+      upgrades: { power: 1, torch: 1, sonar: sonarLevel },
+      actionIntent: { emitSonar: false },
+      getX: () => 640,
+      getY: () => 360,
+    };
+  }
+
+  it('level 1 sonar creates pulse with base ray speed', () => {
+    const player = makePlayerWithSonarLevel(1);
+    const sonar = createSonarSystem(player, () => [], () => [], () => [], mockSoundSystem, () => []);
+    player.actionIntent.emitSonar = true;
+    sonar.update();
+
+    const pulses = sonar.getActivePulses();
+    expect(pulses.length).toBe(1);
+    const particles = pulses[0].particles;
+    const avgSpeed = particles.reduce((s, p) => s + Math.hypot(p.vel.x, p.vel.y), 0) / particles.length;
+    expect(avgSpeed).toBeCloseTo(effectiveRaySpeed(1), 1);
+  });
+
+  it('level 2 sonar creates pulse with higher ray speed than level 1', () => {
+    const player2 = makePlayerWithSonarLevel(2);
+    const sonar2 = createSonarSystem(player2, () => [], () => [], () => [], mockSoundSystem, () => []);
+    player2.actionIntent.emitSonar = true;
+    sonar2.update();
+    const speed2 = sonar2.getActivePulses()[0].particles.reduce((s, p) => s + Math.hypot(p.vel.x, p.vel.y), 0) / 360;
+
+    const player1 = makePlayerWithSonarLevel(1);
+    const sonar1 = createSonarSystem(player1, () => [], () => [], () => [], mockSoundSystem, () => []);
+    player1.actionIntent.emitSonar = true;
+    sonar1.update();
+    const speed1 = sonar1.getActivePulses()[0].particles.reduce((s, p) => s + Math.hypot(p.vel.x, p.vel.y), 0) / 360;
+
+    expect(speed2).toBeGreaterThan(speed1);
+  });
+
+  it('level 5 sonar creates pulse with significantly higher ray speed', () => {
+    const player = makePlayerWithSonarLevel(5);
+    const sonar = createSonarSystem(player, () => [], () => [], () => [], mockSoundSystem, () => []);
+    player.actionIntent.emitSonar = true;
+    sonar.update();
+
+    const pulses = sonar.getActivePulses();
+    const avgSpeed = pulses[0].particles.reduce((s, p) => s + Math.hypot(p.vel.x, p.vel.y), 0) / 360;
+    expect(avgSpeed).toBeGreaterThan(effectiveRaySpeed(1));
+  });
+
+  it('upgrade level change mid-game is picked up on next sonar emit', () => {
+    const player = makePlayerWithSonarLevel(1);
+    const sonar = createSonarSystem(player, () => [], () => [], () => [], mockSoundSystem, () => []);
+
+    // Emit first sonar
+    player.actionIntent.emitSonar = true;
+    sonar.update();
+    const pulsesAfterFirst = sonar.getActivePulses();
+    expect(pulsesAfterFirst.length).toBe(1);
+    const speed1 = pulsesAfterFirst[pulsesAfterFirst.length - 1].particles
+      .reduce((s, p) => s + Math.hypot(p.vel.x, p.vel.y), 0) / 360;
+
+    // Simulate buying an upgrade mid-game
+    player.upgrades.sonar = 3;
+    // Cooldown is 1ms (cooldownTimer=1 after first emit, decays by 0.01/frame).
+    // Advance time: 100 update calls = 100 * 0.01s = 1s simulated time, cooldownTimer → 0.
+    // Must set emitSonar=true BEFORE each update call since it gets cleared after each emit.
+    for (let i = 0; i < 100; i++) {
+      player.actionIntent.emitSonar = true;
+      sonar.update();
+    }
+    const pulsesAfterSecond = sonar.getActivePulses();
+    expect(pulsesAfterSecond.length).toBe(2);  // verify second pulse was created
+    const speed3 = pulsesAfterSecond[pulsesAfterSecond.length - 1].particles
+      .reduce((s, p) => s + Math.hypot(p.vel.x, p.vel.y), 0) / 360;
+
+    expect(speed3).toBeGreaterThan(speed1);
+  });
+
+  it('fires without error when upgrades.sonar is undefined', () => {
+    const player = {
+      x: 640, y: 360,
+      upgrades: { power: 1, torch: 1 },  // no sonar key
+      actionIntent: { emitSonar: true },
+      getX: () => 640, getY: () => 360,
+    };
+    const sonar = createSonarSystem(player, () => [], () => [], () => [], mockSoundSystem, () => []);
+    expect(() => sonar.update()).not.toThrow();
+    expect(sonar.getActivePulses().length).toBe(1); // still fires
+  });
+});
