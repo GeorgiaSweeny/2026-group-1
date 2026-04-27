@@ -49,6 +49,7 @@ import { PLAYER, TIME } from '../config.js';
 export function createPlayerSystem(player) {
   return {
     update() {
+      if (!player?.velocity) return;
       // Apply drag each frame
       player.velocity.x *= PLAYER.DRAG;
       player.velocity.y *= PLAYER.DRAG;
@@ -78,7 +79,7 @@ export function createPlayerSystem(player) {
       const isMoving = Math.abs(player.velocity.x) > 0.1 || Math.abs(player.velocity.y) > 0.1;
       if (isMoving && Math.random() < 0.4) {
         const backX = player.position.x - player.facing * player.w * 0.8;
-        player.bubbles.push({
+        (player.bubbles ??= []).push({
           x: backX,
           y: player.position.y + (Math.random() * 8 - 4),
           size: 2 + Math.random() * 4,
