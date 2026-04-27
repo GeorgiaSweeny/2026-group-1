@@ -104,9 +104,20 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
             const ty = target.position ? target.position.y : target.y;
             if (tx === undefined || ty === undefined) continue;
 
-            const dx = tx - px;
+            const halfW = (target.w || target.width || target.getWidth?.() || 0) / 2;
+            
+            //gets distance to centre
+            let dx = tx - px;
             const dy = ty - py;
-            if (dx * player.facing <= 0) continue;
+
+            //finds closest forward-facing edge
+            if (halfW > 0) {
+                if (player.facing > 0 && tx + halfW >= px) dx = Math.max(0.1, dx); 
+                if (player.facing < 0 && tx - halfW <= px) dx = Math.min(-0.1, dx); 
+            }
+
+            // excludes if completely behind player
+            if (dx * player.facing < 0) continue;
 
             const distSq = dx * dx + dy * dy;
             if (distSq > 400 * 400) continue;
