@@ -31,10 +31,18 @@ export class PowerSystem {
       this.current = config.CURRENT_POWER;
       this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
       this.drainRate = config.DRAIN_RATE;
+      this.upgradeBonusPerLevel = config.UPGRADE_MAX_POWER_BONUS ?? 20;
    }
 
    reset() {
       this.current = this.initialPower;
+   }
+
+   // Scales maxPower based on upgrade level. Level 1 = base, higher = more capacity.
+   setMaxPower(level) {
+      this.maxPower = this.initialPower + (Math.max(1, level) - 1) * this.upgradeBonusPerLevel;
+      // Keep current within new cap
+      this.current = Math.min(this.current, this.maxPower);
    }
 
    drain(rate = this.drainRate) {
