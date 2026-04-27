@@ -155,6 +155,7 @@
             "scaleInDock": 1
         }
     },
+    "last.externalTilesetPath": "/Users/archiebrown/2026-group-1/docs/data/tilesets/Atlantis",
     "map.height": 150,
     "map.lastUsedFormat": "json",
     "map.tileHeight": 16,
@@ -184,5 +185,6 @@
         "rooms/jellyfishAtrium.json",
         "rooms/endlessAbyss.json",
         "rooms/deepCaverns.json"
-    ]
+    ],
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)"
 }
