@@ -36,7 +36,7 @@ export const GAME = {
 //======================
 export const GAME_VERSIONS = {
   demo: {
-    startRoom: "crabCaverns",
+    startRoom: "demoStart",
     rooms: ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "spikeMaze", "jellyfishAtrium", "theSurface"],
     difficulty: "EASY",
   },
@@ -68,7 +68,7 @@ export const CANVAS = {
 //======================
 export const CAMERA = {
   // < 1.0 zooms out, > 1.0 zooms in
-  DEFAULT_SCALE: 1.0,
+  DEFAULT_SCALE: 2.0,
   /*
    DEFAULT_SCALE: 3   (visible area: 640x360)   - very zoomed in
    DEFAULT_SCALE: 2.5 (visible area: 768x432)
