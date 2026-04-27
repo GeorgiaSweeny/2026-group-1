@@ -238,14 +238,15 @@ export function createRenderSystem({
       const platformColor = getPlatformColor?.() ?? '#5a6e82ff';
 
       noStroke();
-      fill(platformColor);
-      
+
       for (const p of platforms) {
          if (p.isDestroyed) continue;
          if (drawSpriteFromTileset(p)) continue;
-         if (p.isBreakable) {
-            rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
-         }
+         // Fallback: no sprite atlas tile available — draw solid rect so the
+         // platform is never invisible. Breakable platforms always get a rect;
+         // non-breakable (e.g. collision-layer walls) get one too as a fallback.
+         fill(platformColor);
+         rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
       }
    }
 

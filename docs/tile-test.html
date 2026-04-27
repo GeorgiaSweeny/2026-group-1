@@ -25,13 +25,16 @@
   <h2>Debug log</h2>
   <div id="results"></div>
 
-  <script src="p5/p5.js"></script>
+  <script src="p5.js"></script>
   <script>
     // ============================================================
     // Minimal reproduction of the tile rendering pipeline from the game
     // Key function under test: tilesetSourceToImagePath
     // ============================================================
 
+    // If serving from repo root: http://127.0.0.1:5501/docs/tile-test.html
+    // If serving from docs/:     http://127.0.0.1:5501/tile-test.html
+    // Adjust BASE accordingly — repo root serving is the game default
     const BASE = 'http://127.0.0.1:5501';
 
     const assets = {};
