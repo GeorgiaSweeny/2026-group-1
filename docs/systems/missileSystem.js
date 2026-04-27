@@ -87,6 +87,7 @@ class Missile extends Hitbox {
 export function createMissileSystem(player, getTargets, getWalls, soundSystem = null) {
     let missiles = [];
     let lastFireTime = 0;
+    let currentTarget = null;
 
     function findNearestTarget(px, py) {
         let nearest = null;
@@ -120,6 +121,9 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
     return {
         update() {
             const now = performance.now();
+            
+            // Constantly track the nearest target every frame
+            currentTarget = findNearestTarget(player.position.x, player.position.y);
 
             for (let i = missiles.length - 1; i >= 0; i--) {
                 const missile = missiles[i];
@@ -162,8 +166,7 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
 
             if (player.actionIntent.launchMissile) {
                 if (now - lastFireTime > MISSILE.COOLDOWN && player.missiles > 0) {
-                    const target = findNearestTarget(player.position.x, player.position.y);
-                    missiles.push(new Missile(player.position.x, player.position.y, target, player.facing));
+                    missiles.push(new Missile(player.position.x, player.position.y, currentTarget, player.facing));
                     player.missiles--;
                     lastFireTime = now;
 
@@ -175,6 +178,10 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
 
         getMissiles() {
             return missiles;
+        },
+
+        getCurrentTarget() {
+            return currentTarget;
         }
     };
 }
