@@ -1,0 +1,11 @@
+#!/bin/bash
+# Pre-commit hook: runs all tests before allowing a commit.
+# To bypass: git commit --no-verify
+
+set -e
+
+echo "Running tests..."
+cd "$(git rev-parse --show-toplevel)/docs"
+
+npm test -- --silent
+echo "All tests passed."

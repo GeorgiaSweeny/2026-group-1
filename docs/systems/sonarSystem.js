@@ -121,7 +121,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
           
           if (Number.isFinite(px) && Number.isFinite(py)) {
             const sonarLevel = player?.upgrades?.sonar ?? 1;
-          const rangeBonus = Math.max(1, sonarLevel - 1) * (SONAR.RANGE_BONUS_PER_LEVEL ?? 50);
+          const rangeBonus = Math.max(0, sonarLevel - 1) * (SONAR.RANGE_BONUS_PER_LEVEL ?? 50);
           const effectiveRange = (SONAR.BASE_RANGE ?? 250) + rangeBonus;
           // Scale ray speed so pulse travels the effective range
           // range ≈ raySpeed * (RAY_LIFETIME / RAY_DECAY)
