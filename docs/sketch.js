@@ -168,13 +168,14 @@ function normalizeTilesetSource(source, mapDir) {
 
 function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
   if (!source) return null;
-  // backgrounds.tsx is an image collection (no single .png atlas file to load).
   if (String(source).toLowerCase().endsWith("backgrounds.tsx")) return null;
-  const pngSource = source.replace(/\.tsx$/i, ".png");
-  // Resolve relative to the tsx file's directory — the tsx <image source> attribute
-  // is relative to the tsx file itself, not the map directory.
-  const tsxDir = getPathDir(source);
-  return normalizeRelativePath(tsxDir, pngSource);
+  // Normalize the tsx path relative to the map directory first, so that a
+  // relative source like "../tilesets/X.tsx" resolves to "data/tilesets/X"
+  // before we extract its directory for image resolution.
+  const resolvedSource = normalizeRelativePath(mapDir, source);
+  const tsxDir = getPathDir(resolvedSource);
+  const pngFilename = resolvedSource.split("/").pop().replace(/\.tsx$/i, ".png");
+  return normalizeRelativePath(tsxDir, pngFilename);
 }
 
 function parseTsxTileProperties(xmlText) {
