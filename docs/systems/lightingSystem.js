@@ -66,7 +66,7 @@ export function createLightingSystem(player = null, getSonarLights = () => [], g
                   kind: 'torch',
                   x,
                   y,
-                  radius: TORCH.RADIUS, // if upgrades added replace with player.torch.radius
+                  radius: player.torch.radius,  // reflects setUpgradeLevel — scales with torch upgrade
                   intensity
                });
             }

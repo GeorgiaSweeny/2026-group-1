@@ -33,15 +33,46 @@ describe('LightingSystem', () => {
 
   describe('torch light source', () => {
     it('returns torch light source when torch is on', () => {
-      const player = makePlayer({ torch: { isOn: true, getIntensity: () => 0.8 } });
+      const player = makePlayer({ torch: { isOn: true, getIntensity: () => 0.8, radius: 100 } });
       const ls = createLightingSystem(player);
       const sources = ls.getLightSources();
       const torchLight = sources.find(s => s.kind === 'torch');
       expect(torchLight).toBeDefined();
       expect(torchLight.x).toBe(100);
       expect(torchLight.y).toBe(100);
-      expect(torchLight.radius).toBe(120);
+      expect(torchLight.radius).toBe(100);  // base radius = TORCH.RADIUS
       expect(torchLight.intensity).toBe(0.8);
+    });
+
+    it('torch light source radius reflects torch.upgradeLevel (base = level 1)', () => {
+      const player = makePlayer({ torch: { isOn: true, getIntensity: () => 0.8, radius: 100 } });
+      const ls = createLightingSystem(player);
+      const sources = ls.getLightSources();
+      const torchLight = sources.find(s => s.kind === 'torch');
+      expect(torchLight.radius).toBe(100);
+    });
+
+    it('torch light source radius scales with upgraded torch radius', () => {
+      // Level 2: base 100 + UPGRADE_RADIUS_BONUS 22 = 122
+      const player = makePlayer({ torch: { isOn: true, getIntensity: () => 0.8, radius: 122 } });
+      const ls = createLightingSystem(player);
+      const sources = ls.getLightSources();
+      const torchLight = sources.find(s => s.kind === 'torch');
+      expect(torchLight.radius).toBe(122);
+    });
+
+    it('torch light source uses player.torch.radius not a fixed constant', () => {
+      // Confirm the light source radius comes from the torch object's radius,
+      // not from any internal fixed value — two different torch radii give two results
+      const base = 100;
+      const upgraded = 200;
+      const ls1 = createLightingSystem(makePlayer({ torch: { isOn: true, getIntensity: () => 0.8, radius: base } }));
+      const ls2 = createLightingSystem(makePlayer({ torch: { isOn: true, getIntensity: () => 0.8, radius: upgraded } }));
+      const r1 = ls1.getLightSources().find(s => s.kind === 'torch').radius;
+      const r2 = ls2.getLightSources().find(s => s.kind === 'torch').radius;
+      expect(r1).not.toBe(r2);
+      expect(r1).toBe(base);
+      expect(r2).toBe(upgraded);
     });
 
     it('does not include torch light when torch is off', () => {
