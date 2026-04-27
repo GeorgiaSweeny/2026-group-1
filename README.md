@@ -89,11 +89,17 @@ The game concept was developed collaboratively through group discussions and pit
 <table align="center">
   <tr>
     <td align="center">
-      <img src="project-docs/report_figures/Figure 1 - Game Ideas.png" alt="Figure 1" width="300"><br>
+      <img 
+        src="project-docs/report_figures/Figure 1 - Game Ideas.png" 
+        alt="Figure 1" 
+        width="300"><br>
       <sub>Figure 1: Game Ideas</sub>
     </td>
     <td align="center">
-      <img src="project-docs/report_figures/Figure 2 - Poll Results for Game Ideas.png" alt="Figure 2" width="300"><br>
+      <img 
+        src="project-docs/report_figures/Figure 2 - Poll Results for Game Ideas.png" 
+        alt="Figure 2" 
+        width="300"><br>
       <sub>Figure 2: Poll Results for Game Ideas</sub>
     </td>
   </tr>
@@ -115,7 +121,6 @@ Based on this feedback, the team shaped the game around exploration, tension, an
     <img src="https://github.com/user-attachments/assets/b768743b-cfa2-456d-9c32-e7780289a064"
     alt="Stakeholders Onion Model" width="500" />
 </p>
-
 
 ### 2.4 Epics and User Stories
 We used epics and user stories to structure the game idea into a clearer and manageable development plan that the team could actually work with. At the start of the project, the overall concept was a bit too broad, so epics helped us organise the project into major areas of player experience and technical functionality, such as player movement, resource management, sonar and lighting, enemies, world progression, interface, and system architecture. 
@@ -152,20 +157,34 @@ In addition to the inital concept proposals, the lead developer documented discu
 <table align="center">
   <tr>
     <td align="center">
-      <img src="project-docs/map-design-photos/room sketches 1.jpg" alt="Figure 5" width="300"><br>
-      <sub>Figure 3: Game Map Sketch</sub>
+      <img src="project-docs/map-design-photos/room sketches 1.jpg" alt="Figure 5" width="400"><br>
+      <sub>Figure 3: Game Map Sketch by Georgia Sweeny</sub>
     </td>
     <td align="center">
-      <img src="project-docs/map-design-photos/room sketches 2.jpg" alt="Figure 6" width="300"><br>
-      <sub>Figure 4: Game Map Sketch</sub>
+      <img src="project-docs/map-design-photos/room sketches 2.jpg" alt="Figure 6" width="200"><br>
+      <sub>Figure 4: Game Map Sketch by Georgia Sweeny</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img 
+        src="project-docs/map-design-photos/game world sketch v1.jpg" 
+        alt="Figure 3" 
+        width="300"><br>
+      <sub>Figure 3: Initial Game World Sketch by Georgia Sweeny</sub>
+    </td>
+    <td align="center">
+      <img 
+        src="project-docs/map-design-photos/demo world map.png" 
+        alt="Figure 4" 
+        width="300"><br>
+      <sub>Figure 4: Demo World Map by Georgia Sweeny</sub>
     </td>
   </tr>
 </table>
 
 ### 2.6 Prioritised Feature Breakdown
 To keep the development manageable and technically feasible, this project followed a risk-managed development approach prioritisation strategy. Core mechanics were given priority over feature breadth so that the team members could first deliver a stable and playable MVP. The breakdown below is based on our user stories derived from our game Epics.
-
-```jude: i removed the time estimates. Keeping them requires additional explanation.```
 
 | **Priority**            | **Systems / Features**                                                   |
 | ----------------------- | ------------------------------------------------------------------------ | 
@@ -193,7 +212,7 @@ To keep the development manageable and technically feasible, this project follow
 ---
 </br>
 
-## 3. Design (DL: 25 Apr 2026)
+## 3. Design
 
 This section explains the final system architecture of the game and how it evolved during development. At the start of the project, we used the p5.js online editor to prototype individual features, and we initially expected the design to be described using more traditional object-oriented modelling. However, as the prototype grew, maintaining shared game state across separate features became increasingly difficult.
 
@@ -329,20 +348,10 @@ flowchart TD
 The structural architecture diagram shows how the main systems are connected. This behavioural flow shows how those systems cooperate during one core gameplay action: activating sonar.
 
 <p align="center">
-  <img src="project-docs/report_figures/F7-Runtime behaviour flow.png" alt="Runtime behaviour flow" width="250" />
+  <img src="project-docs/report_figures/F7-Runtime behaviour flow.png" alt="Runtime behaviour flow" width="300" />
 </p>
 
 This flow shows that sonar is not drawn directly from player input. The input first becomes an intent, then the relevant systems update resources, visibility, enemy behaviour, and rendering in sequence. This keeps the core mechanic modular and prevents rendering logic from being mixed with gameplay logic.
-
-**This flow demonstrates:**
-
-- input being translated into gameplay intent;
-- resource checks controlling whether sonar can be used;
-- sonar affecting visibility and enemy behaviour;
-- rendering remaining separate from game logic.
-
-### 3.4 UI Desgin
-```jude: Archie, could you please provide a few reference game images which influenced your UI design please. these can be screenshots from games. I will add a few description. Thanks.```
 
 
 ### 4. Implementation (DL: 26 Apr 2026)
@@ -402,7 +411,6 @@ fewer or no pickups.
 Our team worked through a process of collaborative planning, exploratory prototyping, and later integration into a shared codebase. In the early stage, we used Notion to collect game ideas, record discussion points, and organise epics, user stories, and acceptance criteria. This helped us turn a broad underwater exploration concept into a more manageable development plan.
 
 #### First sprint: exploratory prototyping
-
 After agreeing on the main theme, we began with a two-week exploratory sprint. Team members selected feature areas from the user stories and built early prototypes using the p5.js online editor. These prototypes were then shared on Notion so that the rest of the team could review the design, compare different approaches, and decide which ideas were suitable for the MVP. This allowed us to test early versions of sonar, lighting, movement, UI, and room-navigation mechanics before committing to a single implementation.
 
 <p align="center">
@@ -426,7 +434,6 @@ After the first sprint, we identified the tasks needed to move from separate pro
 Although this gave the team a clearer task structure, it was difficult to follow perfectly in practice. Many features depended on unfinished work from other areas. For example, sonar, lighting, and camera movement all needed access to shared game state. This created overlap between tasks and made isolated development harder than expected. It also meant that task ownership was not always clear when several people were working on related systems at the same time.
 
 #### First sprint retrospective
-
 The main outcome of the first sprint was that the team had generated useful feature ideas, but the workflow was still too fragmented for implementation. The retrospective lesson was that prototypes were valuable for exploration, but they needed to be followed by clearer integration planning, shared architecture decisions, and better visibility over dependencies between tasks.
 
 To respond to this, we moved toward shared ownership and peer review for some overlapping areas. For example, UI-related work involved more than one co-developer, and pull requests were reviewed by more than one person where possible. This reduced the risk of isolated decisions and gave the team more opportunities to check code quality. However, shared ownership also had limitations: when responsibilities were not clearly divided, it could become harder to know who had the final decision on a feature or whether a task was fully complete.
@@ -434,19 +441,22 @@ To respond to this, we moved toward shared ownership and peer review for some ov
 Team members also had different communication styles and worked at different stages of the project. This made regular coordination important. When communication was less consistent, it became harder to know which features were ready, which parts of the codebase had changed, and how different systems were expected to connect.
 
 #### Second sprint: integration and MVP focus
-
 The second sprint therefore focused more strongly on integration. Instead of creating further isolated prototypes, the team worked on combining the strongest ideas into a single playable version. We also prioritised the MVP more strictly, separating essential features from stretch goals and paying closer attention to how different systems interacted.
 
 #### Second sprint retrospective
-
 Overall, the team’s process evolved from open-ended exploration into a more structured development workflow. The early prototyping stage helped us discover the strongest mechanics, while the later integration stage helped us turn those mechanics into a playable game. The main lesson was that creative experimentation is useful at the start of a project, but it needs to be followed by clear ownership, integration planning, code review, and regular communication.
 
+### 7. Sustainability
 
-### 7. Sustainability (DL: 26 Apr 2026)
+This section is written based on the assumption that how sustainability would apply if *The Abyss* became a large-scale, widely played game in the future. In that scenario, sustainability would not only mean reducing the environmental footprint of the software, but also considering the individual, social, economic, technical, and environmental effects created by long-term use. We therefore discussed the impact on each effect and how 
 
-- 10% ~750 words
+#### Direct environmental impact
 
-- Evidence of the impact of your game across the environment
+#### Enabling and behavioural effects
+
+#### Social, individual, and economic impact
+
+#### Technical sustainability
 
 ### 8. Conclusion (DL: 27 Apr 2026)
 
@@ -458,14 +468,57 @@ Overall, the team’s process evolved from open-ended exploration into a more st
 
 - Provide a table of everyone's contribution, which *may* be used to weight individual grades. We expect that the contribution will be split evenly across team-members in most cases. Please let us know as soon as possible if there are any issues with teamwork as soon as they are apparent and we will do our best to help your team work harmoniously together.
 
+<div align="center">
+    <table>
+        <tr>
+            <th>Contributor</th>
+            <th>Contribution Weighting</th>
+        </tr>
+        <tr>
+            <td>Archie Brown</td>
+            <td align="center">1.0</td>
+        </tr>
+        <tr>
+            <td>Monal Gupta</td>
+            <td align="center">1.0</td>
+        </tr>
+        <tr>
+            <td>Ben Mounce</td>
+            <td align="center">1.0</td>
+        </tr>
+        <tr>
+            <td>Georgia Sweeny</td>
+            <td align="center">1.0</td>
+        </tr>
+        <tr>
+            <td>Nick Jankov</td>
+            <td align="center">1.0</td>
+        </tr>
+        <tr>
+            <td>Jude Hsu</td>
+            <td align="center">1.0</td>
+        </tr>
+    </table>
+    <sub>Table 1: Team Contributions</sub>
+</div>
+
 ### 10. AI Statement (DL: 25 Apr 2026)
-~250 words
 
-- summarise your teams use of AI so we know where to give you credit for work done.
-- eg. to make game visuals, help writing code (help to debug, explictily writng any code with AI, to review code etc.) 
+AI tools were used throughout the project as development support rather than as a replacement for team decision-making. Team members used AI to explore gameplay ideas, draft code, debug errors and improve documentation. We also continued to use conventional search engines and technical documentation when researching gameplay logic, p5.js behaviour, Tiled map editing, and possible implementation approaches.
 
-## 10. AI Statement
-AI tools also affected the workflow. Since the team used AI support for coding, debugging, and documentation, review and integration became especially important. AI-assisted suggestions still had to be checked against the actual architecture of the game, particularly where systems shared state. This reinforced the need for code review, shared understanding, and clearer system boundaries.
+However, AI-generated code could not be accepted unconditionally. Suggested solutions often needed to be adapted to the actual structure of our game, especially where several systems shared state, such as sonar and rendering. Team members also had to become familiar with the game architecture before AI support was useful. When AI could not successfully fix a bug, we still had to trace the issue ourselves, understand how the relevant systems interacted, and decide whether to revise or rewrite the suggested code.
+
+Some parts of the project were also largely manual design work rather than code generation. For example, the game maps were created using Tiled and exported as `.json` files for the game to load. Although AI could suggest possible map layouts or design ideas, the actual maps still had to be built, checked, and adjusted manually so that room structure, collision boundaries, and gameplay flow worked correctly.
+
+<p align="center">
+    <img src="project-docs/map-design-photos/crab caverns map.png" alt="Crab caverns map" width="300" />
+    <img src="project-docs/map-design-photos/spike maze map v2.png" alt="Spike maze map" width="300" />
+</p>
+
+Overall, AI helped us work faster, but it did not remove the need for architectural understanding, debugging, code review, and design judgement. Final responsibility for the project remained with the team.
+
+
+
 
 ### Additional Marks
 
