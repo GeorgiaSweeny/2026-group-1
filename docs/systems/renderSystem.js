@@ -138,11 +138,14 @@ export function createRenderSystem({
       }
 
       const imagePath = tileset.resolvedImagePath ?? tilesetSourceToImagePath(tileset.source);
-      const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
-      if (!tilesetImage) {
-         console.warn(`[renderSystem] Missing tileset image for path: "${imagePath}" (source: "${tileset.source}")`);
-         return false;
+      const assetKey = imagePath ? `tileset:${imagePath}` : null;
+      const tilesetImage = assetKey ? assets?.[assetKey] : null;
+      if (!tilesetImage && drawSpriteFromTileset._logCount < 3) {
+         drawSpriteFromTileset._logCount = (drawSpriteFromTileset._logCount ?? 0) + 1;
+         const allKeys = Object.keys(assets).filter(k => k.startsWith('tileset:'));
+         console.warn(`[renderSystem] Missing tile gid=${gid} localId=${localTileId} tileset=${tileset.name} source=${tileset.source} resolvedImagePath=${tileset.resolvedImagePath} imagePath=${imagePath} assetKey=${assetKey} availableTilesetKeys=${JSON.stringify(allKeys)}`);
       }
+      if (!tilesetImage) return false;
 
       const tileSize = getTileSize?.() ?? {};
       const tileWidth = tileSize.tileWidth ?? tileset.tilewidth ?? 16;
