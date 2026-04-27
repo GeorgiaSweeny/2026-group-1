@@ -145,7 +145,7 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  STARTING_CREDITS: 0,
+  STARTING_CREDITS: 5000,
   MOVE_SPEED: 200,        // Pixels per second (scaled by TIME.fixedDeltaTime per frame)
   ACCELERATION: 4,        // Velocity increase per frame
   DRAG: 0.9  ,            // Higher = less friction (0.9-0.95 feels good)
@@ -160,7 +160,8 @@ export const POWER = {
   MAX_POWER: 100,
   CURRENT_POWER: 100,
   LOW_POWER_THRESHOLD: 0.15,
-  DRAIN_RATE: 0.5
+  DRAIN_RATE: 0.5,
+  UPGRADE_MAX_POWER_BONUS: 20,  // extra capacity per upgrade level
   /*
    (Tested Options)
       DRAIN_RATE: 1             
@@ -248,7 +249,11 @@ export const GLOW = {
 export const SONAR = {
   // Cooldown in seconds for readability; derived ms used by sonarSystem
   COOLDOWN: 1,
-  COOLDOWN_MS: 1
+  COOLDOWN_MS: 1,
+  // Base pulse travel range in pixels (at level 1)
+  BASE_RANGE: 250,
+  // Additional range pixels added per upgrade level
+  RANGE_BONUS_PER_LEVEL: 50,
 };
 
 //======================

@@ -46,6 +46,7 @@ export function createRenderSystem({
    getOldCamPosition,
    getCameraScale,
    getMissiles,
+   getMissileTarget,
    getParticles,
    getPiranhas,
    getGlowObjects,
@@ -140,8 +141,9 @@ export function createRenderSystem({
 
       const imagePath = tileset.resolvedImagePath ?? tilesetSourceToImagePath(tileset.source);
       const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
-      if (!tilesetImage) {
-         console.warn(`[renderSystem] Missing tileset image for path: "${imagePath}" (source: "${tileset.source}")`);
+      // Validate the atlas image is actually loaded (p5.js creates a zero-size placeholder on 404)
+      if (!tilesetImage || !(tilesetImage.width > 0)) {
+         console.warn(`[renderSystem] Missing or unloaded tileset image for path: "${imagePath}" (source: "${tileset.source}")`);
          return false;
       }
 
@@ -235,13 +237,16 @@ export function createRenderSystem({
 
       noStroke();
       fill(platformColor);
-      
+
+     // todo: move the fill logic inside the loop and support per-platform colors via properties, with the default as the global platform color.
+     
       for (const p of platforms) {
          if (p.isDestroyed) continue;
          if (drawSpriteFromTileset(p)) continue;
-         if (p.isBreakable) {
-            rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
-         }
+         // Fallback: no sprite atlas tile available — draw solid rect so platforms
+         // are never invisible (collision-layer walls with no atlas tile still visible).
+         fill(platformColor);
+         rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
       }
    }
 
@@ -291,7 +296,7 @@ export function createRenderSystem({
       }
    }
 
-   //=== TRIGGERS ===//
+   //=== TRIGGERS ===// //todo: remove this from the final game 
    function drawTriggers() {
       const triggers = getTriggers?.() ?? [];
       if (!triggers.length) return;
@@ -816,7 +821,6 @@ export function createRenderSystem({
 // DRAW SONAR
 //======================================
    function drawSonarReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarReveals?.() ?? [];
       if (!reveals.length) return;
 
@@ -830,7 +834,6 @@ export function createRenderSystem({
    }
 
    function drawSonarHazardReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarHazardReveals?.() ?? [];
       if (!reveals.length) return;
 
@@ -845,7 +848,6 @@ export function createRenderSystem({
 
    
    function drawSonarCollectableReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarCollectableReveals?.() ?? [];
       if (!reveals.length) return;
 
@@ -859,7 +861,6 @@ export function createRenderSystem({
    }
 
    function drawSonarEnemyReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarEnemyReveals?.() ?? [];
       if (!reveals.length) return;
 
@@ -908,6 +909,64 @@ export function createRenderSystem({
    }
 
    //===MISSILES===//
+   function drawMissileTarget() {
+      if (!player || player.missiles <= 0) return;
+      
+      const target = getMissileTarget?.();
+      if (target && (target.position || (target.x !== undefined && target.y !== undefined))) {
+         const tx = target.position ? target.position.x : target.x;
+         const ty = target.position ? target.position.y : target.y;
+
+         let isVisible = false;
+
+         const lightSources = getLightSources?.() ?? [];
+         const tRadius = Math.max(target.w || target.width || target.getWidth?.() || 0, target.h || target.height || target.getHeight?.() || 0) / 2 || 16;
+         for (const light of lightSources) {
+            const lx = light.position ? light.position.x : (light.x ?? 0);
+            const ly = light.position ? light.position.y : (light.y ?? 0);
+            const radius = (light.radius ?? 200) * 1.2; // slight leeway
+            if (Math.hypot(tx - lx, ty - ly) < radius + tRadius) {
+               isVisible = true;
+               break;
+            }
+         }
+
+         if (!isVisible) {
+            const reveals = [
+               ...(getSonarEnemyReveals?.() ?? []),
+               ...(getSonarReveals?.() ?? []),
+               ...(getSonarHazardReveals?.() ?? [])
+            ];
+            for (const r of reveals) {
+               const rCx = r.x + (r.w ?? 0) / 2;
+               const rCy = r.y + (r.h ?? 0) / 2;
+               if (Math.hypot(tx - rCx, ty - rCy) < 40) {
+                  isVisible = true;
+                  break;
+               }
+            }
+         }
+
+         if (!isVisible) return; // hide if not illuminated or revealed
+
+         push();
+         translate(tx, ty);
+
+         stroke(255, 50, 50, 200);
+         strokeWeight(2);
+         noFill();
+   
+         line(-10, 0, -4, 0);
+         line(10, 0, 4, 0);
+         line(0, -10, 0, -4);
+         line(0, 10, 0, 4);
+
+         circle(0, 0, 24);
+         
+         pop();
+      }
+   }
+
    function drawMissiles() {
       const missiles = getMissiles?.() ?? [];
       for (const missile of missiles) {
@@ -998,6 +1057,7 @@ function renderInterpolate(oldState, newState, alpha){
          drawSonarHazardReveals();
          drawSonarCollectableReveals();
          drawSonarEnemyReveals();
+         drawMissileTarget();
          pop();
          
          // --- World Space UI overlays (drawn above everything) --- //
