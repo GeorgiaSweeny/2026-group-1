@@ -43,6 +43,7 @@ export function createResourceManagementSystem(
   getHazards,
   getDifficulty,
   getEnemies,
+  soundSystem = null,
 ) {
   const collectedEntities = new Set();
 
@@ -165,6 +166,7 @@ export function createResourceManagementSystem(
           handlers[resourceType](player, e);
         }
         collectedEntities.add(e);
+        soundSystem?.play('powerCollected', 0.8);
       }
     }
   }

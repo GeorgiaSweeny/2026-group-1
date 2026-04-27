@@ -385,6 +385,7 @@ export function createRoomSystem({
   onWin = null,
   getAllowedRooms = null,
   getGameVersion = null,
+  soundSystem = null,
 } = {}) {
   let currentRoom = null;
   let currentConfig = null;
@@ -507,6 +508,7 @@ export function createRoomSystem({
 
       const targetSpawn = exit?.properties?.targetSpawn ?? null;
       loadRoom(targetRoom, { spawnId: targetSpawn });
+      soundSystem?.play('achievementBell', 0.8);
       exitCoolDownSeconds = 0.25;
       break;
     }

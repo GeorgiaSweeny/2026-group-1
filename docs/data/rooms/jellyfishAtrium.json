@@ -644,8 +644,8 @@
                  "type":"",
                  "visible":true,
                  "width":16,
-                 "x":1344,
-                 "y":944
+                 "x":1360,
+                 "y":832
                 }, 
                 {
                  "gid":79,
@@ -681,7 +681,7 @@
                  "visible":true,
                  "width":16,
                  "x":848,
-                 "y":1440
+                 "y":1408
                 }, 
                 {
                  "gid":79,
@@ -704,8 +704,8 @@
                  "type":"",
                  "visible":true,
                  "width":16,
-                 "x":624,
-                 "y":2320
+                 "x":625,
+                 "y":2272
                 }, 
                 {
                  "gid":79,
@@ -729,7 +729,7 @@
                  "visible":true,
                  "width":16,
                  "x":400,
-                 "y":2160
+                 "y":2080
                 }, 
                 {
                  "gid":79,
@@ -741,7 +741,7 @@
                  "visible":true,
                  "width":16,
                  "x":1152,
-                 "y":2384
+                 "y":2320
                 }, 
                 {
                  "gid":79,
@@ -753,7 +753,7 @@
                  "visible":true,
                  "width":16,
                  "x":1200,
-                 "y":1792
+                 "y":1712
                 }, 
                 {
                  "gid":79,
@@ -776,8 +776,8 @@
                  "type":"",
                  "visible":true,
                  "width":16,
-                 "x":768,
-                 "y":688
+                 "x":752,
+                 "y":560
                 }, 
                 {
                  "gid":79,
@@ -836,8 +836,20 @@
                  "type":"",
                  "visible":true,
                  "width":16,
-                 "x":800,
-                 "y":1008
+                 "x":768,
+                 "y":944
+                }, 
+                {
+                 "gid":79,
+                 "height":16,
+                 "id":53,
+                 "name":"jellyfish",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":16,
+                 "x":144,
+                 "y":288
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -846,7 +858,7 @@
          "y":0
         }],
  "nextlayerid":5,
- "nextobjectid":53,
+ "nextobjectid":54,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

@@ -46,7 +46,8 @@ TODO / LIMITATIONS:
 
 import { PLAYER, TIME } from '../config.js';
 
-export function createPlayerSystem(player) {
+export function createPlayerSystem(player, soundSystem = null) {
+  let isPlayingMoveSound = false;
   return {
     update() {
       // Apply drag each frame
@@ -75,7 +76,7 @@ export function createPlayerSystem(player) {
       player.velocity.y = constrain(player.velocity.y, -maxSpeed, maxSpeed);
 
       // Bubble trail — spawn behind submarine when moving
-      const isMoving = Math.abs(player.velocity.x) > 0.1 || Math.abs(player.velocity.y) > 0.1;
+      const isMoving = Math.abs(player.velocity.x) > 1.5 || Math.abs(player.velocity.y) > 1.5;
       if (isMoving && Math.random() < 0.4) {
         const backX = player.position.x - player.facing * player.w * 0.8;
         player.bubbles.push({
@@ -86,6 +87,18 @@ export function createPlayerSystem(player) {
           vx: (Math.random() * 40 - 20),   // px/sec
           vy: -(30 + Math.random() * 50),   // px/sec upward
         });
+
+        //soundseffect plays at most once every 0.4 sec
+        const playerIntending = player.moveIntent.left || player.moveIntent.right
+          || player.moveIntent.up || player.moveIntent.down;
+
+        if (playerIntending && !isPlayingMoveSound) {
+          soundSystem?.loop('movement', 0.2);
+          isPlayingMoveSound = true;
+        } else if (!playerIntending && isPlayingMoveSound) {
+          soundSystem?.stop('movement');
+          isPlayingMoveSound = false;
+        }
       }
 
       // Update existing bubbles (drift upward + fade)
