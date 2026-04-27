@@ -27,11 +27,13 @@ import { POWER, TIME } from '../../config.js';
 export class PowerSystem {
    constructor(config = POWER) {
       this.maxPower = config.MAX_POWER;
+      this.baseMaxPower = config.MAX_POWER;  // original cap, never changed after construction
       this.initialPower = config.CURRENT_POWER;
       this.current = config.CURRENT_POWER;
       this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
       this.drainRate = config.DRAIN_RATE;
       this.upgradeBonusPerLevel = config.UPGRADE_MAX_POWER_BONUS ?? 20;
+      this.currentUpgradeLevel = 1;           // tracks applied upgrade level for setMaxPower
    }
 
    reset() {
@@ -39,8 +41,14 @@ export class PowerSystem {
    }
 
    // Scales maxPower based on upgrade level. Level 1 = base, higher = more capacity.
+   // Called every frame so level changes are picked up immediately.
    setMaxPower(level) {
-      this.maxPower = this.initialPower + (Math.max(1, level) - 1) * this.upgradeBonusPerLevel;
+      const safeLevel = Math.max(1, level);
+      // Remove previously applied bonus
+      const prevBonus = (Math.max(1, this.currentUpgradeLevel) - 1) * this.upgradeBonusPerLevel;
+      const newBonus = (safeLevel - 1) * this.upgradeBonusPerLevel;
+      this.maxPower = this.baseMaxPower + newBonus;
+      this.currentUpgradeLevel = safeLevel;
       // Keep current within new cap
       this.current = Math.min(this.current, this.maxPower);
    }
