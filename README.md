@@ -20,20 +20,8 @@
 ### Video DEMO v4 (2-3 mins long max)
 *(updated 05/03/26)*
 
-
 https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 
-
-
-
-
-
-
-
-
-
-
-<br/>
 <br/>
 
 
@@ -423,12 +411,12 @@ This approach worked well during the early creative stage because it encouraged 
 After the first sprint, we identified the tasks needed to move from separate prototypes toward a runnable MVP. Team members selected tasks based on their interests and added their names to the relevant task cards. [Figure 9] Alongside Notion, we used the GitHub Kanban board to track feature development, progress, and outstanding issues.
 
 <p align="center">
-    <img src="project-docs/report_figures/F9-1 Task Assignment.png" alt="Task assignment" width="250" />
-    <img src="project-docs/report_figures/F9-2 Task Assignment.png" alt="Task assignment" width="250" />
+    <img src="project-docs/report_figures/F9-1 Task Assignment.png" alt="Task assignment" width="400" />
+    <img src="project-docs/report_figures/F9-2 Task Assignment.png" alt="Task assignment" width="400" />
 </p>
 
 <p align="center">
-    <img src="project-docs/report_figures/F10-Kanban.png" alt="GitHub Kanban board" width="500" />
+    <img src="project-docs/report_figures/F10-Kanban.png" alt="GitHub Kanban board" width="600" />
 </p>
 
 Although this gave the team a clearer task structure, it was difficult to follow perfectly in practice. Many features depended on unfinished work from other areas. For example, sonar, lighting, and camera movement all needed access to shared game state. This created overlap between tasks and made isolated development harder than expected. It also meant that task ownership was not always clear when several people were working on related systems at the same time.
@@ -464,7 +452,7 @@ This section is written based on the assumption that how sustainability would ap
 
 - Reflect on the project as a whole. Lessons learnt. Reflect on challenges. Future work, describe both immediate next steps for your current game and also what you would potentially do if you had chance to develop a sequel.
 
-### 9. Contribution Statement (DL: 25 Apr 2026)
+### 9. Contribution Statement
 
 - Provide a table of everyone's contribution, which *may* be used to weight individual grades. We expect that the contribution will be split evenly across team-members in most cases. Please let us know as soon as possible if there are any issues with teamwork as soon as they are apparent and we will do our best to help your team work harmoniously together.
 
@@ -502,7 +490,7 @@ This section is written based on the assumption that how sustainability would ap
     <sub>Table 1: Team Contributions</sub>
 </div>
 
-### 10. AI Statement (DL: 25 Apr 2026)
+### 10. AI Statement
 
 AI tools were used throughout the project as development support rather than as a replacement for team decision-making. Team members used AI to explore gameplay ideas, draft code, debug errors and improve documentation. We also continued to use conventional search engines and technical documentation when researching gameplay logic, p5.js behaviour, Tiled map editing, and possible implementation approaches.
 
@@ -511,8 +499,8 @@ However, AI-generated code could not be accepted unconditionally. Suggested solu
 Some parts of the project were also largely manual design work rather than code generation. For example, the game maps were created using Tiled and exported as `.json` files for the game to load. Although AI could suggest possible map layouts or design ideas, the actual maps still had to be built, checked, and adjusted manually so that room structure, collision boundaries, and gameplay flow worked correctly.
 
 <p align="center">
-    <img src="project-docs/map-design-photos/crab caverns map.png" alt="Crab caverns map" width="300" />
-    <img src="project-docs/map-design-photos/spike maze map v2.png" alt="Spike maze map" width="300" />
+    <img src="project-docs/map-design-photos/crab caverns map.png" alt="Crab caverns map" width="400" />
+    <img src="project-docs/map-design-photos/spike maze map v2.png" alt="Spike maze map" width="400" />
 </p>
 
 Overall, AI helped us work faster, but it did not remove the need for architectural understanding, debugging, code review, and design judgement. Final responsibility for the project remained with the team.
