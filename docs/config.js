@@ -37,7 +37,8 @@ export const GAME = {
 export const GAME_VERSIONS = {
   demo: {
     startRoom: "demoStart",
-    rooms: ["demoStart", "crabCaverns", "theSurface"],
+    rooms: ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "spikeMaze", "jellyfishAtrium", "theSurface"],
+    difficulty: "EASY",
   },
   full: {
     startRoom: "startArea",
@@ -93,7 +94,7 @@ export const DISPLAY = {
 // GAMEPLAY OVERLAY CONFIG
 //======================
 export const GAMEPLAY_OVERLAY = {
-  ENABLED: false, // Set to true to enable the gameplay overlay for testing
+  ENABLED: false,
   CENTER_ON_SCREEN: true, // When true, overlay is centered before offsets are applied
   OFFSET_X: 0,
   OFFSET_Y: 30,
@@ -106,9 +107,7 @@ export const GAMEPLAY_OVERLAY = {
 // MINIMAP CONFIG
 //======================
 export const MINIMAP = {
-  // 1 = fit-to-room baseline scale, >1 zooms in, <1 zooms out.
   ZOOM: 2,
-  // Player marker diameter relative to rendered minimap tile size.
   PLAYER_MARKER_TILE_SCALE: 1.25,
 
   // Absolute minimap center in screen space. Set to null to use top-right fallback.
@@ -162,7 +161,7 @@ export const POWER = {
   CURRENT_POWER: 100,
   LOW_POWER_THRESHOLD: 0.15,
   DRAIN_RATE: 0.5
-  /* 
+  /*
    (Tested Options)
       DRAIN_RATE: 1             
       (100 power = 100s| 1 power = 1s) - very fast
@@ -189,7 +188,15 @@ export const TORCH = {
   RADIUS: 100,
   UPGRADE_RADIUS_BONUS: 22,
   MIN_RADIUS_WHEN_DRAINED: 50,
+  FLICKER_SPEED: 0.5,
   FLICKER_POWER_THRESHOLD: 0.15,
+  BLACKOUT_POWER_THRESHOLD: 0.10,
+  GENTLE_INTENSITY_RANGE: 0.15,
+  DYING_INTENSITY_RANGE: 0.65,
+  SPUTTER_BASE_THRESHOLD: 0.12,
+  SPUTTER_SCALING: 0.18,
+  BURST_BASE_THRESHOLD: 0.18,
+  BURST_SCALING: 0.42,
   DRAIN_RATE: 1
 };
 
@@ -220,6 +227,22 @@ export const LIGHTING = {
 };
 
 //======================
+// GLOW INTERACTABLE CONFIG
+//======================
+export const GLOW = {
+  BASE_RADIUS: 30,         // resting light radius (px)
+  ACTIVE_RADIUS: 72,       // peak light radius when activated (px)
+  BASE_INTENSITY: 0.3,     // resting brightness (always emitted)
+  DECAY_RATE: 1.8,         // intensity lost per second after contact ends (back to base)
+  PULSE_SPEED: 2.5,        // Hz of brightness pulse while active
+  PULSE_AMPLITUDE: 0.12,   // ±intensity variation during pulse
+  KNOCKBACK_STRENGTH: 160, // weaker than COMBAT (400)
+  KNOCKBACK_LIFT: 50,
+  IFRAME_DURATION_MS: 800,
+  DAMAGE_FLASH_DURATION_MS: 300,
+};
+
+//======================
 // SONAR CONFIG
 //======================
 export const SONAR = {
@@ -247,6 +270,24 @@ export const COMBAT = {
 
   // (optional: default for centralised damage via PlayerHitResponse util)
   HIT_DAMAGE: 10, // (not in use!) all damage set to this default
+};
+
+//======================
+// DIFFICULTY CONFIG
+//======================
+export const DIFFICULTY = {
+  easy: {
+    POWER_PICKUP:    10,
+    CREDIT_PICKUP:  100,
+    POWER_DRAIN:    0.5,  // 0.5/s torch off: ~200s (~3m 20s)
+    TORCH_DRAIN:    1.75, // 0.5 × 1.75 = 0.875/s torch on: ~114s (~1m 54s)
+  },
+  hard: {
+    POWER_PICKUP:    5,
+    CREDIT_PICKUP:  50,
+    POWER_DRAIN:    0.75, // 0.75/s torch off: ~133s (~2m 13s)
+    TORCH_DRAIN:    2.0,  // 0.75 × 2.0 = 1.5/s torch on: ~67s (~1m 7s)
+  },
 };
 
 //======================

@@ -22,7 +22,6 @@ RULES:
 import { CONTROLS, keyLabel } from '../config.js';
 
 export function createPauseMenuSystem({
-  onDifficultyChange,
   onResolutionChange,
   onControlModeChange,
   initialControlMode = 'wasd',
@@ -31,7 +30,7 @@ export function createPauseMenuSystem({
   let currentPage = "main"; // 'main' | 'settings' | 'debug'
 
   // Difficulty: 'normal' | 'hard'
-  let difficulty = "normal";
+  let difficulty = "easy";
 
   // Settings (UI only — values stored but not wired to audio etc.)
   let volume = 80; // 0–100
@@ -246,8 +245,8 @@ export function createPauseMenuSystem({
     noStroke();
     text("DEBUG", cx, baseY);
 
-    // Dev Resolution toggle
-    drawToggle("Dev Resolution (640x360)", devResolution, leftX, baseY + 60);
+    // Dev Resolution toggle — x offset pushes switch right of the long label
+    drawToggle("Dev Resolution (640x360)", devResolution, leftX + 40, baseY + 60, leftX);
 
     // Info text
     textAlign(LEFT, TOP);
@@ -290,14 +289,13 @@ export function createPauseMenuSystem({
       } else if (isOver(cx - BUTTON_W / 2, settingsY, BUTTON_W, BUTTON_H)) {
         currentPage = "settings";
       } else if (isOver(cx - BUTTON_W / 2, diffY, BUTTON_W, BUTTON_H)) {
-        difficulty = difficulty === "normal" ? "hard" : "normal";
-        onDifficultyChange?.(difficulty);
+        difficulty = difficulty === "easy" ? "hard" : "easy";
       }
     } else if (currentPage === "settings") {
       const baseY = height / 2 - 100;
       const leftX = cx - 120;
 
-      const togglesX = leftX + 160;
+      const togglesX = leftX + 190; // leftX + 30 (draw offset) + 160 (toggleX offset in drawToggle)
 
       // Show FPS toggle hit area
       if (isOver(togglesX, baseY + 110 - 12, 48, 24)) {
@@ -337,7 +335,7 @@ export function createPauseMenuSystem({
       const leftX = cx - 120;
 
       // Dev Resolution toggle hit area
-      const toggleX = leftX + 160;
+      const toggleX = leftX + 200; // leftX + 40 (draw offset) + 160 (toggleX offset in drawToggle)
       if (isOver(toggleX, baseY + 60 - 12, 48, 24)) {
         devResolution = !devResolution;
         onResolutionChange?.(devResolution);

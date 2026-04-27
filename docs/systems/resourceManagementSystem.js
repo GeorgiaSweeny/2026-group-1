@@ -34,7 +34,7 @@ DESIGN GOALS:
 
 import { isColliding } from "./hitboxSystem.js";
 import { handlePlayerHit } from "../utils/playerHitResponse.js";
-import { COMBAT } from "../config.js";
+import { COMBAT, DIFFICULTY } from "../config.js";
 
 export function createResourceManagementSystem(
   player,
@@ -90,14 +90,12 @@ export function createResourceManagementSystem(
   //======================================
   const handlers = {
     power(player) {
-      const difficulty = getDifficulty?.() ?? "normal";
-      const amount = difficulty === "hard" ? 5 : 10;
-      player.power.current = Math.min(player.power.current + amount, player.power.maxPower);
+      const cfg = DIFFICULTY[getDifficulty?.() ?? "easy"] ?? DIFFICULTY.easy;
+      player.power.current = Math.min(player.power.current + cfg.POWER_PICKUP, player.power.maxPower);
     },
     credits(player, _item) {
-      const difficulty = getDifficulty?.() ?? "normal";
-      const amount = difficulty === "hard" ? 50 : 100;
-      player.credits = (player.credits ?? 0) + amount;
+      const cfg = DIFFICULTY[getDifficulty?.() ?? "easy"] ?? DIFFICULTY.easy;
+      player.credits = (player.credits ?? 0) + cfg.CREDIT_PICKUP;
     },
   };
 

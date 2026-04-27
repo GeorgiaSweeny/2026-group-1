@@ -43,6 +43,7 @@ import {
 } from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
+import { createMainPageSystem } from "./systems/mainPageSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
 import { createShopSystem } from "./systems/shopSystem.js";
 import { createMissileSystem } from "./systems/missileSystem.js";
@@ -51,7 +52,10 @@ import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 import { createGameOverSystem } from "./systems/gameOverSystem.js";
 import { createMiniMapSystem } from "./systems/miniMapSystem.js";
+import { createGlowSystem } from "./systems/glowSystem.js";
 import { createSoundSystem } from "./systems/soundSystem.js";
+import { createStoryPageSystem } from "./systems/storyPageSystem.js";
+import { createControlsPageSystem } from "./systems/controlsPageSystem.js";
 
 let accumulator = 0;
 let alpha;
@@ -59,7 +63,11 @@ let alpha;
 let engine;
 let darknessLayer;
 let player;
-
+let mainPageSystem;
+let mainPageBg;
+let menuBg;
+let storyPageSystem;
+let controlsPageSystem;
 let inputSystem;
 let playerSystem;
 let physicsSystem;
@@ -77,10 +85,14 @@ let missileSystem;
 let particleSystem;
 let cameraSystem;
 let miniMapSystem;
+let glowSystem;
 let lastEnsuredRoom = null;
-let gameState = "MENU";
+//let gameState = "MENU";
+let gameState = "MAIN_PAGE";
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
 let gameVersion = "full"; // "demo" | "full"
+let sessionVersion = "full";   // locked-in version for the current session
+let sessionDifficulty = null;  // locked-in difficulty for the current session ("EASY"|"HARD")
 let menuSystem;
 let winScreenSystem;
 let gameOverSystem;
@@ -139,6 +151,19 @@ function getPathDir(path) {
     .filter(Boolean);
   parts.pop();
   return parts.join("/");
+}
+
+function normalizeTilesetSource(source, mapDir) {
+  if (!source) return source;
+  const resolved = normalizeRelativePath(mapDir, source);
+  if (resolved.startsWith("data/tilesets/")) return source;
+  const idx = source.indexOf("tilesets/");
+  if (idx !== -1) {
+    const fixed = `../${source.slice(idx)}`;
+    console.warn(`[preload] Fixed tileset source: "${source}" → "${fixed}"`);
+    return fixed;
+  }
+  return source;
 }
 
 function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
@@ -410,6 +435,7 @@ function preload() {
   for (const [roomId, room] of Object.entries(roomData)) {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
+      tileset.source = normalizeTilesetSource(tileset.source, mapDir);
       const sourcePath = normalizeRelativePath(mapDir, tileset?.source ?? "");
       if (!sourcePath.toLowerCase().endsWith(".tsx")) continue;
       if (tsxMetaBySourcePath[sourcePath]) continue;
@@ -491,6 +517,10 @@ function preload() {
       );
     },
   );
+
+
+  mainPageBg = loadImage("assets/backgrounds/titleBackground.png");
+  menuBg = loadImage("assets/backgrounds/bg_black.png");
 }
 
 function setup() {
@@ -499,6 +529,9 @@ function setup() {
   textAlign(LEFT);
   applyDisplayScale();
 
+  mainPageSystem = createMainPageSystem();
+  storyPageSystem = createStoryPageSystem();
+  controlsPageSystem = createControlsPageSystem();
   menuSystem = createMenuSystem();
   winScreenSystem = createWinScreenSystem();
   gameOverSystem = createGameOverSystem();
@@ -544,19 +577,21 @@ function setup() {
   cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
   // Snap camera to player's initial position
   cameraSystem.snapTo(player.position.x, player.position.y);
-  powerSystem = createPowerSystem(player);
-  torchSystem = createTorchSystem(player.torch, player, {
-    getDifficulty: () =>
-      pauseMenuSystem ? pauseMenuSystem.getDifficulty() : "normal",
-    soundSystem,
+  powerSystem = createPowerSystem(player, {
+    getDifficulty: () => pauseMenuSystem?.getDifficulty() ?? "easy",
   });
+  torchSystem = createTorchSystem(player.torch, player, { soundSystem });
 
   sonarSystem = createSonarSystem(
     player,
     () => roomSystem.getPlatforms(),
     () => roomSystem.getHazards(),
-    () => roomSystem.getCollectables(),
+    () =>
+      roomSystem
+        .getCollectables()
+        .filter((c) => !resourceManagementSystem?.isCollected(c)),
     soundSystem,
+    () => enemySystem?.getEnemies() ?? [],
   );
 
   missileSystem = createMissileSystem(
@@ -568,9 +603,15 @@ function setup() {
 
   particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 
+  glowSystem = createGlowSystem(
+    player,
+    () => roomSystem.getGlowObjects(),
+  );
+
   lightingSystem = createLightingSystem(
     player,
     () => sonarSystem?.getSonarLights?.() ?? [],
+    () => glowSystem.getGlowLights(),
   );
 
   resourceManagementSystem = createResourceManagementSystem(
@@ -616,6 +657,7 @@ function setup() {
     getJellyfish: () => enemySystem.getJellyfish(),
     getPiranhas: () => enemySystem.getPiranhas(),
     getTriggers: () => roomSystem.getTriggers(),
+    getGlowObjects: () => roomSystem.getGlowObjects(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),
     getTilesets: () => roomSystem.getTilesets(),
@@ -626,6 +668,7 @@ function setup() {
     getSonarReveals: () => sonarSystem?.getRevealedWalls?.(),
     getSonarHazardReveals: () => sonarSystem?.getRevealedHazards?.(),
     getSonarCollectableReveals: () => sonarSystem?.getRevealedCollectables?.(),
+    getSonarEnemyReveals: () => sonarSystem?.getRevealedEnemies?.(),
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),
@@ -660,7 +703,6 @@ function setup() {
   });
 
   pauseMenuSystem = createPauseMenuSystem({
-    onDifficultyChange: (diff) => {},
     onResolutionChange: (isDev) => {
       useDevResolution = isDev;
       applyDisplayScale();
@@ -684,6 +726,7 @@ function setup() {
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
+  engine.register(glowSystem);
   engine.register(enemySystem);
   engine.register(pauseMenuSystem);
   engine.register(shopSystem);
@@ -691,8 +734,24 @@ function setup() {
 
 function draw() {
   frameRate(GAME.FPS);
+
+  if (gameState === "MAIN_PAGE") {
+    mainPageSystem.draw(mainPageBg);
+    return;
+  }
+
+  if (gameState === "STORY_PAGE") {
+    storyPageSystem.draw(menuBg);
+    return;
+  }
+
+  if (gameState === "CONTROLS") {
+  controlsPageSystem.draw(menuBg);
+  return;
+}
+
   if (gameState === "MENU") {
-    menuSystem.draw(null);
+    menuSystem.draw(menuBg);
     return;
   } else if (gameState === "SETTINGS") {
     pauseMenuSystem.draw();
@@ -735,12 +794,11 @@ function draw() {
     return;
   }
 
-  accumulator += deltaTime / 1000;
-
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
   } else {
+    accumulator += deltaTime / 1000;
     // if accumulator gained enough frames
     while (accumulator >= TIME.fixedDeltaTime) {
       engine.update();
@@ -818,12 +876,38 @@ function mousePressed() {
     return;
   }
 
+  if (gameState === "MAIN_PAGE") {
+    const selection = mainPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "PLAY") {
+      gameState = "STORY_PAGE";
+    }
+    return;
+  }
+
+  if (gameState === "STORY_PAGE") {
+    const selection = storyPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "CONTINUE") {
+      gameState = "CONTROLS";
+    }
+    return;
+  }
+
+  if (gameState === "CONTROLS") {
+    const selection = controlsPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "BACK") {
+      gameState = "STORY_PAGE";
+    } else if (selection === "NEXT") {
+      gameState = "MENU";
+    }
+    return;
+  }
+
   if (gameState === WIN_STATE) {
     const selection = winScreenSystem.checkClick(mouseX, mouseY);
-    if (selection === "MENU") {
-      resetGameToStart();
-      gameVersion = "full";
-      menuSystem.setScreen("main");
+    if (selection === "RESTART") {
+      restartCurrentSession();
+      gameState = "PLAYING";
+    } else if (selection === "MENU") {
       gameState = "MENU";
     }
     return;
@@ -832,12 +916,9 @@ function mousePressed() {
   if (gameState === GAME_OVER_STATE) {
     const selection = gameOverSystem.checkClick(mouseX, mouseY);
     if (selection === "YES") {
-      resetGameToStart();
+      restartCurrentSession();
       gameState = "PLAYING";
     } else if (selection === "NO") {
-      resetGameToStart();
-      gameVersion = "full";
-      menuSystem.setScreen("main");
       gameState = "MENU";
     } else if (selection === "SETTINGS") {
       settingsReturnState = GAME_OVER_STATE;
@@ -851,16 +932,16 @@ function mousePressed() {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
     if (selection === "DEMO") {
-      menuSystem.setScreen("demo_difficulty");
-    } else if (selection === "BACK") {
-      menuSystem.setScreen("main");
-    } else if (selection === "DEMO_EASY" || selection === "DEMO_HARD") {
       gameVersion = "demo";
-      applyDifficultyConfig(selection === "DEMO_EASY" ? "EASY" : "HARD");
+      sessionVersion = "demo";
+      sessionDifficulty = GAME_VERSIONS.demo.difficulty;
+      applyDifficultyConfig(sessionDifficulty);
       resetGameToStart();
       gameState = "PLAYING";
     } else if (selection === "EASY" || selection === "HARD") {
       gameVersion = "full";
+      sessionVersion = "full";
+      sessionDifficulty = selection;
       applyDifficultyConfig(selection);
       resetGameToStart();
       gameState = "PLAYING";
@@ -868,6 +949,8 @@ function mousePressed() {
       settingsReturnState = "MENU";
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
+    } else if (selection === "CONTROLS") {
+      gameState = "CONTROLS";
     }
     return;
   }
@@ -885,11 +968,9 @@ function mousePressed() {
 }
 
 function applyDifficultyConfig(selection) {
-  const diffLevel = selection === "EASY" ? "normal" : "hard";
-
+  const diffLevel = selection === "EASY" ? "easy" : "hard";
   if (pauseMenuSystem) {
     pauseMenuSystem.setDifficulty(diffLevel);
-    console.log(`Game started on ${diffLevel} difficulty.`);
   }
 }
 
@@ -934,6 +1015,14 @@ function applyDisplayScale() {
   }
 }
 
+function restartCurrentSession() {
+  gameVersion = sessionVersion;
+  if (sessionDifficulty) {
+    applyDifficultyConfig(sessionDifficulty);
+  }
+  resetGameToStart();
+}
+
 function resetGameToStart() {
   // 1. Send the player back to the first room
   const startRoom = GAME_VERSIONS[gameVersion].startRoom;
@@ -946,11 +1035,13 @@ function resetGameToStart() {
   }
 
   // 3. Snap the camera back to the start
-  cameraSystem.snapTo(playerStart.x, playerStart.y);
+  if (playerStart) {
+    cameraSystem.snapTo(playerStart.x, playerStart.y);
+  }
 
   // 4. Reset Player stats
   if (player.power) {
-    player.power.current = player.power.maxPower;
+    player.power.reset();
   }
   if (player.torch) {
     player.torch.isOn = false;

@@ -43,10 +43,14 @@ export function createGameOverSystem() {
       textSize(64);
       text("POWER DEPLETED", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 - 40);
 
-      // Question
+      // tagline
       fill(200);
       textSize(26);
-      text("Try Again?", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 + 30);
+      text("You are lost to the Abyss.", CANVAS.WIDTH / 2, CANVAS.HEIGHT / 3 + 30);
+
+      // Question — sits just above the YES/NO buttons
+      textSize(26);
+      text("Try Again?", CANVAS.WIDTH / 2, btnY - 40);
 
       // YES button
       const hoverYes =
