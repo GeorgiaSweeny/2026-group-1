@@ -702,6 +702,7 @@ function setup() {
     getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
     getMissiles: () => missileSystem.getMissiles(),
+    getMissileTarget: () => missileSystem.getCurrentTarget(),
     getParticles: () => particleSystem.getParticles(),
     drawMiniMap: () => miniMapSystem.draw(),
     getHudDialSettings: () => ({

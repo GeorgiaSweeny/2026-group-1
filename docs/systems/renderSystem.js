@@ -46,6 +46,7 @@ export function createRenderSystem({
    getOldCamPosition,
    getCameraScale,
    getMissiles,
+   getMissileTarget,
    getParticles,
    getPiranhas,
    getGlowObjects,
@@ -843,6 +844,64 @@ export function createRenderSystem({
    }
 
    //===MISSILES===//
+   function drawMissileTarget() {
+      if (!player || player.missiles <= 0) return;
+      
+      const target = getMissileTarget?.();
+      if (target && (target.position || (target.x !== undefined && target.y !== undefined))) {
+         const tx = target.position ? target.position.x : target.x;
+         const ty = target.position ? target.position.y : target.y;
+
+         let isVisible = false;
+
+         const lightSources = getLightSources?.() ?? [];
+         const tRadius = Math.max(target.w || target.width || target.getWidth?.() || 0, target.h || target.height || target.getHeight?.() || 0) / 2 || 16;
+         for (const light of lightSources) {
+            const lx = light.position ? light.position.x : (light.x ?? 0);
+            const ly = light.position ? light.position.y : (light.y ?? 0);
+            const radius = (light.radius ?? 200) * 1.2; // slight leeway
+            if (Math.hypot(tx - lx, ty - ly) < radius + tRadius) {
+               isVisible = true;
+               break;
+            }
+         }
+
+         if (!isVisible) {
+            const reveals = [
+               ...(getSonarEnemyReveals?.() ?? []),
+               ...(getSonarReveals?.() ?? []),
+               ...(getSonarHazardReveals?.() ?? [])
+            ];
+            for (const r of reveals) {
+               const rCx = r.x + (r.w ?? 0) / 2;
+               const rCy = r.y + (r.h ?? 0) / 2;
+               if (Math.hypot(tx - rCx, ty - rCy) < 40) {
+                  isVisible = true;
+                  break;
+               }
+            }
+         }
+
+         if (!isVisible) return; // hide if not illuminated or revealed
+
+         push();
+         translate(tx, ty);
+
+         stroke(255, 50, 50, 200);
+         strokeWeight(2);
+         noFill();
+   
+         line(-10, 0, -4, 0);
+         line(10, 0, 4, 0);
+         line(0, -10, 0, -4);
+         line(0, 10, 0, 4);
+
+         circle(0, 0, 24);
+         
+         pop();
+      }
+   }
+
    function drawMissiles() {
       const missiles = getMissiles?.() ?? [];
       for (const missile of missiles) {
@@ -930,6 +989,7 @@ function renderInterpolate(oldState, newState, alpha){
          drawSonarHazardReveals();
          drawSonarCollectableReveals();
          drawSonarEnemyReveals();
+         drawMissileTarget();
          pop();
          
          // --- World Space UI overlays (drawn above everything) --- //
