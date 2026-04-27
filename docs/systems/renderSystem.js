@@ -383,11 +383,23 @@ export function createRenderSystem({
          const prevY = Number.isFinite(crab?.previousPos?.y) ? crab.previousPos.y : currY;
          const crabW = Number(crab?.w ?? crab?.width ?? 20) || 20;
          const crabH = Number(crab?.h ?? crab?.height ?? 14) || 14;
-         const facing = Number.isFinite(crab?.facing) && crab.facing !== 0 ? crab.facing : 1;
+         //const facing = Number.isFinite(crab?.facing) && crab.facing !== 0 ? crab.facing : 1;
+         const dir = crab?.spriteDirection ?? 'down';
+
+         let angle = 0;
+
+         if (dir === 'down') angle = 0;
+         if (dir === 'up') angle = Math.PI;
+         if (dir === 'right') angle = -Math.PI / 2;
+         if (dir === 'left') angle = Math.PI / 2;
 
          push();
-         translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
-         scale(facing, 1);
+         translate(
+            renderInterpolate(prevX, currX, alpha),
+            renderInterpolate(prevY, currY, alpha));
+         //scale(facing, 1);
+
+         rotate(angle);
 
          noStroke();
          fill(200, 80, 50);
@@ -1328,7 +1340,7 @@ function renderInterpolate(oldState, newState, alpha){
             pop();
 
             // --- Screen space (fixed to viewport) --- //
-         drawLighting(lightSources, cam, camScale);
+         //drawLighting(lightSources, cam, camScale);
 
          // --- World space overlays (drawn above lighting) --- //
          push();

@@ -549,9 +549,10 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 752, "y": 864,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 112 },
-                { "name": "speed", "type": "float", "value": 28 },
-                { "name": "patrolAxis", "type": "string", "value": "horizontal" }
+                { "name": "patrolDistance",  "type": "int",    "value": 112          },
+                { "name": "speed",           "type": "float",  "value": 28           },
+                { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
+                { "name": "spriteDirection", "type": "string", "value": "up"      }
             ]
         },
         {
@@ -559,9 +560,10 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 464, "y": 352,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 240 },
-                { "name": "speed", "type": "float", "value": 22 },
-                { "name": "patrolAxis", "type": "string", "value": "vertical" }
+                { "name": "patrolDistance",  "type": "int",    "value": 240        },
+                { "name": "speed",           "type": "float",  "value": 22         },
+                { "name": "patrolAxis",      "type": "string", "value": "vertical" },
+                { "name": "spriteDirection", "type": "string", "value": "left"       }
             ]
         },
         {
@@ -569,19 +571,21 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 512, "y": 624,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 176 },
-                { "name": "speed", "type": "float", "value": 35 },
-                { "name": "patrolAxis", "type": "string", "value": "vertical" }
+                { "name": "patrolDistance",  "type": "int",    "value": 176        },
+                { "name": "speed",           "type": "float",  "value": 35         },
+                { "name": "patrolAxis",      "type": "string", "value": "vertical" },
+                { "name": "spriteDirection", "type": "string", "value": "right"     }
             ]
         },
         {
             "gid": 79, "height": 16, "id": 37, "name": "crab",
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
-            "x": 725, "y": 290,
+            "x": 720, "y": 290,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 60 },
-                { "name": "speed", "type": "float", "value": 18 },
-                { "name": "patrolAxis", "type": "string", "value": "vertical" }
+                { "name": "patrolDistance",  "type": "int",    "value": 60         },
+                { "name": "speed",           "type": "float",  "value": 18         },
+                { "name": "patrolAxis",      "type": "string", "value": "vertical" },
+                { "name": "spriteDirection", "type": "string", "value": "left"       }
             ]
         },
         {
@@ -589,9 +593,10 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 1056, "y": 496,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 112 },
-                { "name": "speed", "type": "float", "value": 40 },
-                { "name": "patrolAxis", "type": "string", "value": "horizontal" }
+                { "name": "patrolDistance",  "type": "int",    "value": 112          },
+                { "name": "speed",           "type": "float",  "value": 40           },
+                { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
+                { "name": "spriteDirection", "type": "string", "value": "down"       }
             ]
         },
         {
@@ -599,9 +604,10 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 768, "y": 410,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 230 },
-                { "name": "speed", "type": "float", "value": 25 },
-                { "name": "patrolAxis", "type": "string", "value": "vertical" }
+                { "name": "patrolDistance",  "type": "int",    "value": 230        },
+                { "name": "speed",           "type": "float",  "value": 25         },
+                { "name": "patrolAxis",      "type": "string", "value": "vertical" },
+                { "name": "spriteDirection", "type": "string", "value": "right"     }
             ]
         },
         {
@@ -609,9 +615,10 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 1248, "y": 544,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 96 },
-                { "name": "speed", "type": "float", "value": 32 },
-                { "name": "patrolAxis", "type": "string", "value": "horizontal" }
+                { "name": "patrolDistance",  "type": "int",    "value": 96           },
+                { "name": "speed",           "type": "float",  "value": 32           },
+                { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
+                { "name": "spriteDirection", "type": "string", "value": "up"      }
             ]
         },
         {
@@ -619,9 +626,10 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 240, "y": 928,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 112 },
-                { "name": "speed", "type": "float", "value": 20 },
-                { "name": "patrolAxis", "type": "string", "value": "horizontal" }
+                { "name": "patrolDistance",  "type": "int",    "value": 112          },
+                { "name": "speed",           "type": "float",  "value": 20           },
+                { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
+                { "name": "spriteDirection", "type": "string", "value": "down"       }
             ]
         },
         {
@@ -629,9 +637,10 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 880, "y": 144,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 64 },
-                { "name": "speed", "type": "float", "value": 38 },
-                { "name": "patrolAxis", "type": "string", "value": "vertical" }
+                { "name": "patrolDistance",  "type": "int",    "value": 64         },
+                { "name": "speed",           "type": "float",  "value": 38         },
+                { "name": "patrolAxis",      "type": "string", "value": "vertical" },
+                { "name": "spriteDirection", "type": "string", "value": "left"       }
             ]
         },
         {
@@ -639,9 +648,10 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 1264, "y": 80,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 144 },
-                { "name": "speed", "type": "float", "value": 30 },
-                { "name": "patrolAxis", "type": "string", "value": "horizontal" }
+                { "name": "patrolDistance",  "type": "int",    "value": 144          },
+                { "name": "speed",           "type": "float",  "value": 30           },
+                { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
+                { "name": "spriteDirection", "type": "string", "value": "down"      }
             ]
         },
         {
@@ -649,9 +659,10 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 1312, "y": 32,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 128 },
-                { "name": "speed", "type": "float", "value": 45 },
-                { "name": "patrolAxis", "type": "string", "value": "horizontal" }
+                { "name": "patrolDistance",  "type": "int",    "value": 128          },
+                { "name": "speed",           "type": "float",  "value": 45           },
+                { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
+                { "name": "spriteDirection", "type": "string", "value": "up"       }
             ]
         },
         {
@@ -659,9 +670,10 @@
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
             "x": 1344, "y": 256,
             "properties": [
-                { "name": "patrolDistance", "type": "int", "value": 64 },
-                { "name": "speed", "type": "float", "value": 26 },
-                { "name": "patrolAxis", "type": "string", "value": "horizontal" }
+                { "name": "patrolDistance",  "type": "int",    "value": 64           },
+                { "name": "speed",           "type": "float",  "value": 26           },
+                { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
+                { "name": "spriteDirection", "type": "string", "value": "down"      }
             ]
         }
     ],

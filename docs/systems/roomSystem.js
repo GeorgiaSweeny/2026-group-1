@@ -509,7 +509,7 @@ export function createRoomSystem({
 
       const targetSpawn = exit?.properties?.targetSpawn ?? null;
       loadRoom(targetRoom, { spawnId: targetSpawn });
-      soundSystem?.play('achievementBell', 0.8);
+      soundSystem?.play('achievementBell', 0.5);
       exitCoolDownSeconds = 0.25;
       break;
     }

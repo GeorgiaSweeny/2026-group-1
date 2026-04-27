@@ -24,6 +24,7 @@ import { CONTROLS, keyLabel } from '../config.js';
 export function createPauseMenuSystem({
   onResolutionChange,
   onControlModeChange,
+  onVolumeChange,
   initialControlMode = 'wasd',
 } = {}) {
   let paused = false;
@@ -368,6 +369,7 @@ export function createPauseMenuSystem({
     const leftX = cx - 120;
     const pct = constrain((mouseX - leftX) / SLIDER_W, 0, 1);
     volume = pct * 100;
+    onVolumeChange?.(volume);
   }
 
   function handleMouseReleased() {
