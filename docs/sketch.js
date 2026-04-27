@@ -168,10 +168,14 @@ function normalizeTilesetSource(source, mapDir) {
 
 function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
   if (!source) return null;
-  // backgrounds.tsx is an image collection (no single .png atlas file to load).
   if (String(source).toLowerCase().endsWith("backgrounds.tsx")) return null;
-  const pngSource = source.replace(/\.tsx$/i, ".png");
-  return normalizeRelativePath(mapDir, pngSource);
+  // Normalize the tsx path relative to the map directory first, so that a
+  // relative source like "../tilesets/X.tsx" resolves to "data/tilesets/X"
+  // before we extract its directory for image resolution.
+  const resolvedSource = normalizeRelativePath(mapDir, source);
+  const tsxDir = getPathDir(resolvedSource);
+  const pngFilename = resolvedSource.split("/").pop().replace(/\.tsx$/i, ".png");
+  return normalizeRelativePath(tsxDir, pngFilename);
 }
 
 function parseTsxTileProperties(xmlText) {
@@ -372,10 +376,12 @@ function ensureRoomAssetsLoaded(roomId) {
     const imagePath =
       tileset.resolvedImagePath ??
       tilesetSourceToImagePath(tileset?.source, mapDir);
+    console.warn(`[ensureRoomAssetsLoaded] tileset.source="${tileset.source}" resolvedImagePath="${tileset.resolvedImagePath}" imagePath="${imagePath}" tsxDirForImage="${tileset.resolvedImagePath ? getPathDir(tileset.resolvedImagePath) : 'N/A(resolvedImagePath was undefined)'}"`);
     if (imagePath) {
       tileset.resolvedImagePath = imagePath;
       const key = `tileset:${imagePath}`;
       if (!assets[key]) {
+        console.warn(`[preload] Loading ATLAS image: imagePath="${imagePath}" key="${key}" assetsDir=docs/data/`);
         assets[key] = loadImage(imagePath);
       }
     }
@@ -385,6 +391,13 @@ function ensureRoomAssetsLoaded(roomId) {
       if (!tileImagePath) continue;
       const tileKey = `tileset:${tileImagePath}`;
       if (!assets[tileKey]) {
+        // Only log once per tileset to avoid spam
+        if (!ensureRoomAssetsLoaded._loggedTileImages) {
+          ensureRoomAssetsLoaded._loggedTileImages = true;
+          const allTileImages = Object.values(tileset?.tileImagesById ?? {}).map(ti => ti?.resolvedImagePath);
+          console.warn(`[preload] tileImagesById sample for ${tileset?.name}: ${JSON.stringify(allTileImages.slice(0, 5))} (${Object.keys(tileset?.tileImagesById ?? {}).length} total)`);
+        }
+        console.warn(`[preload] Loading individual tile image: tileImagePath="${tileImagePath}" tileKey="${tileKey}"`);
         assets[tileKey] = loadImage(tileImagePath);
       }
     }
@@ -441,10 +454,14 @@ function preload() {
       if (tsxMetaBySourcePath[sourcePath]) continue;
 
       const tsxLines = loadStrings(sourcePath) ?? [];
+      if (!tsxLines.length) {
+        console.warn(`[preload] TSX file empty or failed to load: "${sourcePath}"`);
+      }
       tsxMetaBySourcePath[sourcePath] = parseTsxMetadata(
         tsxLines.join("\n"),
         sourcePath,
       );
+      console.warn(`[preload] TSX parsed: "${sourcePath}" → resolvedImagePath="${tsxMetaBySourcePath[sourcePath].resolvedImagePath}" tileImagesById count=${Object.keys(tsxMetaBySourcePath[sourcePath].tileImagesById).length}`);
     }
   }
 
@@ -460,6 +477,9 @@ function preload() {
       tileset.resolvedImagePath =
         tsxMeta.resolvedImagePath ??
         tilesetSourceToImagePath(tileset?.source, mapDir);
+      const tileImgKeys = Object.keys(tsxMeta.tileImagesById ?? {});
+      const tileImgSample = tileImgKeys.slice(0, 3).map(k => `${k}:"${tsxMeta.tileImagesById[k]?.resolvedImagePath}"`);
+      console.warn(`[preload] Tileset "${tileset.source}" resolvedImagePath="${tileset.resolvedImagePath}" tileImagesById=${tileImgSample.join(', ')}${tileImgKeys.length > 3 ? ' ...' : ''} (${tileImgKeys.length} total)`);
       if (tsxMeta.tilewidth) tileset.tilewidth = tsxMeta.tilewidth;
       if (tsxMeta.tileheight) tileset.tileheight = tsxMeta.tileheight;
       if (tsxMeta.columns != null) tileset.columns = tsxMeta.columns;
@@ -557,10 +577,13 @@ function setup() {
       }
     },
     onWin: () => {
+      soundSystem?.stop('gamebg1');
+      soundSystem?.play('win', 0.9);
       gameState = WIN_STATE;
     },
     getAllowedRooms: () => GAME_VERSIONS[gameVersion].rooms,
     getGameVersion: () => gameVersion,
+    soundSystem,
   });
   roomSystem.goToRoom(initialRoom, { spawnId: "default" });
   syncCanvasToCurrentRoom();
@@ -572,7 +595,7 @@ function setup() {
   darknessLayer = createGraphics(width, height);
 
   inputSystem = createInputSystem(player);
-  playerSystem = createPlayerSystem(player);
+  playerSystem = createPlayerSystem(player, soundSystem);
   physicsSystem = createPhysicsSystem(player, () => roomSystem.getRoomState());
   cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
   // Snap camera to player's initial position
@@ -621,6 +644,7 @@ function setup() {
     () => roomSystem.getHazards(),
     () => pauseMenuSystem.getDifficulty(),
     () => enemySystem?.getEnemies() ?? [],
+    soundSystem,
   );
 
   enemySystem = createEnemySystem(
@@ -734,6 +758,24 @@ function setup() {
 
 function draw() {
   frameRate(GAME.FPS);
+
+  const isMenuState = gameState === "MAIN_PAGE" || gameState === "STORY_PAGE"
+    || gameState === "CONTROLS" || gameState === "MENU"
+    || gameState === "SETTINGS";
+
+  if (audioUnlocked && isMenuState && !soundSystem?.isPlaying?.('introMusic')) {
+    soundSystem?.loop?.('introMusic', 0.5);
+  }
+
+  if (!isMenuState) {
+    soundSystem?.stop?.('introMusic');
+  }
+
+  const isGameplayState = gameState === "PLAYING";
+  if (!isGameplayState) {
+    soundSystem?.stop('gamebg1');
+    soundSystem?.stop('movement');
+  }
 
   if (gameState === "MAIN_PAGE") {
     mainPageSystem.draw(mainPageBg);
@@ -879,6 +921,7 @@ function mousePressed() {
   if (gameState === "MAIN_PAGE") {
     const selection = mainPageSystem.checkClick(mouseX, mouseY);
     if (selection === "PLAY") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "STORY_PAGE";
     }
     return;
@@ -887,6 +930,7 @@ function mousePressed() {
   if (gameState === "STORY_PAGE") {
     const selection = storyPageSystem.checkClick(mouseX, mouseY);
     if (selection === "CONTINUE") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "CONTROLS";
     }
     return;
@@ -895,8 +939,10 @@ function mousePressed() {
   if (gameState === "CONTROLS") {
     const selection = controlsPageSystem.checkClick(mouseX, mouseY);
     if (selection === "BACK") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "STORY_PAGE";
     } else if (selection === "NEXT") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "MENU";
     }
     return;
@@ -905,9 +951,11 @@ function mousePressed() {
   if (gameState === WIN_STATE) {
     const selection = winScreenSystem.checkClick(mouseX, mouseY);
     if (selection === "RESTART") {
+      soundSystem?.play('buttonClick', 0.8);
       restartCurrentSession();
       gameState = "PLAYING";
     } else if (selection === "MENU") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "MENU";
     }
     return;
@@ -916,11 +964,14 @@ function mousePressed() {
   if (gameState === GAME_OVER_STATE) {
     const selection = gameOverSystem.checkClick(mouseX, mouseY);
     if (selection === "YES") {
+      soundSystem?.play('buttonClick', 0.8);
       restartCurrentSession();
       gameState = "PLAYING";
     } else if (selection === "NO") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "MENU";
     } else if (selection === "SETTINGS") {
+      soundSystem?.play('buttonClick', 0.8);
       settingsReturnState = GAME_OVER_STATE;
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
@@ -932,6 +983,10 @@ function mousePressed() {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
     if (selection === "DEMO") {
+      soundSystem?.stop('introMusic');
+      soundSystem?.play('buttonClick', 0.8);
+      soundSystem?.play('waterSplash', 1.0);
+      soundSystem?.loop('gamebg1', 0.7);
       gameVersion = "demo";
       sessionVersion = "demo";
       sessionDifficulty = GAME_VERSIONS.demo.difficulty;
@@ -939,6 +994,10 @@ function mousePressed() {
       resetGameToStart();
       gameState = "PLAYING";
     } else if (selection === "EASY" || selection === "HARD") {
+      soundSystem?.stop('introMusic');
+      soundSystem?.play('buttonClick', 0.8);
+      soundSystem?.play('waterSplash', 1.0);
+      soundSystem?.loop('gamebg1', 0.7);
       gameVersion = "full";
       sessionVersion = "full";
       sessionDifficulty = selection;
@@ -946,16 +1005,19 @@ function mousePressed() {
       resetGameToStart();
       gameState = "PLAYING";
     } else if (selection === "SETTINGS") {
+      soundSystem?.play('buttonClick', 0.8);
       settingsReturnState = "MENU";
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
     } else if (selection === "CONTROLS") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "CONTROLS";
     }
     return;
   }
 
   if (gameState === "SETTINGS") {
+    soundSystem?.play('buttonClick', 0.8);
     pauseMenuSystem?.onMousePressed();
     return;
   }

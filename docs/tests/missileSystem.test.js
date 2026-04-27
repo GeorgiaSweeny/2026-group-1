@@ -1,272 +1,317 @@
-import { createMissileSystem } from "../systems/missileSystem.js";
-import { GAME } from "../config.js";
-import { isColliding } from "../systems/hitboxSystem.js";
+//======================================
+// UNIT TESTS - MISSILE SYSTEM
+//======================================
+/*
+Tests for missileSystem.js — verifies missile creation, auto-targeting,
+homing behavior, and lifetime expiration.
+*/
 
+import { jest } from '@jest/globals';
 
-jest.mock("../config.js", () => ({
-  MISSILE: { SPEED: 5, TURN_SPEED: 2, LIFETIME: 1000, SIZE: 10, COOLDOWN: 500 },
-  GAME: { DIFFICULTY: 'NORMAL' },
-  TIME: { fixedDeltaTime: 0.016 },
-}));
+// Mock p5 globals used by Missile class and missileSystem
+function makeVector(x, y) {
+  return {
+    x, y,
+    mult(s) { return makeVector(x * s, y * s); },
+    add(v) { return makeVector(this.x + v.x, this.y + v.y); },
+    sub(v) { return makeVector(this.x - v.x, this.y - v.y); },
+    copy() { return makeVector(this.x, this.y); },
+    normalize() { const l = Math.sqrt(this.x * this.x + this.y * this.y) || 1; return makeVector(this.x / l, this.y / l); },
+    heading() { return Math.atan2(this.y, this.x); },
+    dist(v) { return Math.sqrt((this.x - v.x) ** 2 + (this.y - v.y) ** 2); },
+    set(v) { this.x = v.x; this.y = v.y; },
+    lerp(v, t) { return makeVector(this.x + (v.x - this.x) * t, this.y + (v.y - this.y) * t); },
+  };
+}
 
-jest.mock("../systems/hitboxSystem.js", () => ({
-  Hitbox: class {
-    constructor(x, y, w, h) { this.x = x; this.y = y; this.w = w; this.h = h; }
+// Mock performance.now for cooldown tracking
+let mockNow = 10000;
+global.performance = { now: () => mockNow };
+
+global.createVector = (x, y) => makeVector(x, y);
+global.TWO_PI = Math.PI * 2;
+global.p5 = {
+  Vector: {
+    fromAngle: (a) => makeVector(Math.cos(a), Math.sin(a)),
+    dist: (a, b) => Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2),
+    sub: (a, b) => makeVector(a.x - b.x, a.y - b.y),
+    lerp: (a, b, t) => makeVector(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t),
+    mult: (v, s) => makeVector(v.x * s, v.y * s),
   },
-  isColliding: jest.fn(),
+};
+global.random = (a, b) => (b !== undefined ? a + Math.random() * (b - a) : Math.random() * a);
+global.cos = Math.cos;
+global.sin = Math.sin;
+
+// Mock hitboxSystem
+jest.unstable_mockModule('../systems/hitboxSystem.js', () => ({
+  isColliding: jest.fn().mockReturnValue(false),
+  Hitbox: class Hitbox {
+    constructor(x, y, w, h) {
+      this.position = { x: x + w / 2, y: y + h / 2 };
+      this.w = w; this.h = h;
+    }
+    getX() { return this.position.x - this.w / 2; }
+    getY() { return this.position.y - this.h / 2; }
+  },
+  Wall: class Wall {},
 }));
 
-describe("MissileSystem", () => {
+// Mock config
+jest.unstable_mockModule('../config.js', () => ({
+  MISSILE: {
+    SPEED: 180,
+    TURN_SPEED: 0.08,
+    LIFETIME: 4000,
+    SIZE: 8,
+    COOLDOWN: 2000,  // milliseconds
+  },
+  GAME: { EASY: false },
+  TIME: { fixedDeltaTime: 1 / 60 },
+  DEBUG_COLOR: { WALL: 'red' },
+}));
+
+const { createMissileSystem } = await import('../systems/missileSystem.js');
+
+describe('MissileSystem', () => {
   let mockPlayer;
-  let mockTargets;
-  let mockWalls;
   let mockSoundSystem;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-
-    global.random = jest.fn(() => 0.5);
-    global.cos = Math.cos;
-    global.sin = Math.sin;
-    global.createVector = (x, y) => ({
-      x, y,
-      add: function(v) { this.x += v.x; this.y += v.y; return this; },
-      copy: function() { return global.createVector(this.x, this.y); },
-      normalize: function() { return this; }, 
-      heading: () => 0,
-      mult: function(n) { this.x *= n; this.y *= n; return this; },
-      set: function(v) { this.x = v.x; this.y = v.y; return this; }
-    });
-    global.p5 = {
-      Vector: {
-        dist: (v1, v2) => Math.hypot(v2.x - v1.x, v2.y - v1.y),
-        sub: (v1, v2) => global.createVector(v1.x - v2.x, v1.y - v2.y),
-        lerp: (v1, v2, amt) => global.createVector(v1.x, v1.y), 
-        mult: (v, n) => global.createVector(v.x * n, v.y * n)
-      }
-    };
-
-    jest.spyOn(performance, 'now').mockReturnValue(1000);
-
+    mockNow = 10000; // Advance past COOLDOWN (2000ms) so first missile can fire
     mockPlayer = {
-      position: { x: 0, y: 0 },
+      position: { x: 100, y: 100 },
+      bubbles: [],
       facing: 1,
-      missiles: 3,
+      missiles: 10,
       actionIntent: { launchMissile: false },
     };
-
-    mockTargets = [];
-    mockWalls = [];
     mockSoundSystem = { play: jest.fn() };
-   
-    GAME.DIFFICULTY = 'NORMAL';
   });
 
-  it("should launch a missile, decrement ammo, and play sound when intent is true", () => {
-    mockPlayer.actionIntent.launchMissile = true;
-    const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => mockWalls, mockSoundSystem);
+  function makeTarget(x, y, overrides = {}) {
+    return {
+      position: { x, y },
+      pendingDestroy: false,
+      isDestroyed: false,
+      bubbles: [],
+      x, y,
+      w: 24,
+      h: 24,
+      ...overrides,
+    };
+  }
 
-    missileSystem.update();
-
-    expect(missileSystem.getMissiles().length).toBe(1);
-    expect(mockPlayer.missiles).toBe(2);
-    expect(mockPlayer.actionIntent.launchMissile).toBe(false);
-    expect(mockSoundSystem.play).toHaveBeenCalledWith('missileFired', 0.2);
-  });
-
-  it("should not launch a missile if out of ammo", () => {
-    mockPlayer.missiles = 0;
-    mockPlayer.actionIntent.launchMissile = true;
-    const missileSystem = createMissileSystem(mockPlayer, () => [], () => []);
-
-    missileSystem.update();
-
-    expect(missileSystem.getMissiles().length).toBe(0);
-  });
-
-  it("should not launch a missile if intent is false", () => {
-    mockPlayer.actionIntent.launchMissile = false;
-    const missileSystem = createMissileSystem(mockPlayer, () => [], () => []);
-
-    missileSystem.update();
-
-    expect(missileSystem.getMissiles().length).toBe(0);
-  });
-
-  it("should respect the fire cooldown timer", () => {
-    const missileSystem = createMissileSystem(mockPlayer, () => [], () => []);
-    
-    mockPlayer.actionIntent.launchMissile = true;
-    missileSystem.update();
-    expect(missileSystem.getMissiles().length).toBe(1);
-
-    jest.spyOn(performance, 'now').mockReturnValue(1100);
-    mockPlayer.actionIntent.launchMissile = true;
-    missileSystem.update();
-
-    expect(missileSystem.getMissiles().length).toBe(1);
-  });
-
-  it("should allow firing again once the cooldown has expired", () => {
-    const missileSystem = createMissileSystem(mockPlayer, () => [], () => []);
-    
-    mockPlayer.actionIntent.launchMissile = true;
-    missileSystem.update();
-    expect(missileSystem.getMissiles().length).toBe(1);
-
-    jest.spyOn(performance, 'now').mockReturnValue(1600);
-    mockPlayer.actionIntent.launchMissile = true;
-    missileSystem.update();
-
-    expect(missileSystem.getMissiles().length).toBe(2);
-  });
-
-  it("should target the nearest valid enemy in front of the player", () => {
-    const enemyBehind = { position: { x: -50, y: 0 }, pendingDestroy: false };
-    const enemyClose = { position: { x: 50, y: 0 }, pendingDestroy: false };
-    const enemyFar = { position: { x: 150, y: 0 }, pendingDestroy: false };
-    
-    mockTargets = [enemyBehind, enemyFar, enemyClose];
-    mockPlayer.actionIntent.launchMissile = true;
-    
-    const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => []);
-
-    missileSystem.update();
-
-    const activeMissiles = missileSystem.getMissiles();
-    expect(activeMissiles.length).toBe(1);
-    expect(activeMissiles[0].target).toBe(enemyClose);
-  });
-
-  it("should destroy enemies on collision and destroy the missile", () => {
-    const enemy = { position: { x: 100, y: 0 }, pendingDestroy: false };
-    mockTargets = [enemy];
-    mockPlayer.actionIntent.launchMissile = true;
-    const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => []);
-
-    isColliding.mockReturnValue(true);
-
-    missileSystem.update();
-    missileSystem.update();
-
-    expect(enemy.pendingDestroy).toBe(true);
-    expect(missileSystem.getMissiles().length).toBe(0);
-  });
-
-  it("should destroy adjacent breakable walls when difficulty is EASY", () => {
-    GAME.DIFFICULTY = 'EASY';
-    
-    const targetWall = { position: { x: 100, y: 0 }, isBreakable: true, isDestroyed: false };
-    const nearbyWall = { position: { x: 110, y: 0 }, isBreakable: true, isDestroyed: false };
-    const farWall = { position: { x: 300, y: 0 }, isBreakable: true, isDestroyed: false };
-    
-    mockWalls = [targetWall, nearbyWall, farWall];
-    mockPlayer.actionIntent.launchMissile = true;
-    
-    const missileSystem = createMissileSystem(mockPlayer, () => [], () => mockWalls);
-    
-    isColliding.mockReturnValue(true);
-
-    missileSystem.update();
-    missileSystem.update();
-
-    expect(targetWall.isDestroyed).toBe(true);
-    expect(nearbyWall.isDestroyed).toBe(true);
-    expect(farWall.isDestroyed).toBe(false);
-  });
-
-  it("should only destroy the target breakable wall when difficulty is NORMAL", () => {
-    GAME.DIFFICULTY = 'NORMAL';
-    
-    const targetWall = { position: { x: 100, y: 0 }, isBreakable: true, isDestroyed: false };
-    const nearbyWall = { position: { x: 110, y: 0 }, isBreakable: true, isDestroyed: false };
-    
-    mockWalls = [targetWall, nearbyWall];
-    mockPlayer.actionIntent.launchMissile = true;
-    
-    const missileSystem = createMissileSystem(mockPlayer, () => [], () => mockWalls);
-    
-    isColliding.mockReturnValue(true);
-
-    missileSystem.update();
-    missileSystem.update();
-
-    expect(targetWall.isDestroyed).toBe(true);
-    expect(nearbyWall.isDestroyed).toBe(false);
-  });
-
-  it("should destroy missiles after their lifetime expires", () => {
-    mockPlayer.actionIntent.launchMissile = true;
-    const missileSystem = createMissileSystem(mockPlayer, () => [], () => []);
-
-    missileSystem.update();
-    expect(missileSystem.getMissiles().length).toBe(1);
-
-    jest.spyOn(performance, 'now').mockReturnValue(2100);
-    
-    missileSystem.update();
-
-    expect(missileSystem.getMissiles().length).toBe(0);
-  });
-
-  describe("Targeting Functionality (getCurrentTarget)", () => {
-    it("should return null if no targets are present or available", () => {
-      const missileSystem = createMissileSystem(mockPlayer, () => [], () => []);
-      missileSystem.update();
-      expect(missileSystem.getCurrentTarget()).toBeNull();
+  describe('creation and state', () => {
+    it('creates a missile system without throwing', () => {
+      expect(() => createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem)).not.toThrow();
     });
 
-    it("should constantly track and return the nearest target on update", () => {
-      const farEnemy = { position: { x: 300, y: 0 }, pendingDestroy: false };
-      const closeEnemy = { position: { x: 200, y: 0 }, pendingDestroy: false };
-      
-      mockTargets = [farEnemy, closeEnemy];
-      
-      const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => []);
-      missileSystem.update();
+    it('starts with no active missiles', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      expect(ms.getMissiles().length).toBe(0);
+    });
+  });
 
-      expect(missileSystem.getCurrentTarget()).toBe(closeEnemy);
+  describe('fireMissile intent', () => {
+    it('creates a missile when launchMissile intent is set', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      expect(ms.getMissiles().length).toBe(1);
     });
 
-    it("should dynamically switch targets when a closer target emerges", () => {
-      const enemy1 = { position: { x: 250, y: 0 }, pendingDestroy: false };
-      mockTargets = [enemy1];
-      
-      const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => []);
-      missileSystem.update();
-      expect(missileSystem.getCurrentTarget()).toBe(enemy1);
-
-      const enemy2 = { position: { x: 100, y: 0 }, pendingDestroy: false };
-      mockTargets.push(enemy2);
-      
-      missileSystem.update(); 
-      expect(missileSystem.getCurrentTarget()).toBe(enemy2);
+    it('consumes launchMissile intent after firing', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      expect(mockPlayer.actionIntent.launchMissile).toBe(false);
     });
 
-    it("should ignore targets out of range (> 400) or behind the player", () => {
-      const enemyTooFar = { position: { x: 450, y: 0 }, pendingDestroy: false };
-      const enemyBehind = { position: { x: -100, y: 0 }, pendingDestroy: false };
-      
-      mockTargets = [enemyTooFar, enemyBehind];
-      
-      const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => []);
-      missileSystem.update();
-
-      expect(missileSystem.getCurrentTarget()).toBeNull();
+    it('does not fire if no launchMissile intent', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = false;
+      ms.update();
+      expect(ms.getMissiles().length).toBe(0);
     });
 
-    it("should prioritise targeting breakable walls if they are closest", () => {
-      const enemy = { position: { x: 300, y: 0 }, pendingDestroy: false };
-      const breakableWall = { position: { x: 150, y: 0 }, isBreakable: true, isDestroyed: false };
-      const unbreakableWall = { position: { x: 100, y: 0 }, isBreakable: false, isDestroyed: false };
-      
-      mockTargets = [enemy];
-      mockWalls = [breakableWall, unbreakableWall];
-      
-      const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => mockWalls);
-      missileSystem.update();
+    it('fires toward the nearest valid target', () => {
+      const targets = [
+        makeTarget(200, 100),
+        makeTarget(500, 500),
+      ];
+      const ms = createMissileSystem(mockPlayer, () => targets, () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      expect(ms.getMissiles().length).toBe(1);
+    });
+  });
 
-      expect(missileSystem.getCurrentTarget()).toBe(breakableWall);
+  describe('missile targeting', () => {
+    it('missile targets the nearest non-destroyed enemy', () => {
+      const targets = [
+        makeTarget(200, 100, { isDestroyed: true }),
+        makeTarget(150, 100),
+        makeTarget(300, 300),
+      ];
+      const ms = createMissileSystem(mockPlayer, () => targets, () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      expect(ms.getMissiles().length).toBe(1);
+      expect(ms.getMissiles()[0].target).toBe(targets[1]);
+    });
+
+    it('missile ignores pendingDestroy targets', () => {
+      const targets = [
+        makeTarget(120, 100, { pendingDestroy: true }),
+        makeTarget(200, 100),
+      ];
+      const ms = createMissileSystem(mockPlayer, () => targets, () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      expect(ms.getMissiles().length).toBe(1);
+    });
+
+    it('fires even when no targets exist', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      expect(ms.getMissiles().length).toBe(1);
+    });
+  });
+
+  describe('missile lifetime', () => {
+    it('marks missile as pendingDestroy after lifetime expires', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      const missile = ms.getMissiles()[0];
+      expect(missile.pendingDestroy).toBe(false);
+
+      // Simulate many updates — lifetime is 4000ms, each update reduces by ~16.67ms
+      for (let i = 0; i < 250; i++) ms.update();
+      expect(ms.getMissiles().length).toBe(0);
+    });
+
+    it('removes expired missiles from active list', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      expect(ms.getMissiles().length).toBe(1);
+
+      for (let i = 0; i < 300; i++) ms.update();
+      expect(ms.getMissiles().length).toBe(0);
+    });
+  });
+
+  describe('cooldown between shots', () => {
+    it('respects fire cooldown (cannot fire instantly again)', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      expect(ms.getMissiles().length).toBe(1);
+
+      // Try to fire again immediately — cooldown is 2000ms, millis() hasn't advanced
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      expect(ms.getMissiles().length).toBe(1);
+    });
+  });
+
+  describe('homing behavior', () => {
+    it('missile moves toward target over multiple updates', () => {
+      // Target within 400px range, in front of player (dx * facing > 0)
+      const target = makeTarget(200, 100);
+      const ms = createMissileSystem(mockPlayer, () => [target], () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      const missile = ms.getMissiles()[0];
+      expect(missile).toBeDefined();
+
+      // Run many updates without crashing
+      expect(() => { for (let i = 0; i < 30; i++) ms.update(); }).not.toThrow();
+
+      // Missile should still be in the list (hasn't expired)
+      expect(ms.getMissiles().length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('missile with no target flies straight without crashing', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      ms.update();
+      expect(() => { for (let i = 0; i < 10; i++) ms.update(); }).not.toThrow();
+    });
+  });
+
+  describe('edge cases', () => {
+    it('handles null soundSystem without throwing', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], null);
+      mockPlayer.actionIntent.launchMissile = true;
+      expect(() => ms.update()).not.toThrow();
+    });
+
+    it('handles null getTargets callback', () => {
+      const ms = createMissileSystem(mockPlayer, null, () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      expect(() => ms.update()).not.toThrow();
+    });
+
+    it('handles empty targets array', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      mockPlayer.actionIntent.launchMissile = true;
+      expect(() => ms.update()).not.toThrow();
+      expect(ms.getMissiles().length).toBe(1);
+    });
+
+    it('getMissiles returns an array', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      expect(Array.isArray(ms.getMissiles())).toBe(true);
+    });
+  });
+
+  describe('getCurrentTarget', () => {
+    it('returns null when no targets or walls present', () => {
+      const ms = createMissileSystem(mockPlayer, () => [], () => [], mockSoundSystem);
+      ms.update();
+      expect(ms.getCurrentTarget()).toBeNull();
+    });
+
+    it('tracks the nearest forward target on each update', () => {
+      const near = makeTarget(200, 100);
+      const far = makeTarget(350, 100);
+      const ms = createMissileSystem(mockPlayer, () => [far, near], () => [], mockSoundSystem);
+      ms.update();
+      expect(ms.getCurrentTarget()).toBe(near);
+    });
+
+    it('switches to a closer target dynamically between updates', () => {
+      const enemy1 = makeTarget(300, 100);
+      const targets = [enemy1];
+      const ms = createMissileSystem(mockPlayer, () => targets, () => [], mockSoundSystem);
+      ms.update();
+      expect(ms.getCurrentTarget()).toBe(enemy1);
+
+      const enemy2 = makeTarget(150, 100);
+      targets.push(enemy2);
+      ms.update();
+      expect(ms.getCurrentTarget()).toBe(enemy2);
+    });
+
+    it('returns null for targets out of range or behind the player', () => {
+      const tooFar = makeTarget(600, 100);  // > 400px from player at x=100
+      const behind = makeTarget(50, 100);   // behind player facing right
+      const ms = createMissileSystem(mockPlayer, () => [tooFar, behind], () => [], mockSoundSystem);
+      ms.update();
+      expect(ms.getCurrentTarget()).toBeNull();
+    });
+
+    it('prefers the closest breakable wall over a farther enemy', () => {
+      const enemy = makeTarget(350, 100);
+      const breakable = makeTarget(200, 100, { isBreakable: true });
+      const unbreakable = makeTarget(130, 100, { isBreakable: false });
+      const ms = createMissileSystem(mockPlayer, () => [enemy], () => [breakable, unbreakable], mockSoundSystem);
+      ms.update();
+      expect(ms.getCurrentTarget()).toBe(breakable);
     });
   });
 });

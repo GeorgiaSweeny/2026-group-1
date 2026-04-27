@@ -140,8 +140,9 @@ export function createRenderSystem({
 
       const imagePath = tileset.resolvedImagePath ?? tilesetSourceToImagePath(tileset.source);
       const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
-      if (!tilesetImage) {
-         console.warn(`[renderSystem] Missing tileset image for path: "${imagePath}" (source: "${tileset.source}")`);
+      // Validate the atlas image is actually loaded (p5.js creates a zero-size placeholder on 404)
+      if (!tilesetImage || !(tilesetImage.width > 0)) {
+         console.warn(`[renderSystem] Missing or unloaded tileset image for path: "${imagePath}" (source: "${tileset.source}")`);
          return false;
       }
 
@@ -208,13 +209,16 @@ export function createRenderSystem({
 
       noStroke();
       fill(platformColor);
-      
+
+     // todo: move the fill logic inside the loop and support per-platform colors via properties, with the default as the global platform color.
+     
       for (const p of platforms) {
          if (p.isDestroyed) continue;
          if (drawSpriteFromTileset(p)) continue;
-         if (p.isBreakable) {
-            rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
-         }
+         // Fallback: no sprite atlas tile available — draw solid rect so platforms
+         // are never invisible (collision-layer walls with no atlas tile still visible).
+         fill(platformColor);
+         rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
       }
    }
 
@@ -264,7 +268,7 @@ export function createRenderSystem({
       }
    }
 
-   //=== TRIGGERS ===//
+   //=== TRIGGERS ===// //todo: remove this from the final game 
    function drawTriggers() {
       const triggers = getTriggers?.() ?? [];
       if (!triggers.length) return;
@@ -752,7 +756,6 @@ export function createRenderSystem({
 // DRAW SONAR
 //======================================
    function drawSonarReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarReveals?.() ?? [];
       if (!reveals.length) return;
 
@@ -766,7 +769,6 @@ export function createRenderSystem({
    }
 
    function drawSonarHazardReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarHazardReveals?.() ?? [];
       if (!reveals.length) return;
 
@@ -781,7 +783,6 @@ export function createRenderSystem({
 
    
    function drawSonarCollectableReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarCollectableReveals?.() ?? [];
       if (!reveals.length) return;
 
@@ -795,7 +796,6 @@ export function createRenderSystem({
    }
 
    function drawSonarEnemyReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarEnemyReveals?.() ?? [];
       if (!reveals.length) return;
 

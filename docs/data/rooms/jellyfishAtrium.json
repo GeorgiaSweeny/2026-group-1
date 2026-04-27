@@ -634,219 +634,208 @@
                  "width":16,
                  "x":448,
                  "y":32
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":36,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":1344,
-                 "y":944
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":37,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":1152,
-                 "y":784
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":38,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":512,
-                 "y":496
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":39,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":848,
-                 "y":1440
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":40,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":400,
-                 "y":1712
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":41,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":624,
-                 "y":2320
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":42,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":816,
-                 "y":2080
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":43,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":400,
-                 "y":2160
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":44,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":1152,
-                 "y":2384
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":45,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":1200,
-                 "y":1792
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":46,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":1264,
-                 "y":1136
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":47,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":768,
-                 "y":688
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":48,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":272,
-                 "y":496
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":49,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":400,
-                 "y":896
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":50,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":880,
-                 "y":272
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":51,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":656,
-                 "y":1184
-                }, 
-                {
-                 "gid":79,
-                 "height":16,
-                 "id":52,
-                 "name":"jellyfish",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":16,
-                 "x":800,
-                 "y":1008
-                }],
+                }
+                ],
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
          "x":0,
          "y":0
-        }],
+        }, 
+        {
+    "draworder": "topdown",
+    "id": 10,
+    "name": "enemies",
+    "objects": [
+        {
+            "gid": 79, "height": 16, "id": 36, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 1360, "y": 832,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 112 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 37, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 1152, "y": 784,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 38, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 512, "y": 496,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 39, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 848, "y": 1408,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 40, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 400, "y": 1712,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 41, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 625, "y": 2272,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 48 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 42, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 816, "y": 2080,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 43, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 400, "y": 2080,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 80 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 44, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 1152, "y": 2320,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 64 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 45, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 1200, "y": 1712,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 80 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 46, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 1264, "y": 1136,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 47, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 752, "y": 560,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 128 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 48, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 272, "y": 496,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 49, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 400, "y": 896,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 50, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 880, "y": 272,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 51, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 656, "y": 1184,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 52, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 768, "y": 944,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 64 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        },
+        {
+            "gid": 79, "height": 16, "id": 53, "name": "jellyfish",
+            "rotation": 0, "type": "", "visible": true, "width": 16,
+            "x": 144, "y": 288,
+            "properties": [
+                { "name": "amplitude", "type": "int", "value": 32 },
+                { "name": "driftSpeed", "type": "float", "value": 0.3 },
+                { "name": "frequency", "type": "float", "value": 1 }
+            ]
+        }
+    ],
+    "opacity": 1,
+    "type": "objectgroup",
+    "visible": true,
+    "x": 0,
+    "y": 0
+}],
  "nextlayerid":5,
- "nextobjectid":53,
+ "nextobjectid":54,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

@@ -46,26 +46,28 @@ TODO / LIMITATIONS:
 
 import { PLAYER, TIME } from '../config.js';
 
-export function createPlayerSystem(player) {
+export function createPlayerSystem(player, soundSystem = null) {
+  let isPlayingMoveSound = false;
   return {
     update() {
+      if (!player?.velocity) return;
       // Apply drag each frame
       player.velocity.x *= PLAYER.DRAG;
       player.velocity.y *= PLAYER.DRAG;
 
-      // Apply acceleration based on movement intent
-      if (player.moveIntent.right) {
+      // Apply acceleration based on movement intent (guard for missing moveIntent)
+      if (player.moveIntent?.right) {
         player.velocity.x += PLAYER.ACCELERATION;
         player.facing = 1;
       }
-      if (player.moveIntent.left) {
+      if (player.moveIntent?.left) {
         player.velocity.x -= PLAYER.ACCELERATION;
         player.facing = -1;
       }
-      if (player.moveIntent.up) {
+      if (player.moveIntent?.up) {
         player.velocity.y -= PLAYER.ACCELERATION;
       }
-      if (player.moveIntent.down) {
+      if (player.moveIntent?.down) {
         player.velocity.y += PLAYER.ACCELERATION;
       }
 
@@ -75,10 +77,10 @@ export function createPlayerSystem(player) {
       player.velocity.y = constrain(player.velocity.y, -maxSpeed, maxSpeed);
 
       // Bubble trail — spawn behind submarine when moving
-      const isMoving = Math.abs(player.velocity.x) > 0.1 || Math.abs(player.velocity.y) > 0.1;
+      const isMoving = Math.abs(player.velocity.x) > 1.5 || Math.abs(player.velocity.y) > 1.5;
       if (isMoving && Math.random() < 0.4) {
         const backX = player.position.x - player.facing * player.w * 0.8;
-        player.bubbles.push({
+        (player.bubbles ??= []).push({
           x: backX,
           y: player.position.y + (Math.random() * 8 - 4),
           size: 2 + Math.random() * 4,
@@ -86,9 +88,22 @@ export function createPlayerSystem(player) {
           vx: (Math.random() * 40 - 20),   // px/sec
           vy: -(30 + Math.random() * 50),   // px/sec upward
         });
+
+        //soundseffect plays at most once every 0.4 sec
+        const playerIntending = player.moveIntent.left || player.moveIntent.right
+          || player.moveIntent.up || player.moveIntent.down;
+
+        if (playerIntending && !isPlayingMoveSound) {
+          soundSystem?.loop('movement', 0.2);
+          isPlayingMoveSound = true;
+        } else if (!playerIntending && isPlayingMoveSound) {
+          soundSystem?.stop('movement');
+          isPlayingMoveSound = false;
+        }
       }
 
       // Update existing bubbles (drift upward + fade)
+      if (player.bubbles) {
       for (let i = player.bubbles.length - 1; i >= 0; i--) {
         const b = player.bubbles[i];
         b.x += b.vx * TIME.fixedDeltaTime;
@@ -98,8 +113,9 @@ export function createPlayerSystem(player) {
           player.bubbles.splice(i, 1);
         }
       }
-    },
-  };
+      }
+    }
+  }
 }
 
 //======================================
