@@ -635,6 +635,7 @@ function setup() {
     player,
     () => sonarSystem?.getSonarLights?.() ?? [],
     () => glowSystem.getGlowLights(),
+    () => roomSystem?.getCurrentRoom?.() ?? null,
   );
 
   resourceManagementSystem = createResourceManagementSystem(
@@ -696,12 +697,19 @@ function setup() {
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),
+    getSkyBand: () => roomSystem?.getCurrentRoom?.() === 'theSurface'
+      ? {
+          y: 0, height: 320, width: 1440, color: '#87CEEB',
+          waterGradient: { topColor: '#1a5f8a', bottomColor: '#021B3A', worldTop: 320, worldBot: 950 },
+        }
+      : null,
     getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
     getCameraOffset: () => cameraSystem.getOffset(),
     getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
     getMissiles: () => missileSystem.getMissiles(),
+    getMissileTarget: () => missileSystem.getCurrentTarget(),
     getParticles: () => particleSystem.getParticles(),
     drawMiniMap: () => miniMapSystem.draw(),
     getHudDialSettings: () => ({
