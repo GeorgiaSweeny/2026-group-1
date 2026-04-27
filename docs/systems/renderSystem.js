@@ -264,7 +264,7 @@ export function createRenderSystem({
       }
    }
 
-   //=== TRIGGERS ===//
+   //=== TRIGGERS ===// //todo: remove this from the final game 
    function drawTriggers() {
       const triggers = getTriggers?.() ?? [];
       if (!triggers.length) return;
