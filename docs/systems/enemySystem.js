@@ -36,15 +36,23 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
   function syncEnemies() {
     const raw = (getEnemies ? getEnemies() : []) ?? [];
     if (raw === sourceEnemiesRef) return;
- 
+
     sourceEnemiesRef = raw;
     crabs = [];
     jellyfish = [];
     piranhas = [];
- 
+
     for (const e of raw) {
       if (e.name === 'crab') {
-        crabs.push(new Crab(e.x, e.y, e.w, e.h, e.patrolDistance, e.speed));
+        const p = getProps(e);
+        crabs.push(new Crab(
+          e.x, e.y,
+          e.width,
+          e.height,
+          p.patrolDistance ?? 64,
+          p.speed ?? 100,
+          p.patrolAxis ?? 'horizontal'
+        ));
       } else if (e.name === 'jellyfish') {
         const variant = e.variant || 'default';
         const jelly = variant === 'default'
@@ -57,11 +65,38 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
         piranhas.push(new Piranha(e.x, e.y, e.w, e.h, detectionRadius, chaseSpeed));
       }
     }
-    
+
     contactSet.clear();
   }
 
+
+  function getProps(e) {
+    const result = {};
+
+    const props = e.properties;
+
+    if (!props) return result;
+    //redering tiles was having error so i added two cases
+    //case 1: array format - how tiled is as of now in json
+    if (Array.isArray(props)) {
+      for (const p of props) {
+        result[p.name] = p.value;
+      }
+      return result;
+    }
+
+    //case 2: already object format
+    if (typeof props === 'object') {
+      for (const key in props) {
+        result[key] = props[key];
+      }
+    }
+
+    return result;
+  }
+
   function updateCrab(crab) {
+
     const speed = Number(crab.speed) || 0;
     const patrolDistance = Math.max(0, Number(crab.patrolDistance) || 0);
     const step = speed * fixedDtSeconds;
@@ -70,27 +105,45 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
     crab.previousPos.x = crab.position.x;
     crab.previousPos.y = crab.position.y;
 
-    let nextX = crab.position.x + crab.direction * step;
-    const minX = crab.spawnX - patrolDistance;
-    const maxX = crab.spawnX + patrolDistance;
+    if (crab.patrolAxis === 'vertical') {
+      let nextY = crab.position.y + crab.direction * step;
+      const minY = crab.spawnY - patrolDistance;
+      const maxY = crab.spawnY + patrolDistance;
 
-    if (nextX > maxX) {
-      nextX = maxX;
-      crab.direction = -1;
-      crab.facing = -1;
+      if (nextY > maxY) {
+        nextY = maxY;
+        crab.direction = -1;
+      }
+      if (nextY < minY) {
+        nextY = minY;
+        crab.direction = 1;
+      }
+
+      crab.position.y = nextY;
+    } else {
+      let nextX = crab.position.x + crab.direction * step;
+      const minX = crab.spawnX - patrolDistance;
+      const maxX = crab.spawnX + patrolDistance;
+
+      if (nextX > maxX) {
+        nextX = maxX;
+        crab.direction = -1;
+        crab.facing = -1;
+
+      }
+      if (nextX < minX) {
+        nextX = minX;
+        crab.direction = 1;
+        crab.facing = 1;
+      }
+
+      crab.position.x = nextX;
     }
-
-    if (nextX < minX) {
-      nextX = minX;
-      crab.direction = 1;
-      crab.facing = 1;
-    }
-
-    crab.position.x = nextX;
 
     crab.nextPos.x = crab.position.x;
     crab.nextPos.y = crab.position.y;
   }
+
 
   function updateJellyfish(jelly) {
     if (jelly.pendingDestroy) return;
@@ -248,7 +301,7 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
         checkPlayerContact(piranha, CRAB_CONTACT_PENALTY, CRAB_DRAIN_RATE);
       }
     },
- 
+
     getCrabs() {
       return crabs;
     },
@@ -257,7 +310,7 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
       return jellyfish;
     },
 
-    getPiranhas() { 
+    getPiranhas() {
       return piranhas;
     },
 
