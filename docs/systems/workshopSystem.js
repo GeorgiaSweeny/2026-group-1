@@ -82,15 +82,15 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
       cost: INITIAL_UPGRADE_COSTS.power,
       description: "Increase max power capacity",
     },
-    torch: {
-      level: player?.upgrades?.torch ?? 1,
-      cost: INITIAL_UPGRADE_COSTS.torch,
-      description: "Expand torch radius"
-    },
     sonar: {
       level: player?.upgrades?.sonar ?? 1,
       cost: INITIAL_UPGRADE_COSTS.sonar,
       description: "Increase sonar range"
+    },
+    torch: {
+      level: player?.upgrades?.torch ?? 1,
+      cost: INITIAL_UPGRADE_COSTS.torch,
+      description: "Expand torch radius"
     },
   };
 
@@ -105,10 +105,10 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
 
   // Layout constants
   const PANEL_W = 900;
-  const PANEL_H = 520;
+  const PANEL_H = 460;
   const CARD_W = 190;
   const CARD_H = 118;
-  const BUTTON_W = 150;
+  const BUTTON_W = 110;
   const BUTTON_H = 38;
 
   //--------------------------------------
@@ -178,9 +178,9 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
     const panelX = width / 2 - PANEL_W / 2;
     const panelY = height / 2 - PANEL_H / 2;
     const upgradesStartX = panelX + 32;
-    const upgradesStartY = panelY + 102;
+    const upgradesStartY = panelY + 118;
     const cardGap = 18;
-    const sectionGapY = 150;
+    const sectionGapY = 182;
 
     const upgradeCards = [];
     let i = 0;
@@ -210,12 +210,12 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
 
     const rightPanel = {
       x: panelX + PANEL_W - 250,
-      y: panelY + 102,
+      y: panelY + 118,
       w: 220,
       h: 306,
     };
 
-    const rp = { x: panelX + PANEL_W - 250, y: panelY + 102, w: 220, h: 306 };
+    const rp = { x: panelX + PANEL_W - 250, y: panelY + 118, w: 220, h: 306 };
     const closeButton = {
       x: rp.x + (rp.w - BUTTON_W) / 2,
       y: rp.y + rp.h - BUTTON_H - 12,
@@ -329,17 +329,17 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
     const sysBarTop = panelY + 68, sysBarH = 30;
     noStroke();
     fill(28, 42, 54, 220);
-    rect(panelX + 30, sysBarTop, PANEL_W - 280, sysBarH, 4);
+    rect(panelX + 30, sysBarTop, 608, sysBarH, 4);
     noStroke();
     fill(220, 237, 242);
     textAlign(LEFT, CENTER);
     textSize(16);
     text("SYSTEMS", panelX + 42, sysBarTop + sysBarH / 2);
 
-    const subBarTop = panelY + 219, subBarH = 30;
+    const subBarTop = panelY + 252, subBarH = 30;
     noStroke();
     fill(24, 38, 50, 220);
-    rect(panelX + 30, subBarTop, PANEL_W - 280, subBarH, 4);
+    rect(panelX + 30, subBarTop, 608, subBarH, 4);
     noStroke();
     fill(220, 237, 242);
     textAlign(LEFT, CENTER);
@@ -360,7 +360,32 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
     fill(190, 228, 236);
     textSize(13);
     textAlign(LEFT, TOP);
-    text(`Scrap: ${player?.scrap ?? 0}`, info.x + 20, info.y + 56);
+
+    // Scrap row — highlighted box
+    const scrapIcon = getScrapIcon?.();
+    const iconSize = 20;
+    const boxX = info.x + 14, boxY = info.y + 48, boxW = info.w - 28, boxH = 26;
+    noStroke();
+    fill(12, 23, 31, 200);
+    rect(boxX, boxY, boxW, boxH, 4);
+    stroke(126, 220, 224, 140);
+    strokeWeight(1.2);
+    noFill();
+    rect(boxX, boxY, boxW, boxH, 4);
+    noStroke();
+
+    const scrapRowY = boxY + boxH / 2;
+    if (scrapIcon) {
+      image(scrapIcon, boxX + 8, scrapRowY - iconSize / 2, iconSize, iconSize);
+    }
+    fill(255, 223, 136);
+    textSize(13);
+    textAlign(LEFT, CENTER);
+    text(`Scrap: ${player?.scrap ?? 0}`, boxX + 8 + (scrapIcon ? iconSize + 4 : 0), scrapRowY);
+
+    fill(190, 228, 236);
+    textSize(13);
+    textAlign(LEFT, TOP);
     text(`Missiles: ${player?.missiles ?? 0}`, info.x + 20, info.y + 82);
     text(`Power Lvl: ${player?.upgrades?.power ?? 1}`, info.x + 20, info.y + 108);
     text(`Torch Lvl: ${player?.upgrades?.torch ?? 1}`, info.x + 20, info.y + 134);
@@ -369,7 +394,7 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
     fill(116, 160, 171);
     textSize(11);
     const shopKey = keyLabel(CONTROLS.MODES[controlMode].ACCEPT);
-    text(`Click any card to buy. Press ${shopKey} or close to return.`, info.x + 20, info.y + 204, info.w - 40, 80);
+    text(`Click any card to buy. Press ${shopKey} or close to return.`, info.x + 20, info.y + 218, info.w - 40, 80);
 
     drawButton(
       `CLOSE (${shopKey})`,

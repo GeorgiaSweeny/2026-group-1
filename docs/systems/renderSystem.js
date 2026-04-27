@@ -835,7 +835,7 @@ export function createRenderSystem({
 
       // "SCRAP" label
       noStroke();
-      fill(174, 205, 211);
+      fill(255, 223, 136);
       textAlign(LEFT, CENTER);
       textSize(12);
       text('SCRAP:', ix + iconSize / 2 + 14, cy);
