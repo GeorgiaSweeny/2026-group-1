@@ -168,10 +168,14 @@ function normalizeTilesetSource(source, mapDir) {
 
 function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
   if (!source) return null;
-  // backgrounds.tsx is an image collection (no single .png atlas file to load).
   if (String(source).toLowerCase().endsWith("backgrounds.tsx")) return null;
-  const pngSource = source.replace(/\.tsx$/i, ".png");
-  return normalizeRelativePath(mapDir, pngSource);
+  // Normalize the tsx path relative to the map directory first, so that a
+  // relative source like "../tilesets/X.tsx" resolves to "data/tilesets/X"
+  // before we extract its directory for image resolution.
+  const resolvedSource = normalizeRelativePath(mapDir, source);
+  const tsxDir = getPathDir(resolvedSource);
+  const pngFilename = resolvedSource.split("/").pop().replace(/\.tsx$/i, ".png");
+  return normalizeRelativePath(tsxDir, pngFilename);
 }
 
 function parseTsxTileProperties(xmlText) {
@@ -372,10 +376,12 @@ function ensureRoomAssetsLoaded(roomId) {
     const imagePath =
       tileset.resolvedImagePath ??
       tilesetSourceToImagePath(tileset?.source, mapDir);
+    console.warn(`[ensureRoomAssetsLoaded] tileset.source="${tileset.source}" resolvedImagePath="${tileset.resolvedImagePath}" imagePath="${imagePath}" tsxDirForImage="${tileset.resolvedImagePath ? getPathDir(tileset.resolvedImagePath) : 'N/A(resolvedImagePath was undefined)'}"`);
     if (imagePath) {
       tileset.resolvedImagePath = imagePath;
       const key = `tileset:${imagePath}`;
       if (!assets[key]) {
+        console.warn(`[preload] Loading ATLAS image: imagePath="${imagePath}" key="${key}" assetsDir=docs/data/`);
         assets[key] = loadImage(imagePath);
       }
     }
@@ -385,6 +391,13 @@ function ensureRoomAssetsLoaded(roomId) {
       if (!tileImagePath) continue;
       const tileKey = `tileset:${tileImagePath}`;
       if (!assets[tileKey]) {
+        // Only log once per tileset to avoid spam
+        if (!ensureRoomAssetsLoaded._loggedTileImages) {
+          ensureRoomAssetsLoaded._loggedTileImages = true;
+          const allTileImages = Object.values(tileset?.tileImagesById ?? {}).map(ti => ti?.resolvedImagePath);
+          console.warn(`[preload] tileImagesById sample for ${tileset?.name}: ${JSON.stringify(allTileImages.slice(0, 5))} (${Object.keys(tileset?.tileImagesById ?? {}).length} total)`);
+        }
+        console.warn(`[preload] Loading individual tile image: tileImagePath="${tileImagePath}" tileKey="${tileKey}"`);
         assets[tileKey] = loadImage(tileImagePath);
       }
     }
@@ -441,10 +454,14 @@ function preload() {
       if (tsxMetaBySourcePath[sourcePath]) continue;
 
       const tsxLines = loadStrings(sourcePath) ?? [];
+      if (!tsxLines.length) {
+        console.warn(`[preload] TSX file empty or failed to load: "${sourcePath}"`);
+      }
       tsxMetaBySourcePath[sourcePath] = parseTsxMetadata(
         tsxLines.join("\n"),
         sourcePath,
       );
+      console.warn(`[preload] TSX parsed: "${sourcePath}" → resolvedImagePath="${tsxMetaBySourcePath[sourcePath].resolvedImagePath}" tileImagesById count=${Object.keys(tsxMetaBySourcePath[sourcePath].tileImagesById).length}`);
     }
   }
 
@@ -460,6 +477,9 @@ function preload() {
       tileset.resolvedImagePath =
         tsxMeta.resolvedImagePath ??
         tilesetSourceToImagePath(tileset?.source, mapDir);
+      const tileImgKeys = Object.keys(tsxMeta.tileImagesById ?? {});
+      const tileImgSample = tileImgKeys.slice(0, 3).map(k => `${k}:"${tsxMeta.tileImagesById[k]?.resolvedImagePath}"`);
+      console.warn(`[preload] Tileset "${tileset.source}" resolvedImagePath="${tileset.resolvedImagePath}" tileImagesById=${tileImgSample.join(', ')}${tileImgKeys.length > 3 ? ' ...' : ''} (${tileImgKeys.length} total)`);
       if (tsxMeta.tilewidth) tileset.tilewidth = tsxMeta.tilewidth;
       if (tsxMeta.tileheight) tileset.tileheight = tsxMeta.tileheight;
       if (tsxMeta.columns != null) tileset.columns = tsxMeta.columns;
@@ -558,7 +578,7 @@ function setup() {
     },
     onWin: () => {
       soundSystem?.stop('gamebg1');
-      soundSystem?.play('win', 0.9);
+      soundSystem?.play('win', 0.4);
       gameState = WIN_STATE;
     },
     getAllowedRooms: () => GAME_VERSIONS[gameVersion].rooms,
@@ -615,6 +635,7 @@ function setup() {
     player,
     () => sonarSystem?.getSonarLights?.() ?? [],
     () => glowSystem.getGlowLights(),
+    () => roomSystem?.getCurrentRoom?.() ?? null,
   );
 
   resourceManagementSystem = createResourceManagementSystem(
@@ -676,12 +697,19 @@ function setup() {
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),
+    getSkyBand: () => roomSystem?.getCurrentRoom?.() === 'theSurface'
+      ? {
+          y: 0, height: 320, width: 1440, color: '#87CEEB',
+          waterGradient: { topColor: '#1a5f8a', bottomColor: '#021B3A', worldTop: 320, worldBot: 950 },
+        }
+      : null,
     getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
     getCameraOffset: () => cameraSystem.getOffset(),
     getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
     getMissiles: () => missileSystem.getMissiles(),
+    getMissileTarget: () => missileSystem.getCurrentTarget(),
     getParticles: () => particleSystem.getParticles(),
     drawMiniMap: () => miniMapSystem.draw(),
     getHudDialSettings: () => ({
@@ -711,6 +739,9 @@ function setup() {
       applyDisplayScale();
     },
     onControlModeChange: (mode) => { inputSystem.setControlMode(mode); shopSystem?.setControlMode(mode); },
+    onVolumeChange: (v) => {
+      soundSystem.setMasterVolume(v);
+    },
     initialControlMode: CONTROLS.DEFAULT_MODE,
   });
 
@@ -828,7 +859,7 @@ function draw() {
     if (player.power?.isEmpty()) {
       gameState = GAME_OVER_STATE;
     }
-    soundSystem.setMasterVolume(pauseMenuSystem.getSettings().volume);
+    //soundSystem.setMasterVolume(pauseMenuSystem.getSettings().volume);
     alpha = accumulator / TIME.fixedDeltaTime;
     renderSystem.draw(alpha);
   }

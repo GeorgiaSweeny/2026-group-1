@@ -45,24 +45,44 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
     for (const e of raw) {
       if (e.name === 'crab') {
         const p = getProps(e);
+
+        const patrolDistance = p.patrolDistance ?? 64;
+        const speed = p.speed ?? 100;
+        const patrolAxis = p.patrolAxis ?? 'horizontal';
+        const spriteDirection = p.spriteDirection ?? 'down';
+
         crabs.push(new Crab(
-          e.x, e.y,
+          e.x,
+          e.y,
           e.width,
           e.height,
-          p.patrolDistance ?? 64,
-          p.speed ?? 100,
-          p.patrolAxis ?? 'horizontal'
+          patrolDistance,
+          speed,
+          patrolAxis,
+          spriteDirection
         ));
       } else if (e.name === 'jellyfish') {
         const variant = e.variant || 'default';
         const jelly = variant === 'default'
-          ? new Jellyfish(e.x, e.y, e.w, e.h, e.amplitude, e.frequency, e.driftSpeed)
+          ? new Jellyfish(
+            e.x,
+            e.y,
+            e.w,
+            e.h,
+            e.amplitude,
+            e.frequency,
+            e.driftSpeed)
           : Jellyfish.createVariant(variant, e.x, e.y);
         jellyfish.push(jelly);
       } else if (e.name === 'piranha') {
         const detectionRadius = e.detectionRadius ?? 120;
         const chaseSpeed = e.chaseSpeed ?? 0.6;
-        piranhas.push(new Piranha(e.x, e.y, e.w, e.h, detectionRadius, chaseSpeed));
+        piranhas.push(new Piranha(e.x,
+          e.y,
+          e.w, 
+          e.h,
+          detectionRadius, 
+          chaseSpeed));
       }
     }
 
@@ -264,7 +284,7 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
       if (!contactSet.has(enemy)) {
         player.power.current = Math.max(0, player.power.current - contactPenalty);
         contactSet.add(enemy);
-        soundSystem?.play('playerHit', 0.3);
+        soundSystem?.play('playerHit', 0.2);
       }
       player.power.drain(drainRate);
     } else {

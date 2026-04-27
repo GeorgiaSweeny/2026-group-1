@@ -364,6 +364,7 @@ function normalizeLegacyRoom(roomKey, roomConfig) {
   normalized.platformColor = roomConfig.platformColor ?? null;
   normalized.hazards = [...(roomConfig.hazards ?? [])];
   normalized.collectables = [...(roomConfig.collectables ?? [])];
+  normalized.enemies = [...(roomConfig.enemies ?? [])];
   normalized.triggers = [...(roomConfig.triggers ?? [])];
   normalized.foreground = [...(roomConfig.foreground ?? [])];
 
@@ -508,7 +509,7 @@ export function createRoomSystem({
 
       const targetSpawn = exit?.properties?.targetSpawn ?? null;
       loadRoom(targetRoom, { spawnId: targetSpawn });
-      soundSystem?.play('achievementBell', 0.8);
+      soundSystem?.play('achievementBell', 0.5);
       exitCoolDownSeconds = 0.25;
       break;
     }

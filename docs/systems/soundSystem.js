@@ -9,7 +9,17 @@ DESCRIPTION:
 
 export function createSoundSystem() {
   const sounds = {};
+  const baseVolumes = {};
   let masterVolume = 0.8;
+
+  function applyLiveVolumes() {
+    Object.entries(sounds).forEach(([key, s]) => {
+      if (s && s.isLoaded()) {
+        const base = baseVolumes[key] ?? 1.0;
+        s.setVolume(base * masterVolume);
+      }
+    });
+  }
 
   return {
     preload() {
@@ -32,6 +42,7 @@ export function createSoundSystem() {
 
     setMasterVolume(zeroToHundred) {
       masterVolume = zeroToHundred / 100;
+      applyLiveVolumes();
     },
 
     play(key, volume = 1.0) {

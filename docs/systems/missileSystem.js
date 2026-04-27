@@ -87,6 +87,7 @@ class Missile extends Hitbox {
 export function createMissileSystem(player, getTargets, getWalls, soundSystem = null) {
     let missiles = [];
     let lastFireTime = 0;
+    let currentTarget = null;
 
     function findNearestTarget(px, py) {
         let nearest = null;
@@ -103,9 +104,20 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
             const ty = target.position ? target.position.y : target.y;
             if (tx === undefined || ty === undefined) continue;
 
-            const dx = tx - px;
+            const halfW = (target.w || target.width || target.getWidth?.() || 0) / 2;
+            
+            //gets distance to centre
+            let dx = tx - px;
             const dy = ty - py;
-            if (dx * player.facing <= 0) continue;
+
+            //finds closest forward-facing edge
+            if (halfW > 0) {
+                if (player.facing > 0 && tx + halfW >= px) dx = Math.max(0.1, dx); 
+                if (player.facing < 0 && tx - halfW <= px) dx = Math.min(-0.1, dx); 
+            }
+
+            // excludes if completely behind player
+            if (dx * player.facing < 0) continue;
 
             const distSq = dx * dx + dy * dy;
             if (distSq > 400 * 400) continue;
@@ -120,6 +132,9 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
     return {
         update() {
             const now = performance.now();
+            
+            // Constantly track the nearest target every frame
+            currentTarget = findNearestTarget(player.position.x, player.position.y);
 
             for (let i = missiles.length - 1; i >= 0; i--) {
                 const missile = missiles[i];
@@ -162,8 +177,7 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
 
             if (player.actionIntent.launchMissile) {
                 if (now - lastFireTime > MISSILE.COOLDOWN && player.missiles > 0) {
-                    const target = findNearestTarget(player.position.x, player.position.y);
-                    missiles.push(new Missile(player.position.x, player.position.y, target, player.facing));
+                    missiles.push(new Missile(player.position.x, player.position.y, currentTarget, player.facing));
                     player.missiles--;
                     lastFireTime = now;
 
@@ -175,6 +189,10 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
 
         getMissiles() {
             return missiles;
+        },
+
+        getCurrentTarget() {
+            return currentTarget;
         }
     };
 }

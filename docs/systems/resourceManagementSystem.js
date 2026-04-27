@@ -166,7 +166,7 @@ export function createResourceManagementSystem(
           handlers[resourceType](player, e);
         }
         collectedEntities.add(e);
-        soundSystem?.play('powerCollected', 0.8);
+        soundSystem?.play('powerCollected', 0.4);
       }
     }
   }
