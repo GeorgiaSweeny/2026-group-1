@@ -380,6 +380,7 @@ function ensureRoomAssetsLoaded(roomId) {
       tileset.resolvedImagePath = imagePath;
       const key = `tileset:${imagePath}`;
       if (!assets[key]) {
+        console.warn(`[preload] Loading ATLAS image: imagePath="${imagePath}" key="${key}" assetsDir=docs/data/`);
         assets[key] = loadImage(imagePath);
       }
     }
@@ -389,6 +390,13 @@ function ensureRoomAssetsLoaded(roomId) {
       if (!tileImagePath) continue;
       const tileKey = `tileset:${tileImagePath}`;
       if (!assets[tileKey]) {
+        // Only log once per tileset to avoid spam
+        if (!ensureRoomAssetsLoaded._loggedTileImages) {
+          ensureRoomAssetsLoaded._loggedTileImages = true;
+          const allTileImages = Object.values(tileset?.tileImagesById ?? {}).map(ti => ti?.resolvedImagePath);
+          console.warn(`[preload] tileImagesById sample for ${tileset?.name}: ${JSON.stringify(allTileImages.slice(0, 5))} (${Object.keys(tileset?.tileImagesById ?? {}).length} total)`);
+        }
+        console.warn(`[preload] Loading individual tile image: tileImagePath="${tileImagePath}" tileKey="${tileKey}"`);
         assets[tileKey] = loadImage(tileImagePath);
       }
     }
@@ -445,6 +453,9 @@ function preload() {
       if (tsxMetaBySourcePath[sourcePath]) continue;
 
       const tsxLines = loadStrings(sourcePath) ?? [];
+      if (!tsxLines.length) {
+        console.warn(`[preload] TSX file empty or failed to load: "${sourcePath}"`);
+      }
       tsxMetaBySourcePath[sourcePath] = parseTsxMetadata(
         tsxLines.join("\n"),
         sourcePath,
@@ -464,6 +475,9 @@ function preload() {
       tileset.resolvedImagePath =
         tsxMeta.resolvedImagePath ??
         tilesetSourceToImagePath(tileset?.source, mapDir);
+      const tileImgKeys = Object.keys(tsxMeta.tileImagesById ?? {});
+      const tileImgSample = tileImgKeys.slice(0, 3).map(k => `${k}:"${tsxMeta.tileImagesById[k]?.resolvedImagePath}"`);
+      console.warn(`[preload] Tileset "${tileset.source}" resolvedImagePath="${tileset.resolvedImagePath}" tileImagesById=${tileImgSample.join(', ')}${tileImgKeys.length > 3 ? ' ...' : ''} (${tileImgKeys.length} total)`);
       if (tsxMeta.tilewidth) tileset.tilewidth = tsxMeta.tilewidth;
       if (tsxMeta.tileheight) tileset.tileheight = tsxMeta.tileheight;
       if (tsxMeta.columns != null) tileset.columns = tsxMeta.columns;
