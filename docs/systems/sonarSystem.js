@@ -53,9 +53,9 @@ engine.register(sonarSystem);
 import { SONAR } from '../config.js';
 
 const RAY_COUNT = 360;
-const RAY_SPEED = 2;
+const BASE_RAY_SPEED = 2;
 const RAY_DECAY = 2;
-const RAY_LIFETIME = 255;
+const BASE_RAY_LIFETIME = 255;
 
 const REVEAL_BONUS = 70;
 const REVEAL_FADE_PER_MS = 2;
@@ -120,7 +120,13 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
           const py = typeof player.getY === 'function' ? player.getY() : player.y;
           
           if (Number.isFinite(px) && Number.isFinite(py)) {
-            pulses.push(new Pulse(px, py));
+            const sonarLevel = player?.upgrades?.sonar ?? 1;
+          const rangeBonus = Math.max(1, sonarLevel - 1) * (SONAR.RANGE_BONUS_PER_LEVEL ?? 50);
+          const effectiveRange = (SONAR.BASE_RANGE ?? 250) + rangeBonus;
+          // Scale ray speed so pulse travels the effective range
+          // range ≈ raySpeed * (RAY_LIFETIME / RAY_DECAY)
+          const raySpeed = effectiveRange * RAY_DECAY / BASE_RAY_LIFETIME;
+          pulses.push(new Pulse(px, py, raySpeed));
             cooldownTimer = SONAR.COOLDOWN_MS ?? 0;
             soundSystem?.play('sonarPing', 0.8);
           }
@@ -310,15 +316,15 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 }
 
 class Pulse {
-  constructor(x, y) {
+  constructor(x, y, raySpeed = BASE_RAY_SPEED) {
     this.particles = [];
     for (let i = 0; i < RAY_COUNT; i++) {
       const angle = (i / RAY_COUNT) * TWO_PI;
-      const vel = p5.Vector.fromAngle(angle).mult(RAY_SPEED);
+      const vel = p5.Vector.fromAngle(angle).mult(raySpeed);
       this.particles.push({
         pos: createVector(x, y),
         vel,
-        life: RAY_LIFETIME,
+        life: BASE_RAY_LIFETIME,
       });
     }
   }

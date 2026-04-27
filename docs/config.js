@@ -249,7 +249,11 @@ export const GLOW = {
 export const SONAR = {
   // Cooldown in seconds for readability; derived ms used by sonarSystem
   COOLDOWN: 1,
-  COOLDOWN_MS: 1
+  COOLDOWN_MS: 1,
+  // Base pulse travel range in pixels (at level 1)
+  BASE_RANGE: 250,
+  // Additional range pixels added per upgrade level
+  RANGE_BONUS_PER_LEVEL: 50,
 };
 
 //======================
