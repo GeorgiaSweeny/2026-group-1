@@ -121,11 +121,12 @@ describe('PlayerSystem', () => {
 
   describe('drag', () => {
     it('applies drag to velocity.x each update', () => {
-      player.velocity.x = 10;
+      // Use velocity below maxSpeed so it doesn't get clamped
+      player.velocity.x = 2; // maxSpeed ≈ 3.33, so 2 < 3.33 → no clamp
       const system = createPlayerSystem(player);
       system.update();
-      expect(player.velocity.x).toBeLessThan(10);
-      expect(player.velocity.x).toBeCloseTo(10 * PLAYER_MOCK.DRAG, 2);
+      expect(player.velocity.x).toBeLessThan(2);
+      expect(player.velocity.x).toBeCloseTo(2 * PLAYER_MOCK.DRAG, 2); // 2 * 0.85 = 1.7
     });
 
     it('applies drag to velocity.y each update', () => {

@@ -107,9 +107,12 @@ describe('isColliding', () => {
     expect(isColliding(a, b)).toBe(true);
   });
 
-  it('returns false when two hitboxes are edge-to-edge (not overlapping)', () => {
+  it('returns false when two hitboxes are clearly separated', () => {
+    // A at cx=0, w=32 → edges [-16, 16]
+    // B at cx=50, w=32 → edges [34, 66]
+    // Gap between 16 and 34 → no overlap possible
     const a = makeHitbox(0, 0, 32, 32);
-    const b = makeHitbox(32, 0, 32, 32); // right edge of a at x=16, left edge of b at x=16 → adjacent
+    const b = makeHitbox(50, 0, 32, 32);
     expect(isColliding(a, b)).toBe(false);
   });
 

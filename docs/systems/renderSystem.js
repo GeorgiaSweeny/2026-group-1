@@ -751,7 +751,6 @@ export function createRenderSystem({
 // DRAW SONAR
 //======================================
    function drawSonarReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarReveals?.() ?? [];
       if (!reveals.length) return;
 
@@ -765,7 +764,6 @@ export function createRenderSystem({
    }
 
    function drawSonarHazardReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarHazardReveals?.() ?? [];
       if (!reveals.length) return;
 
@@ -780,7 +778,6 @@ export function createRenderSystem({
 
    
    function drawSonarCollectableReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarCollectableReveals?.() ?? [];
       if (!reveals.length) return;
 
@@ -794,7 +791,6 @@ export function createRenderSystem({
    }
 
    function drawSonarEnemyReveals() {
-      if (player?.torch?.isOn) return;
       const reveals = getSonarEnemyReveals?.() ?? [];
       if (!reveals.length) return;
 
