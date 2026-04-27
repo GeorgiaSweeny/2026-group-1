@@ -731,6 +731,9 @@ function setup() {
       applyDisplayScale();
     },
     onControlModeChange: (mode) => { inputSystem.setControlMode(mode); shopSystem?.setControlMode(mode); },
+    onVolumeChange: (v) => {
+      soundSystem.setMasterVolume(v);
+    },
     initialControlMode: CONTROLS.DEFAULT_MODE,
   });
 
@@ -848,7 +851,7 @@ function draw() {
     if (player.power?.isEmpty()) {
       gameState = GAME_OVER_STATE;
     }
-    soundSystem.setMasterVolume(pauseMenuSystem.getSettings().volume);
+    //soundSystem.setMasterVolume(pauseMenuSystem.getSettings().volume);
     alpha = accumulator / TIME.fixedDeltaTime;
     renderSystem.draw(alpha);
   }
