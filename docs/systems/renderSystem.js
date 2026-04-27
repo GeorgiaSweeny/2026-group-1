@@ -908,9 +908,9 @@ export function createRenderSystem({
       noFill();
       rect(panelX, panelY, panelW, panelH, 6);
 
-      // TAB key badge
+      // B key badge
       const keyX = panelX + 10;
-      const keyW = 34, keyH = 18;
+      const keyW = 20, keyH = 18;
       fill(26, 42, 54, 240);
       stroke(126, 220, 224, 120);
       strokeWeight(1);
@@ -920,7 +920,7 @@ export function createRenderSystem({
       fill(174, 205, 211);
       textAlign(CENTER, CENTER);
       textSize(10);
-      text('TAB', keyX + keyW / 2, cy);
+      text('B', keyX + keyW / 2, cy);
 
       // Label
       fill(174, 205, 211);

@@ -310,7 +310,6 @@ export const DIFFICULTY = {
 export function keyLabel(binding) {
   if (typeof binding === 'string') return binding.toUpperCase();
   const names = {
-    9:   'Tab',
     27:  'ESC',
     32:  'Space',
     37:  '←',
@@ -318,6 +317,7 @@ export function keyLabel(binding) {
     39:  '→',
     40:  '↓',
     65:  'A',
+    66:  'B',
     68:  'D',
     69:  'E',
     70:  'F',
@@ -346,7 +346,7 @@ export const CONTROLS = {
       SONAR:        69,    // E
       LAUNCH_MISSILE: 32,  // Space
       TOGGLE_PAUSE:      27,    // Escape
-      TOGGLE_WORKSHOP:       9,     // Tab
+      TOGGLE_WORKSHOP:       66,    // B
       ACCEPT:            81,    // Q
       TOGGLE_FULLSCREEN: 192,   // Backtick
     },
@@ -360,7 +360,7 @@ export const CONTROLS = {
       SONAR:        69,    // E
       LAUNCH_MISSILE: 32,  // Space
       TOGGLE_PAUSE:      27,    // Escape
-      TOGGLE_WORKSHOP:       9,     // Tab
+      TOGGLE_WORKSHOP:       66,    // B
       ACCEPT:            81,    // Q
       TOGGLE_FULLSCREEN: 192,   // Backtick
     },

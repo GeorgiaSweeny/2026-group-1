@@ -85,10 +85,17 @@ describe('EnemySystem', () => {
 
     it('reverses direction at patrol boundary', () => {
       const enemies = [
-        { name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 10, speed: 10 },
+        {
+          name: 'crab', x: 100, y: 100, width: 24, height: 16,
+          properties: [
+            { name: 'patrolDistance', value: 10 },
+            { name: 'speed', value: 10 },
+          ],
+        },
       ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
-      for (let i = 0; i < 50; i++) es.update();
+      // spawnX=100, maxX=110 — need >60 updates at step=10/60 to trigger reversal
+      for (let i = 0; i < 150; i++) es.update();
       const crabs = es.getCrabs();
       expect(crabs[0].position.x).toBeLessThanOrEqual(110);
     });
