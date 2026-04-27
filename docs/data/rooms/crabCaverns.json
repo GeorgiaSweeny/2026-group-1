@@ -552,7 +552,7 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 112          },
                 { "name": "speed",           "type": "float",  "value": 28           },
                 { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
-                { "name": "spriteDirection", "type": "string", "value": "right"      }
+                { "name": "spriteDirection", "type": "string", "value": "up"      }
             ]
         },
         {
@@ -563,7 +563,7 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 240        },
                 { "name": "speed",           "type": "float",  "value": 22         },
                 { "name": "patrolAxis",      "type": "string", "value": "vertical" },
-                { "name": "spriteDirection", "type": "string", "value": "up"       }
+                { "name": "spriteDirection", "type": "string", "value": "left"       }
             ]
         },
         {
@@ -574,18 +574,18 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 176        },
                 { "name": "speed",           "type": "float",  "value": 35         },
                 { "name": "patrolAxis",      "type": "string", "value": "vertical" },
-                { "name": "spriteDirection", "type": "string", "value": "down"     }
+                { "name": "spriteDirection", "type": "string", "value": "right"     }
             ]
         },
         {
             "gid": 79, "height": 16, "id": 37, "name": "crab",
             "rotation": 0, "type": "enemy", "visible": true, "width": 16,
-            "x": 725, "y": 290,
+            "x": 720, "y": 290,
             "properties": [
                 { "name": "patrolDistance",  "type": "int",    "value": 60         },
                 { "name": "speed",           "type": "float",  "value": 18         },
                 { "name": "patrolAxis",      "type": "string", "value": "vertical" },
-                { "name": "spriteDirection", "type": "string", "value": "up"       }
+                { "name": "spriteDirection", "type": "string", "value": "left"       }
             ]
         },
         {
@@ -596,7 +596,7 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 112          },
                 { "name": "speed",           "type": "float",  "value": 40           },
                 { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
-                { "name": "spriteDirection", "type": "string", "value": "left"       }
+                { "name": "spriteDirection", "type": "string", "value": "down"       }
             ]
         },
         {
@@ -607,7 +607,7 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 230        },
                 { "name": "speed",           "type": "float",  "value": 25         },
                 { "name": "patrolAxis",      "type": "string", "value": "vertical" },
-                { "name": "spriteDirection", "type": "string", "value": "down"     }
+                { "name": "spriteDirection", "type": "string", "value": "right"     }
             ]
         },
         {
@@ -618,7 +618,7 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 96           },
                 { "name": "speed",           "type": "float",  "value": 32           },
                 { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
-                { "name": "spriteDirection", "type": "string", "value": "right"      }
+                { "name": "spriteDirection", "type": "string", "value": "up"      }
             ]
         },
         {
@@ -629,7 +629,7 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 112          },
                 { "name": "speed",           "type": "float",  "value": 20           },
                 { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
-                { "name": "spriteDirection", "type": "string", "value": "left"       }
+                { "name": "spriteDirection", "type": "string", "value": "down"       }
             ]
         },
         {
@@ -640,7 +640,7 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 64         },
                 { "name": "speed",           "type": "float",  "value": 38         },
                 { "name": "patrolAxis",      "type": "string", "value": "vertical" },
-                { "name": "spriteDirection", "type": "string", "value": "up"       }
+                { "name": "spriteDirection", "type": "string", "value": "left"       }
             ]
         },
         {
@@ -651,7 +651,7 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 144          },
                 { "name": "speed",           "type": "float",  "value": 30           },
                 { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
-                { "name": "spriteDirection", "type": "string", "value": "right"      }
+                { "name": "spriteDirection", "type": "string", "value": "down"      }
             ]
         },
         {
@@ -662,7 +662,7 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 128          },
                 { "name": "speed",           "type": "float",  "value": 45           },
                 { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
-                { "name": "spriteDirection", "type": "string", "value": "left"       }
+                { "name": "spriteDirection", "type": "string", "value": "up"       }
             ]
         },
         {
@@ -673,7 +673,7 @@
                 { "name": "patrolDistance",  "type": "int",    "value": 64           },
                 { "name": "speed",           "type": "float",  "value": 26           },
                 { "name": "patrolAxis",      "type": "string", "value": "horizontal" },
-                { "name": "spriteDirection", "type": "string", "value": "right"      }
+                { "name": "spriteDirection", "type": "string", "value": "down"      }
             ]
         }
     ],

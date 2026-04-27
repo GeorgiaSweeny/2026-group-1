@@ -335,8 +335,8 @@ export function createRenderSystem({
 
          if (dir === 'down') angle = 0;
          if (dir === 'up') angle = Math.PI;
-         if (dir === 'right') angle = Math.PI / 2;
-         if (dir === 'left') angle = -Math.PI / 2;
+         if (dir === 'right') angle = -Math.PI / 2;
+         if (dir === 'left') angle = Math.PI / 2;
 
          push();
          translate(
