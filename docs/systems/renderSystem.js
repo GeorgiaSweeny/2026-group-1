@@ -738,12 +738,12 @@ export function createRenderSystem({
       push();
       noFill();
 
-      // Outer tech-frame ring (shop-style cyan border)
+      // Outer tech-frame ring
       stroke(126, 220, 224, 100);
       strokeWeight(1.5);
       circle(x, y, size + 18);
 
-      // Background ring (empty portion) — dark shop tone
+      // Background ring (empty portion)
       stroke(30, 50, 65, 200);
       strokeWeight(10);
       circle(x, y, size);
@@ -769,7 +769,7 @@ export function createRenderSystem({
       pop();
    }
 
-   // Segmented upgrade bar — matches shop level-tick visual language
+   // Segmented upgrade bar
    function drawSegmentBar(cx, y, level, maxLevel, segW, segH, segGap) {
       const totalW = maxLevel * (segW + segGap) - segGap;
       const startX = cx - totalW / 2;
@@ -780,7 +780,7 @@ export function createRenderSystem({
       }
    }
 
-   // Dot row — used for missiles (quantity, not upgrade level)
+   // Dot row — used for missiles (quantity)
    function drawDotRow(cx, y, count, maxCount, dotSize, dotGap) {
       const totalW = maxCount * (dotSize + dotGap) - dotGap;
       const startX = cx - totalW / 2;
@@ -991,7 +991,7 @@ export function createRenderSystem({
          labelColor: color(234, 246, 248),
       });
 
-      // Thin gold inner ring + static text glow when torch is on
+      // Thin gold inner ring,  TORCH text glow when torch is on
       if (player.torch?.isOn) {
          // Gold glow: strongest at ring's inner edge, fades toward centre
          const ctx = drawingContext;
@@ -1001,9 +1001,9 @@ export function createRenderSystem({
             powerDialX, powerDialY, glowRadius
          );
          grad.addColorStop(0,    'rgba(255, 200, 80, 0)');
-         grad.addColorStop(0.65, 'rgba(255, 200, 80, 0)');
-         grad.addColorStop(0.82, 'rgba(255, 200, 80, 0.22)');
-         grad.addColorStop(0.92, 'rgba(255, 185, 60, 0.30)');
+         grad.addColorStop(0.55, 'rgba(255, 200, 80, 0)');
+         grad.addColorStop(0.75, 'rgba(255, 200, 80, 0.25)');
+         grad.addColorStop(0.88, 'rgba(255, 185, 60, 0.55)');
          grad.addColorStop(1,    'rgba(255, 170, 40, 0)');
          ctx.fillStyle = grad;
          ctx.fillRect(0, 0, width, height);
