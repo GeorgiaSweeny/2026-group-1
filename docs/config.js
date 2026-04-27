@@ -145,7 +145,7 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  STARTING_CREDITS: 0,
+  STARTING_CREDITS: 5000,
   MOVE_SPEED: 200,        // Pixels per second (scaled by TIME.fixedDeltaTime per frame)
   ACCELERATION: 4,        // Velocity increase per frame
   DRAG: 0.9  ,            // Higher = less friction (0.9-0.95 feels good)
