@@ -364,6 +364,7 @@ function normalizeLegacyRoom(roomKey, roomConfig) {
   normalized.platformColor = roomConfig.platformColor ?? null;
   normalized.hazards = [...(roomConfig.hazards ?? [])];
   normalized.collectables = [...(roomConfig.collectables ?? [])];
+  normalized.enemies = [...(roomConfig.enemies ?? [])];
   normalized.triggers = [...(roomConfig.triggers ?? [])];
   normalized.foreground = [...(roomConfig.foreground ?? [])];
 

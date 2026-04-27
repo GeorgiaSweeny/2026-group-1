@@ -43,6 +43,10 @@ export function createPowerSystem(entity, { getDifficulty = () => "easy", config
 
       //---UPDATE HOOK---//
       update() {
+         // Sync maxPower with current upgrade level
+         const upgradeLevel = entity?.upgrades?.power ?? 1;
+         power.setMaxPower(upgradeLevel);
+
          const diff = DIFFICULTY[getDifficulty()] ?? DIFFICULTY.easy;
          let rate = diff.POWER_DRAIN;
 

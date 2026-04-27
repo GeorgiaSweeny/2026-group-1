@@ -50,23 +50,24 @@ export function createPlayerSystem(player, soundSystem = null) {
   let isPlayingMoveSound = false;
   return {
     update() {
+      if (!player?.velocity) return;
       // Apply drag each frame
       player.velocity.x *= PLAYER.DRAG;
       player.velocity.y *= PLAYER.DRAG;
 
-      // Apply acceleration based on movement intent
-      if (player.moveIntent.right) {
+      // Apply acceleration based on movement intent (guard for missing moveIntent)
+      if (player.moveIntent?.right) {
         player.velocity.x += PLAYER.ACCELERATION;
         player.facing = 1;
       }
-      if (player.moveIntent.left) {
+      if (player.moveIntent?.left) {
         player.velocity.x -= PLAYER.ACCELERATION;
         player.facing = -1;
       }
-      if (player.moveIntent.up) {
+      if (player.moveIntent?.up) {
         player.velocity.y -= PLAYER.ACCELERATION;
       }
-      if (player.moveIntent.down) {
+      if (player.moveIntent?.down) {
         player.velocity.y += PLAYER.ACCELERATION;
       }
 
@@ -79,7 +80,7 @@ export function createPlayerSystem(player, soundSystem = null) {
       const isMoving = Math.abs(player.velocity.x) > 1.5 || Math.abs(player.velocity.y) > 1.5;
       if (isMoving && Math.random() < 0.4) {
         const backX = player.position.x - player.facing * player.w * 0.8;
-        player.bubbles.push({
+        (player.bubbles ??= []).push({
           x: backX,
           y: player.position.y + (Math.random() * 8 - 4),
           size: 2 + Math.random() * 4,
@@ -102,6 +103,7 @@ export function createPlayerSystem(player, soundSystem = null) {
       }
 
       // Update existing bubbles (drift upward + fade)
+      if (player.bubbles) {
       for (let i = player.bubbles.length - 1; i >= 0; i--) {
         const b = player.bubbles[i];
         b.x += b.vx * TIME.fixedDeltaTime;
@@ -111,8 +113,9 @@ export function createPlayerSystem(player, soundSystem = null) {
           player.bubbles.splice(i, 1);
         }
       }
-    },
-  };
+      }
+    }
+  }
 }
 
 //======================================
