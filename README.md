@@ -152,11 +152,11 @@ In addition to the inital concept proposals, the lead developer documented discu
 <table align="center">
   <tr>
     <td align="center">
-      <img src="/Users/judebezos/Documents/2026-group-1/project-docs/map-design-photos/room sketches 1.jpg" alt="Figure 5" width="300"><br>
+      <img src="project-docs/map-design-photos/room sketches 1.jpg" alt="Figure 5" width="300"><br>
       <sub>Figure 3: Game Map Sketch</sub>
     </td>
     <td align="center">
-      <img src="/Users/judebezos/Documents/2026-group-1/project-docs/map-design-photos/room sketches 2.jpg" alt="Figure 6" width="300"><br>
+      <img src="project-docs/map-design-photos/room sketches 2.jpg" alt="Figure 6" width="300"><br>
       <sub>Figure 4: Game Map Sketch</sub>
     </td>
   </tr>
