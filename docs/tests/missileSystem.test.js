@@ -208,4 +208,65 @@ describe("MissileSystem", () => {
 
     expect(missileSystem.getMissiles().length).toBe(0);
   });
+
+  describe("Targeting Functionality (getCurrentTarget)", () => {
+    it("should return null if no targets are present or available", () => {
+      const missileSystem = createMissileSystem(mockPlayer, () => [], () => []);
+      missileSystem.update();
+      expect(missileSystem.getCurrentTarget()).toBeNull();
+    });
+
+    it("should constantly track and return the nearest target on update", () => {
+      const farEnemy = { position: { x: 300, y: 0 }, pendingDestroy: false };
+      const closeEnemy = { position: { x: 200, y: 0 }, pendingDestroy: false };
+      
+      mockTargets = [farEnemy, closeEnemy];
+      
+      const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => []);
+      missileSystem.update();
+
+      expect(missileSystem.getCurrentTarget()).toBe(closeEnemy);
+    });
+
+    it("should dynamically switch targets when a closer target emerges", () => {
+      const enemy1 = { position: { x: 250, y: 0 }, pendingDestroy: false };
+      mockTargets = [enemy1];
+      
+      const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => []);
+      missileSystem.update();
+      expect(missileSystem.getCurrentTarget()).toBe(enemy1);
+
+      const enemy2 = { position: { x: 100, y: 0 }, pendingDestroy: false };
+      mockTargets.push(enemy2);
+      
+      missileSystem.update(); 
+      expect(missileSystem.getCurrentTarget()).toBe(enemy2);
+    });
+
+    it("should ignore targets out of range (> 400) or behind the player", () => {
+      const enemyTooFar = { position: { x: 450, y: 0 }, pendingDestroy: false };
+      const enemyBehind = { position: { x: -100, y: 0 }, pendingDestroy: false };
+      
+      mockTargets = [enemyTooFar, enemyBehind];
+      
+      const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => []);
+      missileSystem.update();
+
+      expect(missileSystem.getCurrentTarget()).toBeNull();
+    });
+
+    it("should prioritise targeting breakable walls if they are closest", () => {
+      const enemy = { position: { x: 300, y: 0 }, pendingDestroy: false };
+      const breakableWall = { position: { x: 150, y: 0 }, isBreakable: true, isDestroyed: false };
+      const unbreakableWall = { position: { x: 100, y: 0 }, isBreakable: false, isDestroyed: false };
+      
+      mockTargets = [enemy];
+      mockWalls = [breakableWall, unbreakableWall];
+      
+      const missileSystem = createMissileSystem(mockPlayer, () => mockTargets, () => mockWalls);
+      missileSystem.update();
+
+      expect(missileSystem.getCurrentTarget()).toBe(breakableWall);
+    });
+  });
 });

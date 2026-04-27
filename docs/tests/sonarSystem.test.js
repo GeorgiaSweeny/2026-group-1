@@ -132,6 +132,30 @@ describe("SonarSystem", () => {
     expect(revealedCollectables[0].collectableType).toBe("gold");
   });
 
+  it("should reveal enemies when a pulse collides with them", () => {
+    const mockEnemies = [{ x: 100, y: 100, w: 20, h: 20 }];
+    
+    mockPlayer.actionIntent.emitSonar = true;
+    const sonarSystem = createSonarSystem(
+      mockPlayer, 
+      () => [], 
+      () => [], 
+      () => [],
+      mockSoundSystem,
+      () => mockEnemies
+    );
+
+    sonarSystem.update();
+    sonarSystem.update();
+
+    const revealedEnemies = sonarSystem.getRevealedEnemies();
+    
+    expect(revealedEnemies.length).toBe(1);
+    expect(revealedEnemies[0].x).toBe(90);
+    expect(revealedEnemies[0].y).toBe(90);
+    expect(revealedEnemies[0].alpha).toBeGreaterThan(0);
+  });
+
   it("should remove pulses once they have finished their lifecycle", () => {
     mockPlayer.actionIntent.emitSonar = true;
     const sonarSystem = createSonarSystem(mockPlayer, () => [], () => [], () => []);
