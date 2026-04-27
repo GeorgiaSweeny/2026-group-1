@@ -238,7 +238,10 @@ export function createRenderSystem({
       const platformColor = getPlatformColor?.() ?? '#5a6e82ff';
 
       noStroke();
+      fill(platformColor);
 
+     // todo: move the fill logic inside the loop and support per-platform colors via properties, with the default as the global platform color.
+     
       for (const p of platforms) {
          if (p.isDestroyed) continue;
          if (drawSpriteFromTileset(p)) continue;
