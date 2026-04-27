@@ -112,10 +112,10 @@ export const MINIMAP = {
 
   // Absolute minimap center in screen space. Set to null to use top-right fallback.
   CENTER_X: 960,
-  CENTER_Y: 935,
+  CENTER_Y: 895,
 
-  // If set, minimap radius is fitted to dialRadius - dialInset.
-  DIAL_RADIUS: null,
+  // Effective radius = DIAL_RADIUS - DIAL_INSET (85px). Keeps minimap clear of bottom row.
+  DIAL_RADIUS: 93,
   DIAL_INSET: 8,
 };
 
@@ -123,10 +123,10 @@ export const MINIMAP = {
 // HUD DIALS CONFIG
 //======================
 export const HUD_DIALS = {
-  POWER_X: 630,
-  POWER_Y: 925,
-  SONAR_X: 1285,
-  SONAR_Y: 925,
+  POWER_X: 700,
+  POWER_Y: 895,
+  SONAR_X: 1220,
+  SONAR_Y: 895,
 
   // Base dial diameter in pixels.
   BASE_SIZE: 92,
@@ -134,6 +134,12 @@ export const HUD_DIALS = {
   // Per-dial scale multipliers.
   POWER_SCALE: 1.3,
   SONAR_SCALE: 1.3,
+
+  // Bottom row: upgrade bars + missile dots
+  BOTTOM_ROW_Y: 1025,
+  BOTTOM_ROW_LABEL_Y: 1048,
+  BOTTOM_ROW_SPACING: 150,
+  BOTTOM_ROW_CENTER_X: 960,
 };
 
 //======================
@@ -145,7 +151,7 @@ export const PLAYER = {
   SIZE: CANVAS.TILE_SIZE,
   START_X: CANVAS.TILE_SIZE,
   START_Y: CANVAS.TILE_SIZE,
-  STARTING_CREDITS: 5000,
+  STARTING_SCRAP: 0,
   MOVE_SPEED: 200,        // Pixels per second (scaled by TIME.fixedDeltaTime per frame)
   ACCELERATION: 4,        // Velocity increase per frame
   DRAG: 0.9  ,            // Higher = less friction (0.9-0.95 feels good)
@@ -283,13 +289,13 @@ export const COMBAT = {
 export const DIFFICULTY = {
   easy: {
     POWER_PICKUP:    10,
-    CREDIT_PICKUP:  100,
+    SCRAP_PICKUP:  100,
     POWER_DRAIN:    0.5,  // 0.5/s torch off: ~200s (~3m 20s)
     TORCH_DRAIN:    1.75, // 0.5 × 1.75 = 0.875/s torch on: ~114s (~1m 54s)
   },
   hard: {
     POWER_PICKUP:    5,
-    CREDIT_PICKUP:  50,
+    SCRAP_PICKUP:  50,
     POWER_DRAIN:    0.75, // 0.75/s torch off: ~133s (~2m 13s)
     TORCH_DRAIN:    2.0,  // 0.75 × 2.0 = 1.5/s torch on: ~67s (~1m 7s)
   },
@@ -304,7 +310,6 @@ export const DIFFICULTY = {
 export function keyLabel(binding) {
   if (typeof binding === 'string') return binding.toUpperCase();
   const names = {
-    9:   'Tab',
     27:  'ESC',
     32:  'Space',
     37:  '←',
@@ -312,6 +317,7 @@ export function keyLabel(binding) {
     39:  '→',
     40:  '↓',
     65:  'A',
+    66:  'B',
     68:  'D',
     69:  'E',
     70:  'F',
@@ -340,7 +346,7 @@ export const CONTROLS = {
       SONAR:        69,    // E
       LAUNCH_MISSILE: 32,  // Space
       TOGGLE_PAUSE:      27,    // Escape
-      TOGGLE_SHOP:       9,     // Tab
+      TOGGLE_WORKSHOP:       66,    // B
       ACCEPT:            81,    // Q
       TOGGLE_FULLSCREEN: 192,   // Backtick
     },
@@ -354,7 +360,7 @@ export const CONTROLS = {
       SONAR:        69,    // E
       LAUNCH_MISSILE: 32,  // Space
       TOGGLE_PAUSE:      27,    // Escape
-      TOGGLE_SHOP:       9,     // Tab
+      TOGGLE_WORKSHOP:       66,    // B
       ACCEPT:            81,    // Q
       TOGGLE_FULLSCREEN: 192,   // Backtick
     },

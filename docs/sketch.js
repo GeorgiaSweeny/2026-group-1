@@ -45,7 +45,7 @@ import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMainPageSystem } from "./systems/mainPageSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
-import { createShopSystem } from "./systems/shopSystem.js";
+import { createWorkshopSystem } from "./systems/workshopSystem.js";
 import { createMissileSystem } from "./systems/missileSystem.js";
 import { createParticleSystem } from "./systems/particleSystem.js";
 import { createEnemySystem } from './systems/enemySystem.js';
@@ -80,7 +80,7 @@ let roomSystem;
 let resourceManagementSystem;
 let enemySystem;
 let pauseMenuSystem;
-let shopSystem;
+let workshopSystem;
 let missileSystem;
 let particleSystem;
 let cameraSystem;
@@ -117,6 +117,12 @@ const BACKGROUND_FILE_MAP = {
 };
 const GAMEPLAY_OVERLAY_ASSET_KEY = "ui:gameplayOverlay";
 const GAMEPLAY_OVERLAY_PATH = "assets/ui/gameplay-overlay.png";
+const SCRAP_ICON_ASSET_KEY = "ui:scrapIcon";
+const SCRAP_ICON_PATH = "assets/ui/scrap-icon.png";
+const POWER_CELL_ASSET_KEY = "sprite:powerCell";
+const POWER_CELL_PATH = "assets/sprites/power-cell.png";
+const SCRAP_SPRITE_ASSET_KEY = "sprite:scrap";
+const SCRAP_SPRITE_PATH = "assets/sprites/scrap.png";
 
 function getTilesetForGid(room, gid) {
   if (!Number.isFinite(gid)) return null;
@@ -538,6 +544,33 @@ function preload() {
     },
   );
 
+  assets[SCRAP_ICON_ASSET_KEY] = loadImage(
+    SCRAP_ICON_PATH,
+    undefined,
+    () => {
+      assets[SCRAP_ICON_ASSET_KEY] = null;
+      console.warn(`[sketch] Scrap icon not found at ${SCRAP_ICON_PATH}`);
+    },
+  );
+
+  assets[POWER_CELL_ASSET_KEY] = loadImage(
+    POWER_CELL_PATH,
+    undefined,
+    () => {
+      assets[POWER_CELL_ASSET_KEY] = null;
+      console.warn(`[sketch] Power cell sprite not found at ${POWER_CELL_PATH}`);
+    },
+  );
+
+  assets[SCRAP_SPRITE_ASSET_KEY] = loadImage(
+    SCRAP_SPRITE_PATH,
+    undefined,
+    () => {
+      assets[SCRAP_SPRITE_ASSET_KEY] = null;
+      console.warn(`[sketch] Scrap sprite not found at ${SCRAP_SPRITE_PATH}`);
+    },
+  );
+
 
   mainPageBg = loadImage("assets/backgrounds/titleBackground.png");
   menuBg = loadImage("assets/backgrounds/bg_black.png");
@@ -663,6 +696,9 @@ function setup() {
     dialRadius: MINIMAP.DIAL_RADIUS,
     dialInset: MINIMAP.DIAL_INSET,
     playerMarkerTileScale: MINIMAP.PLAYER_MARKER_TILE_SCALE,
+    borderColor: 'rgba(126, 220, 224, 0.78)',
+    borderWidth: 2,
+    backgroundColor: 'rgba(12, 23, 31, 0.80)',
     getPlayer: () => player,
     getRoomState: () => roomSystem.getRoomState(),
     getPlatforms: () => roomSystem.getPlatforms(),
@@ -722,6 +758,9 @@ function setup() {
       sonarScale: HUD_DIALS.SONAR_SCALE,
     }),
     getGameplayOverlay: () => assets[GAMEPLAY_OVERLAY_ASSET_KEY],
+    getScrapIcon: () => assets[SCRAP_ICON_ASSET_KEY],
+    getPowerCellSprite: () => assets[POWER_CELL_ASSET_KEY],
+    getScrapSprite: () => assets[SCRAP_SPRITE_ASSET_KEY],
     getGameplayOverlaySettings: () => ({
       enabled: GAMEPLAY_OVERLAY.ENABLED,
       centerOnScreen: GAMEPLAY_OVERLAY.CENTER_ON_SCREEN,
@@ -738,14 +777,14 @@ function setup() {
       useDevResolution = isDev;
       applyDisplayScale();
     },
-    onControlModeChange: (mode) => { inputSystem.setControlMode(mode); shopSystem?.setControlMode(mode); },
+    onControlModeChange: (mode) => { inputSystem.setControlMode(mode); workshopSystem?.setControlMode(mode); },
     onVolumeChange: (v) => {
       soundSystem.setMasterVolume(v);
     },
     initialControlMode: CONTROLS.DEFAULT_MODE,
   });
 
-  shopSystem = createShopSystem(player, CONTROLS.DEFAULT_MODE);
+  workshopSystem = createWorkshopSystem(player, CONTROLS.DEFAULT_MODE, () => assets[SCRAP_ICON_ASSET_KEY]);
 
   engine = new Engine();
   engine.register(inputSystem);
@@ -763,7 +802,7 @@ function setup() {
   engine.register(glowSystem);
   engine.register(enemySystem);
   engine.register(pauseMenuSystem);
-  engine.register(shopSystem);
+  engine.register(workshopSystem);
 }
 
 function draw() {
@@ -839,10 +878,10 @@ function draw() {
     lastEnsuredRoom = currentRoom;
   }
 
-  // Shop overlay (blocks all input/gameplay)
-  if (shopSystem && shopSystem.isShopOpen()) {
+  // Workshop overlay (blocks all input/gameplay)
+  if (workshopSystem && workshopSystem.isWorkshopOpen()) {
     renderSystem?.draw?.(0);
-    shopSystem.draw();
+    workshopSystem.draw();
     return;
   }
 
@@ -905,13 +944,13 @@ function keyPressed() {
     player.actionIntent.togglePause = false;
   }
 
-  if (player?.actionIntent?.toggleShop) {
-    shopSystem?.toggleShop();
-    player.actionIntent.toggleShop = false;
+  if (player?.actionIntent?.toggleWorkshop) {
+    workshopSystem?.toggleWorkshop();
+    player.actionIntent.toggleWorkshop = false;
   }
 
   if (player?.actionIntent?.accept) {
-    if (shopSystem?.isShopOpen()) shopSystem.toggleShop();
+    if (workshopSystem?.isWorkshopOpen()) workshopSystem.toggleWorkshop();
     player.actionIntent.accept = false;
   }
 
@@ -922,9 +961,9 @@ function keyPressed() {
 function mousePressed() {
   tryUnlockAudioContext();
 
-  // Shop overlay blocks all clicks
-  if (shopSystem?.isShopOpen()) {
-    shopSystem?.onMousePressed();
+  // Workshop overlay blocks all clicks
+  if (workshopSystem?.isWorkshopOpen()) {
+    workshopSystem?.onMousePressed();
     return;
   }
 
@@ -1119,13 +1158,13 @@ function resetGameToStart() {
     player.torch.isOn = false;
   }
 
-  // 5. Reset upgrades, inventory, and credits
+  // 5. Reset upgrades, inventory, and scrap
   player.upgrades = { power: 1, torch: 1, sonar: 1 };
   player.missiles = 0;
-  player.credits = PLAYER.STARTING_CREDITS;
+  player.scrap = PLAYER.STARTING_SCRAP;
 
-  // 6. Reset shop internal state (costs, levels, open state)
-  shopSystem?.reset();
+  // 6. Reset workshop internal state (costs, levels, open state)
+  workshopSystem?.reset();
 
   // 7. Reset Collectables (requires a reset method in resourceManagementSystem)
   if (

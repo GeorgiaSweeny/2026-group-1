@@ -19,7 +19,7 @@ jest.unstable_mockModule('../config.js', () => ({
         MOVE_UP: 87,            // 'w'
         MOVE_DOWN: 83,          // 's'
         TOGGLE_PAUSE: 27,       // Escape
-        TOGGLE_SHOP: 69,        // 'e'
+        TOGGLE_WORKSHOP: 66,        // 'e'
         ACCEPT: 13,             // Enter
         TOGGLE_TORCH: 32,       // Space
         SONAR: 70,              // 'f'
@@ -31,7 +31,7 @@ jest.unstable_mockModule('../config.js', () => ({
         MOVE_UP: 38,
         MOVE_DOWN: 40,
         TOGGLE_PAUSE: 27,
-        TOGGLE_SHOP: 69,
+        TOGGLE_WORKSHOP: 66,
         ACCEPT: 13,
         TOGGLE_TORCH: 32,
         SONAR: 70,
@@ -53,7 +53,7 @@ function makePlayer(overrides = {}) {
     moveIntent: { left: false, right: false, up: false, down: false },
     actionIntent: {
       togglePause: false,
-      toggleShop: false,
+      toggleWorkshop: false,
       accept: false,
       toggleTorch: false,
       emitSonar: false,
@@ -152,10 +152,10 @@ describe('InputSystem', () => {
       expect(player.actionIntent.togglePause).toBe(true);
     });
 
-    it('sets toggleShop = true when E (69) is pressed', () => {
+    it('sets toggleWorkshop = true when B (66) is pressed', () => {
       const input = createInputSystem(player);
-      input.onKeyPressed('e', 69);
-      expect(player.actionIntent.toggleShop).toBe(true);
+      input.onKeyPressed('b', 66);
+      expect(player.actionIntent.toggleWorkshop).toBe(true);
     });
 
     it('sets accept = true when Enter (13) is pressed', () => {
@@ -192,8 +192,8 @@ describe('InputSystem', () => {
 
     it('is case-insensitive for letter keys', () => {
       const input = createInputSystem(player);
-      input.onKeyPressed('E', 69);
-      expect(player.actionIntent.toggleShop).toBe(true);
+      input.onKeyPressed('F', 70);
+      expect(player.actionIntent.emitSonar).toBe(true);
     });
 
     it('unknown key does not set any action intent', () => {
