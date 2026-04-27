@@ -382,6 +382,7 @@ function ensureRoomAssetsLoaded(roomId) {
     const imagePath =
       tileset.resolvedImagePath ??
       tilesetSourceToImagePath(tileset?.source, mapDir);
+    console.warn(`[ensureRoomAssetsLoaded] tileset.source="${tileset.source}" resolvedImagePath="${tileset.resolvedImagePath}" imagePath="${imagePath}" tsxDirForImage="${tileset.resolvedImagePath ? getPathDir(tileset.resolvedImagePath) : 'N/A(resolvedImagePath was undefined)'}"`);
     if (imagePath) {
       tileset.resolvedImagePath = imagePath;
       const key = `tileset:${imagePath}`;
@@ -466,6 +467,7 @@ function preload() {
         tsxLines.join("\n"),
         sourcePath,
       );
+      console.warn(`[preload] TSX parsed: "${sourcePath}" → resolvedImagePath="${tsxMetaBySourcePath[sourcePath].resolvedImagePath}" tileImagesById count=${Object.keys(tsxMetaBySourcePath[sourcePath].tileImagesById).length}`);
     }
   }
 
