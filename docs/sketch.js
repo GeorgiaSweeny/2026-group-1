@@ -171,7 +171,10 @@ function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
   // backgrounds.tsx is an image collection (no single .png atlas file to load).
   if (String(source).toLowerCase().endsWith("backgrounds.tsx")) return null;
   const pngSource = source.replace(/\.tsx$/i, ".png");
-  return normalizeRelativePath(mapDir, pngSource);
+  // Resolve relative to the tsx file's directory — the tsx <image source> attribute
+  // is relative to the tsx file itself, not the map directory.
+  const tsxDir = getPathDir(source);
+  return normalizeRelativePath(tsxDir, pngSource);
 }
 
 function parseTsxTileProperties(xmlText) {
