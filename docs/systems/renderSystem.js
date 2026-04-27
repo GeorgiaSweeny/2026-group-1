@@ -845,29 +845,57 @@ export function createRenderSystem({
 
    //===MISSILES===//
    function drawMissileTarget() {
+      if (!player || player.missiles <= 0) return;
+      
       const target = getMissileTarget?.();
       if (target && (target.position || (target.x !== undefined && target.y !== undefined))) {
-         push();
          const tx = target.position ? target.position.x : target.x;
          const ty = target.position ? target.position.y : target.y;
 
+         let isVisible = false;
+
+         const lightSources = getLightSources?.() ?? [];
+         const tRadius = Math.max(target.w || target.width || target.getWidth?.() || 0, target.h || target.height || target.getHeight?.() || 0) / 2 || 16;
+         for (const light of lightSources) {
+            const lx = light.position ? light.position.x : (light.x ?? 0);
+            const ly = light.position ? light.position.y : (light.y ?? 0);
+            const radius = (light.radius ?? 200) * 1.2; // slight leeway
+            if (Math.hypot(tx - lx, ty - ly) < radius + tRadius) {
+               isVisible = true;
+               break;
+            }
+         }
+
+         if (!isVisible) {
+            const reveals = [
+               ...(getSonarEnemyReveals?.() ?? []),
+               ...(getSonarReveals?.() ?? []),
+               ...(getSonarHazardReveals?.() ?? [])
+            ];
+            for (const r of reveals) {
+               const rCx = r.x + (r.w ?? 0) / 2;
+               const rCy = r.y + (r.h ?? 0) / 2;
+               if (Math.hypot(tx - rCx, ty - rCy) < 40) {
+                  isVisible = true;
+                  break;
+               }
+            }
+         }
+
+         if (!isVisible) return; // hide if not illuminated or revealed
+
+         push();
          translate(tx, ty);
 
-         // Optional: make crosshair pulse slightly for visual feedback
-         const pulse = map(sin(millis() * 0.01), -1, 1, 0.9, 1.1);
-         scale(pulse);
-
-         stroke(255, 50, 50, 200); // Red crosshair
+         stroke(255, 50, 50, 200);
          strokeWeight(2);
          noFill();
-         
-         // Crosshair
+   
          line(-10, 0, -4, 0);
          line(10, 0, 4, 0);
          line(0, -10, 0, -4);
          line(0, 10, 0, 4);
 
-         // Outer bracket
          circle(0, 0, 24);
          
          pop();
@@ -944,7 +972,6 @@ function renderInterpolate(oldState, newState, alpha){
             drawBubbles();
             drawParticles();
             drawMissiles();
-            drawMissileTarget();
             drawPlayer(alpha);
             debugHitbox(DEBUG_COLOR.DRAW);
 
@@ -962,6 +989,7 @@ function renderInterpolate(oldState, newState, alpha){
          drawSonarHazardReveals();
          drawSonarCollectableReveals();
          drawSonarEnemyReveals();
+         drawMissileTarget();
          pop();
          
          // --- World Space UI overlays (drawn above everything) --- //
