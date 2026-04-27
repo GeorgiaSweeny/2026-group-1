@@ -46,6 +46,7 @@ export function createRenderSystem({
    getOldCamPosition,
    getCameraScale,
    getMissiles,
+   getMissileTarget,
    getParticles,
    getPiranhas,
    getGlowObjects,
@@ -1190,6 +1191,36 @@ export function createRenderSystem({
    }
 
    //===MISSILES===//
+   function drawMissileTarget() {
+      const target = getMissileTarget?.();
+      if (target && (target.position || (target.x !== undefined && target.y !== undefined))) {
+         push();
+         const tx = target.position ? target.position.x : target.x;
+         const ty = target.position ? target.position.y : target.y;
+
+         translate(tx, ty);
+
+         // Optional: make crosshair pulse slightly for visual feedback
+         const pulse = map(sin(millis() * 0.01), -1, 1, 0.9, 1.1);
+         scale(pulse);
+
+         stroke(255, 50, 50, 200); // Red crosshair
+         strokeWeight(2);
+         noFill();
+         
+         // Crosshair
+         line(-10, 0, -4, 0);
+         line(10, 0, 4, 0);
+         line(0, -10, 0, -4);
+         line(0, 10, 0, 4);
+
+         // Outer bracket
+         circle(0, 0, 24);
+         
+         pop();
+      }
+   }
+
    function drawMissiles() {
       const missiles = getMissiles?.() ?? [];
       for (const missile of missiles) {
@@ -1263,6 +1294,7 @@ function renderInterpolate(oldState, newState, alpha){
             drawBubbles();
             drawParticles();
             drawMissiles();
+            drawMissileTarget();
             drawPlayer(alpha);
             debugHitbox(DEBUG_COLOR.DRAW);
 
