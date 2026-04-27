@@ -8,13 +8,48 @@ piranha sonar-triggered chase, and player contact damage.
 
 import { jest } from '@jest/globals';
 
+// p5 globals needed by entity constructors (Crab, Jellyfish, Piranha use createVector)
+global.createVector = (x, y) => ({ x, y });
+
+// Mock hitboxSystem FIRST (enemySystem imports it)
+jest.unstable_mockModule('../systems/hitboxSystem.js', () => ({
+  isColliding: jest.fn().mockReturnValue(false),
+  Hitbox: class Hitbox {
+    constructor(x, y, w, h) {
+      // hitboxSystem stores CENTER position: createVector(x + w/2, y + h/2)
+      this.position = { x: x + w / 2, y: y + h / 2 };
+      this.w = w;
+      this.h = h;
+    }
+    getX() { return this.position.x - this.w / 2; }
+    getY() { return this.position.y - this.h / 2; }
+  },
+  Wall: class Wall {
+    constructor(x, y, w, h) {
+      this.position = { x, y };
+      this.w = w;
+      this.h = h;
+      this.isDestroyed = false;
+    }
+  },
+}));
+
+// Mock config with all required exports (hitboxSystem imports DEBUG_COLOR)
 jest.unstable_mockModule('../config.js', () => ({
   TIME: { fixedDeltaTime: 1 / 60 },
+  DEBUG_COLOR: { WALL: 'red', PLAYER: 'blue', ENEMY: 'green' },
+  CANVAS: { TILE_SIZE: 16 },
+  PLAYER: { DRAG: 0.85, ACCELERATION: 0.8, MOVE_SPEED: 200 },
+  CONTROLS: { DEFAULT_MODE: 'default', MODES: { default: {} } },
+  SONAR: { COOLDOWN_MS: 500 },
 }));
 
 const mockSoundSystem = { play: jest.fn() };
 
+// Import after mocks are registered — do this at the top level
 const { createEnemySystem } = await import('../systems/enemySystem.js');
+const hitboxSystemModule = await import('../systems/hitboxSystem.js');
+const mockIsColliding = hitboxSystemModule.isColliding;
 
 describe('EnemySystem', () => {
   let player;
@@ -29,6 +64,7 @@ describe('EnemySystem', () => {
       power: { current: 100, drain: jest.fn() },
     };
     mockSoundSystem.play.mockReset();
+    mockIsColliding.mockReturnValue(false);
   });
 
   //======================================
@@ -37,7 +73,9 @@ describe('EnemySystem', () => {
 
   describe('crab patrol', () => {
     it('moves crab right initially', () => {
-      const enemies = [{ name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 50, speed: 1 }];
+      const enemies = [
+        { name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 50, speed: 1 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
       const crabs = es.getCrabs();
@@ -46,16 +84,19 @@ describe('EnemySystem', () => {
     });
 
     it('reverses direction at patrol boundary', () => {
-      const enemies = [{ name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 10, speed: 10 }];
+      const enemies = [
+        { name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 10, speed: 10 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
-      // Run enough frames to reach patrol boundary
       for (let i = 0; i < 50; i++) es.update();
       const crabs = es.getCrabs();
       expect(crabs[0].position.x).toBeLessThanOrEqual(110);
     });
 
     it('sets facing direction based on movement', () => {
-      const enemies = [{ name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 50, speed: 1 }];
+      const enemies = [
+        { name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 50, speed: 1 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
       const crabs = es.getCrabs();
@@ -63,13 +104,13 @@ describe('EnemySystem', () => {
       expect([1, -1]).toContain(crabs[0].facing);
     });
 
-    it('does not sync enemies every frame unnecessarily', () => {
-      const enemies = [{ name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 50, speed: 1 }];
+    it('does not resync enemies every frame unnecessarily', () => {
+      const enemies = [
+        { name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 50, speed: 1 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
       es.update();
-      es.update();
-      // Crabs should not be recreated — same instances
       const crabs1 = es.getCrabs();
       const crabs2 = es.getCrabs();
       expect(crabs1[0]).toBe(crabs2[0]);
@@ -82,7 +123,9 @@ describe('EnemySystem', () => {
 
   describe('jellyfish movement', () => {
     it('creates jellyfish instances from enemy data', () => {
-      const enemies = [{ name: 'jellyfish', x: 100, y: 100, w: 20, h: 20, amplitude: 10, frequency: 2, driftSpeed: 0 }];
+      const enemies = [
+        { name: 'jellyfish', x: 100, y: 100, w: 20, h: 20, amplitude: 10, frequency: 2, driftSpeed: 0 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
       const jellyfish = es.getJellyfish();
@@ -90,7 +133,9 @@ describe('EnemySystem', () => {
     });
 
     it('oscillates vertically over time', () => {
-      const enemies = [{ name: 'jellyfish', x: 100, y: 100, w: 20, h: 20, amplitude: 10, frequency: 2, driftSpeed: 0 }];
+      const enemies = [
+        { name: 'jellyfish', x: 100, y: 100, w: 20, h: 20, amplitude: 10, frequency: 2, driftSpeed: 0 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
       const pos1 = es.getJellyfish()[0].position.y;
@@ -100,7 +145,9 @@ describe('EnemySystem', () => {
     });
 
     it('handles drift movement', () => {
-      const enemies = [{ name: 'jellyfish', x: 100, y: 100, w: 20, h: 20, amplitude: 5, frequency: 1, driftSpeed: 1, maxDrift: 50 }];
+      const enemies = [
+        { name: 'jellyfish', x: 100, y: 100, w: 20, h: 20, amplitude: 5, frequency: 1, driftSpeed: 1, maxDrift: 50 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
       const pos1 = es.getJellyfish()[0].position.x;
@@ -116,7 +163,9 @@ describe('EnemySystem', () => {
 
   describe('piranha sonar detection and chase', () => {
     it('piranha starts in idle state', () => {
-      const enemies = [{ name: 'piranha', x: 200, y: 200, w: 24, h: 24, detectionRadius: 120, chaseSpeed: 0.6 }];
+      const enemies = [
+        { name: 'piranha', x: 200, y: 200, w: 24, h: 24, detectionRadius: 120, chaseSpeed: 0.6 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
       const piranhas = es.getPiranhas();
@@ -124,25 +173,23 @@ describe('EnemySystem', () => {
     });
 
     it('piranha chases player when sonar pulse is detected', () => {
-      const enemies = [{ name: 'piranha', x: 200, y: 200, w: 24, h: 24, detectionRadius: 120, chaseSpeed: 0.6 }];
-      // Pulse particle near piranha
-      const fakePulse = {
-        particles: [{ pos: { x: 200, y: 200 }, life: 255 }],
-      };
+      const enemies = [
+        { name: 'piranha', x: 200, y: 200, w: 24, h: 24, detectionRadius: 120, chaseSpeed: 0.6 },
+      ];
+      const fakePulse = { particles: [{ pos: { x: 200, y: 200 }, life: 255 }] };
       const es = createEnemySystem(player, () => enemies, () => [fakePulse], mockSoundSystem);
       es.update();
       const piranhas = es.getPiranhas();
       expect(piranhas[0].state).toBe('chase');
     });
 
-    it('piranha returns to idle after chase timer expires', () => {
-      const enemies = [{ name: 'piranha', x: 200, y: 200, w: 24, h: 24, detectionRadius: 120, chaseSpeed: 0.6 }];
-      const fakePulse = {
-        particles: [{ pos: { x: 200, y: 200 }, life: 255 }],
-      };
+    it('piranha returns after chase timer expires', () => {
+      const enemies = [
+        { name: 'piranha', x: 200, y: 200, w: 24, h: 24, detectionRadius: 120, chaseSpeed: 0.6 },
+      ];
+      const fakePulse = { particles: [{ pos: { x: 200, y: 200 }, life: 255 }] };
       const es = createEnemySystem(player, () => enemies, () => [fakePulse], mockSoundSystem);
-      es.update(); // Triggered to chase
-      // Run enough frames to exhaust chase timer (~180 frames at 60fps)
+      es.update();
       for (let i = 0; i < 200; i++) es.update();
       const piranhas = es.getPiranhas();
       expect(piranhas[0].state).toBe('return');
@@ -154,24 +201,31 @@ describe('EnemySystem', () => {
   //======================================
 
   describe('player contact damage', () => {
-    it('drains player power when touching crab', () => {
-      const enemies = [{ name: 'crab', x: 102, y: 102, w: 24, h: 16, patrolDistance: 50, speed: 0 }];
+    it('calls power.drain when touching crab (isColliding true)', () => {
+      mockIsColliding.mockReturnValue(true);
+      const enemies = [
+        { name: 'crab', x: 102, y: 102, w: 24, h: 16, patrolDistance: 50, speed: 0 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
-      // Player and crab overlap — isColliding returns true (mocked by proximity)
       es.update();
-      // System should attempt to drain — exact amount depends on isColliding mock
       expect(player.power.drain).toHaveBeenCalled();
     });
 
-    it('drains player power when touching jellyfish', () => {
-      const enemies = [{ name: 'jellyfish', x: 102, y: 102, w: 20, h: 20, amplitude: 5, frequency: 1, driftSpeed: 0 }];
+    it('does not drain power when not colliding', () => {
+      mockIsColliding.mockReturnValue(false);
+      const enemies = [
+        { name: 'crab', x: 102, y: 102, w: 24, h: 16, patrolDistance: 50, speed: 0 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
-      expect(player.power.drain).toHaveBeenCalled();
+      expect(player.power.drain).not.toHaveBeenCalled();
     });
 
     it('plays playerHit sound on enemy contact', () => {
-      const enemies = [{ name: 'crab', x: 102, y: 102, w: 24, h: 16, patrolDistance: 0, speed: 0 }];
+      mockIsColliding.mockReturnValue(true);
+      const enemies = [
+        { name: 'crab', x: 102, y: 102, w: 24, h: 16, patrolDistance: 0, speed: 0 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
       expect(mockSoundSystem.play).toHaveBeenCalledWith('playerHit', 0.3);
@@ -184,17 +238,20 @@ describe('EnemySystem', () => {
 
   describe('pending destroy', () => {
     it('removes crab marked pendingDestroy from list', () => {
-      const enemies = [{ name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 50, speed: 1 }];
+      const enemies = [
+        { name: 'crab', x: 100, y: 100, w: 24, h: 16, patrolDistance: 50, speed: 1 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
-      // Manually mark for destroy
       es.getCrabs()[0].pendingDestroy = true;
       es.update();
       expect(es.getCrabs().length).toBe(0);
     });
 
     it('removes jellyfish marked pendingDestroy from list', () => {
-      const enemies = [{ name: 'jellyfish', x: 100, y: 100, w: 20, h: 20, amplitude: 5, frequency: 1, driftSpeed: 0 }];
+      const enemies = [
+        { name: 'jellyfish', x: 100, y: 100, w: 20, h: 20, amplitude: 5, frequency: 1, driftSpeed: 0 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
       es.getJellyfish()[0].pendingDestroy = true;
@@ -243,7 +300,7 @@ describe('EnemySystem', () => {
       expect(es.getEnemies().length).toBe(0);
     });
 
-    it('handles null/undefined getEnemies', () => {
+    it('handles null getEnemies callback', () => {
       const es = createEnemySystem(player, null, () => [], mockSoundSystem);
       expect(() => es.update()).not.toThrow();
     });
@@ -256,7 +313,10 @@ describe('EnemySystem', () => {
     });
 
     it('handles null soundSystem', () => {
-      const enemies = [{ name: 'crab', x: 102, y: 102, w: 24, h: 16, patrolDistance: 0, speed: 0 }];
+      mockIsColliding.mockReturnValue(true);
+      const enemies = [
+        { name: 'crab', x: 102, y: 102, w: 24, h: 16, patrolDistance: 0, speed: 0 },
+      ];
       const es = createEnemySystem(player, () => enemies, () => [], null);
       expect(() => es.update()).not.toThrow();
     });

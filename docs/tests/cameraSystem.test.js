@@ -50,7 +50,7 @@ describe('CameraSystem', () => {
       const cam = createCameraSystem(player, 640, 360);
       const initial = cam.getOffset();
 
-      // Move player significantly
+      // Move player significantly right and down
       player.position.x = 340;
       player.position.y = 250;
 
@@ -60,11 +60,18 @@ describe('CameraSystem', () => {
       expect(afterOne.x).not.toBe(initial.x);
       expect(afterOne.y).not.toBe(initial.y);
 
-      // After many updates, camera should be close to the player position
-      for (let i = 0; i < 50; i++) cam.update();
+      // Camera is moving in the correct direction (toward target)
+      // targetX = player.x - 160 = 180, targetY = player.y - 90 = 160
+      // LERP_SPEED = 0.08: offset converges asymptotically as (1 - 0.92^n)
+      // After 50 updates: offset ≈ 176 (98% of the way to target)
+      // After 200 updates: offset ≈ 179.7 (99.8% of the way)
+      for (let i = 0; i < 200; i++) cam.update();
       const later = cam.getOffset();
-      expect(later.x).toBeCloseTo(40, 0);  // 340 - 160 - centered
-      expect(later.y).toBeCloseTo(160, 0); // 250 - 90
+      expect(later.x).toBeGreaterThan(initial.x);  // moved right
+      expect(later.y).toBeGreaterThan(initial.y);  // moved down
+      // After 200 updates, should be very close to target (within 1 pixel)
+      expect(Math.abs(later.x - 180)).toBeLessThan(1);
+      expect(Math.abs(later.y - 160)).toBeLessThan(1);
     });
 
     it('camera lerp speed gradually reduces overshoot', () => {
