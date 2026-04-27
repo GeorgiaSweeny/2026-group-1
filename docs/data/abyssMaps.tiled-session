@@ -16,7 +16,7 @@
                 7,
                 6
             ],
-            "scale": 0.5122,
+            "scale": 1.7359,
             "selectedLayer": 4,
             "viewCenter": {
                 "x": 800.4685669660289,
@@ -57,8 +57,8 @@
                 4,
                 3
             ],
-            "scale": 0.2334,
-            "selectedLayer": 0,
+            "scale": 0.668,
+            "selectedLayer": 3,
             "viewCenter": {
                 "x": 801.1996572407884,
                 "y": 1281.0625535561269
@@ -90,6 +90,8 @@
         },
         "rooms/spikeMaze.json": {
             "expandedObjectLayers": [
+                5,
+                2,
                 9,
                 5,
                 2,

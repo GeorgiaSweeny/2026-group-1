@@ -577,10 +577,13 @@ function setup() {
       }
     },
     onWin: () => {
+      soundSystem?.stop('gamebg1');
+      soundSystem?.play('win', 0.9);
       gameState = WIN_STATE;
     },
     getAllowedRooms: () => GAME_VERSIONS[gameVersion].rooms,
     getGameVersion: () => gameVersion,
+    soundSystem,
   });
   roomSystem.goToRoom(initialRoom, { spawnId: "default" });
   syncCanvasToCurrentRoom();
@@ -592,7 +595,7 @@ function setup() {
   darknessLayer = createGraphics(width, height);
 
   inputSystem = createInputSystem(player);
-  playerSystem = createPlayerSystem(player);
+  playerSystem = createPlayerSystem(player, soundSystem);
   physicsSystem = createPhysicsSystem(player, () => roomSystem.getRoomState());
   cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
   // Snap camera to player's initial position
@@ -641,6 +644,7 @@ function setup() {
     () => roomSystem.getHazards(),
     () => pauseMenuSystem.getDifficulty(),
     () => enemySystem?.getEnemies() ?? [],
+    soundSystem,
   );
 
   enemySystem = createEnemySystem(
@@ -753,6 +757,24 @@ function setup() {
 
 function draw() {
   frameRate(GAME.FPS);
+
+  const isMenuState = gameState === "MAIN_PAGE" || gameState === "STORY_PAGE"
+    || gameState === "CONTROLS" || gameState === "MENU"
+    || gameState === "SETTINGS";
+
+  if (audioUnlocked && isMenuState && !soundSystem?.isPlaying?.('introMusic')) {
+    soundSystem?.loop?.('introMusic', 0.5);
+  }
+
+  if (!isMenuState) {
+    soundSystem?.stop?.('introMusic');
+  }
+
+  const isGameplayState = gameState === "PLAYING";
+  if (!isGameplayState) {
+    soundSystem?.stop('gamebg1');
+    soundSystem?.stop('movement');
+  }
 
   if (gameState === "MAIN_PAGE") {
     mainPageSystem.draw(mainPageBg);
@@ -898,6 +920,7 @@ function mousePressed() {
   if (gameState === "MAIN_PAGE") {
     const selection = mainPageSystem.checkClick(mouseX, mouseY);
     if (selection === "PLAY") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "STORY_PAGE";
     }
     return;
@@ -906,6 +929,7 @@ function mousePressed() {
   if (gameState === "STORY_PAGE") {
     const selection = storyPageSystem.checkClick(mouseX, mouseY);
     if (selection === "CONTINUE") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "CONTROLS";
     }
     return;
@@ -914,8 +938,10 @@ function mousePressed() {
   if (gameState === "CONTROLS") {
     const selection = controlsPageSystem.checkClick(mouseX, mouseY);
     if (selection === "BACK") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "STORY_PAGE";
     } else if (selection === "NEXT") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "MENU";
     }
     return;
@@ -924,9 +950,11 @@ function mousePressed() {
   if (gameState === WIN_STATE) {
     const selection = winScreenSystem.checkClick(mouseX, mouseY);
     if (selection === "RESTART") {
+      soundSystem?.play('buttonClick', 0.8);
       restartCurrentSession();
       gameState = "PLAYING";
     } else if (selection === "MENU") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "MENU";
     }
     return;
@@ -935,11 +963,14 @@ function mousePressed() {
   if (gameState === GAME_OVER_STATE) {
     const selection = gameOverSystem.checkClick(mouseX, mouseY);
     if (selection === "YES") {
+      soundSystem?.play('buttonClick', 0.8);
       restartCurrentSession();
       gameState = "PLAYING";
     } else if (selection === "NO") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "MENU";
     } else if (selection === "SETTINGS") {
+      soundSystem?.play('buttonClick', 0.8);
       settingsReturnState = GAME_OVER_STATE;
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
@@ -951,6 +982,10 @@ function mousePressed() {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
     if (selection === "DEMO") {
+      soundSystem?.stop('introMusic');
+      soundSystem?.play('buttonClick', 0.8);
+      soundSystem?.play('waterSplash', 1.0);
+      soundSystem?.loop('gamebg1', 0.7);
       gameVersion = "demo";
       sessionVersion = "demo";
       sessionDifficulty = GAME_VERSIONS.demo.difficulty;
@@ -958,6 +993,10 @@ function mousePressed() {
       resetGameToStart();
       gameState = "PLAYING";
     } else if (selection === "EASY" || selection === "HARD") {
+      soundSystem?.stop('introMusic');
+      soundSystem?.play('buttonClick', 0.8);
+      soundSystem?.play('waterSplash', 1.0);
+      soundSystem?.loop('gamebg1', 0.7);
       gameVersion = "full";
       sessionVersion = "full";
       sessionDifficulty = selection;
@@ -965,16 +1004,19 @@ function mousePressed() {
       resetGameToStart();
       gameState = "PLAYING";
     } else if (selection === "SETTINGS") {
+      soundSystem?.play('buttonClick', 0.8);
       settingsReturnState = "MENU";
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
     } else if (selection === "CONTROLS") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "CONTROLS";
     }
     return;
   }
 
   if (gameState === "SETTINGS") {
+    soundSystem?.play('buttonClick', 0.8);
     pauseMenuSystem?.onMousePressed();
     return;
   }
