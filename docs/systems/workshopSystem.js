@@ -1,53 +1,53 @@
 /*
 ========================================
 VERSION: 1.0
-SYSTEM: SHOP SYSTEM
+SYSTEM: WORKSHOP SYSTEM
 AUTHOR/s: Archie
 DESCRIPTION:
-- Manages shop UI overlay
+- Manages workshop UI overlay
 - Displays upgradeable abilities: power, torch, sonar
 - Displays purchasable items: missiles
-- Frontend-only: reads player credits, no mutations
+- Frontend-only: reads player scrap, no mutations
 
 RULES:
 - No drawing inside update() function
 - No state changes inside draw() function
 - Mutations handled by other systems later
-- Only reads player.credits, does not modify player state directly
+- Only reads player.scrap, does not modify player state directly
 
 DESIGN GOALS:
-- Decouple shop UI from gameplay systems
+- Decouple workshop UI from gameplay systems
 - Provide clear purchase feedback without action
 - Enable future integration with upgrade/purchase handlers
 
 RESPONSIBILITIES:
-- Shop open/close state management
+- Workshop open/close state management
 - UI rendering and hit detection
 - Log purchase attempts to console
 - Display current upgrade levels and item quantities
 - Handle mouse clicks on upgrade/item cards
 
 DEPENDENCIES:
-- Player object (read-only: credits property)
+- Player object (read-only: scrap property)
 - p5.js drawing functions (fill, rect, text, etc.)
 - Mouse events (mouseX, mouseY from p5.js)
 
 USAGE:
-import { createShopSystem } from './systems/shopSystem.js';
+import { createWorkshopSystem } from './systems/workshopSystem.js';
 
-const shopSystem = createShopSystem(player);
-engine.register(shopSystem);
+const workshopSystem = createWorkshopSystem(player);
+engine.register(workshopSystem);
 
 // In draw():
-if (shopSystem.isShopOpen()) {
-  shopSystem.draw();
+if (workshopSystem.isWorkshopOpen()) {
+  workshopSystem.draw();
 }
 
 // In keyPressed():
-shopSystem.onKeyPressed?.(key, keyCode);
+workshopSystem.onKeyPressed?.(key, keyCode);
 ========================================
 NOTES:
-- Purchase attempts logged to console (no credits deducted yet)
+- Purchase attempts logged to console (no scrap deducted yet)
 - Upgrades have levels and costs
 - Items have quantity tracking and per-unit costs
 - UI uses semi-transparent overlay like pauseMenuSystem
@@ -64,13 +64,13 @@ TODO / LIMITATIONS:
 
 
 //======================================
-// SHOP SYSTEM
+// WORKSHOP SYSTEM
 //======================================
 
 import { CONTROLS, keyLabel } from '../config.js';
 
-export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_MODE) {
-  let shopOpen = false;
+export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAULT_MODE, getScrapIcon = () => null) {
+  let workshopOpen = false;
   let controlMode = initialControlMode;
 
   const INITIAL_UPGRADE_COSTS = { power: 50, torch: 40, sonar: 60 };
@@ -82,15 +82,15 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
       cost: INITIAL_UPGRADE_COSTS.power,
       description: "Increase max power capacity",
     },
-    torch: {
-      level: player?.upgrades?.torch ?? 1,
-      cost: INITIAL_UPGRADE_COSTS.torch,
-      description: "Expand torch radius"
-    },
     sonar: {
       level: player?.upgrades?.sonar ?? 1,
       cost: INITIAL_UPGRADE_COSTS.sonar,
       description: "Increase sonar range"
+    },
+    torch: {
+      level: player?.upgrades?.torch ?? 1,
+      cost: INITIAL_UPGRADE_COSTS.torch,
+      description: "Expand torch radius"
     },
   };
 
@@ -105,10 +105,10 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
 
   // Layout constants
   const PANEL_W = 900;
-  const PANEL_H = 520;
+  const PANEL_H = 460;
   const CARD_W = 190;
   const CARD_H = 118;
-  const BUTTON_W = 150;
+  const BUTTON_W = 110;
   const BUTTON_H = 38;
 
   //--------------------------------------
@@ -143,7 +143,7 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     text(label, x + w / 2, y + h / 2);
   }
 
-  function drawTechFrame(x, y, w, h, title) {
+  function drawTechFrame(x, y, w, h, title, titleBarH = 28) {
     noStroke();
     fill(12, 23, 31, 240);
     rect(x, y, w, h, 10);
@@ -153,14 +153,15 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     noFill();
     rect(x, y, w, h, 10);
 
+    const titleBarTop = y + 12;
     noStroke();
     fill(33, 56, 70, 240);
-    rect(x + 14, y + 12, w - 28, 28, 5);
+    rect(x + 14, titleBarTop, w - 28, titleBarH, 5);
 
     fill(227, 244, 248);
     textAlign(LEFT, CENTER);
     textSize(14);
-    text(title, x + 24, y + 26);
+    text(title, x + 24, titleBarTop + titleBarH / 2);
   }
 
   function drawLevelTicks(x, y, level, maxTicks = 8) {
@@ -177,9 +178,9 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     const panelX = width / 2 - PANEL_W / 2;
     const panelY = height / 2 - PANEL_H / 2;
     const upgradesStartX = panelX + 32;
-    const upgradesStartY = panelY + 86;
+    const upgradesStartY = panelY + 118;
     const cardGap = 18;
-    const sectionGapY = 150;
+    const sectionGapY = 182;
 
     const upgradeCards = [];
     let i = 0;
@@ -209,14 +210,15 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
 
     const rightPanel = {
       x: panelX + PANEL_W - 250,
-      y: panelY + 86,
+      y: panelY + 118,
       w: 220,
       h: 306,
     };
 
+    const rp = { x: panelX + PANEL_W - 250, y: panelY + 118, w: 220, h: 306 };
     const closeButton = {
-      x: panelX + PANEL_W - BUTTON_W - 30,
-      y: panelY + PANEL_H - BUTTON_H - 18,
+      x: rp.x + (rp.w - BUTTON_W) / 2,
+      y: rp.y + rp.h - BUTTON_H - 12,
       w: BUTTON_W,
       h: BUTTON_H,
     };
@@ -224,9 +226,25 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     return { panelX, panelY, upgradeCards, itemCards, rightPanel, closeButton };
   }
 
+  function drawScrapCost(amount, x, y, canAfford) {
+    const icon = getScrapIcon();
+    const iconSize = 24;
+    const textCol = canAfford ? color(255, 223, 136) : color(132, 132, 132);
+    if (icon) {
+      tint(canAfford ? color(255, 255, 255) : color(100, 100, 100));
+      image(icon, x, y - iconSize / 2, iconSize, iconSize);
+      noTint();
+    }
+    fill(textCol);
+    noStroke();
+    textAlign(LEFT, CENTER);
+    textSize(12);
+    text(amount, x + iconSize + 4, y);
+  }
+
   function drawUpgradeCard(name, upgrade, x, y) {
-    const playerCredits = player?.credits ?? 0;
-    const canAfford = playerCredits >= upgrade.cost;
+    const playerScrap = player?.scrap ?? 0;
+    const canAfford = playerScrap >= upgrade.cost;
     const currentLevel = player?.upgrades?.[name] ?? upgrade.level;
 
     noStroke();
@@ -252,19 +270,17 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     text(`LEVEL ${currentLevel}`, x + 10, y + 50);
     drawLevelTicks(x + 10, y + 68, currentLevel, 8);
 
-    fill(canAfford ? color(255, 223, 136) : color(132, 132, 132));
-    textSize(12);
-    text(`COST ${upgrade.cost}`, x + 10, y + 98);
+    drawScrapCost(upgrade.cost, x + 5, y + 98, canAfford);
 
-    textAlign(RIGHT, TOP);
+    textAlign(RIGHT, CENTER);
     textSize(10);
     fill(canAfford ? color(148, 252, 165) : color(129, 129, 129));
-    text(canAfford ? "CLICK TO UPGRADE" : "INSUFFICIENT CREDITS", x + CARD_W - 10, y + 100);
+    text(canAfford ? "CLICK TO UPGRADE" : "INSUFFICIENT MATERIALS", x + CARD_W - 10, y + 98);
   }
 
   function drawItemCard(itemName, item, x, y) {
-    const playerCredits = player?.credits ?? 0;
-    const canAfford = playerCredits >= item.costPerUnit;
+    const playerScrap = player?.scrap ?? 0;
+    const canAfford = playerScrap >= item.costPerUnit;
     const currentQuantity = itemName === 'missiles' ? (player?.missiles ?? 0) : (item.quantity ?? 0);
 
     noStroke();
@@ -289,20 +305,18 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     fill(174, 205, 211);
     text(`OWNED ${currentQuantity}`, x + 10, y + 50);
 
-    fill(canAfford ? color(255, 223, 136) : color(132, 132, 132));
-    textSize(12);
-    text(`UNIT COST ${item.costPerUnit}`, x + 10, y + 98);
+    drawScrapCost(item.costPerUnit, x + 5, y + 98, canAfford);
 
-    textAlign(RIGHT, TOP);
+    textAlign(RIGHT, CENTER);
     textSize(10);
     fill(canAfford ? color(148, 252, 165) : color(129, 129, 129));
-    text(canAfford ? "CLICK TO BUY +1" : "INSUFFICIENT CREDITS", x + CARD_W - 10, y + 100);
+    text(canAfford ? "CLICK TO BUY +1" : "INSUFFICIENT MATERIALS", x + CARD_W - 10, y + 98);
   }
 
   //--------------------------------------
   // SHOP DISPLAY
   //--------------------------------------
-  function drawShopUI() {
+  function drawWorkshopUI() {
     noStroke();
     fill(2, 8, 14, 210);
     rect(0, 0, width, height);
@@ -310,21 +324,27 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     const layout = getLayout();
     const { panelX, panelY } = layout;
 
-    drawTechFrame(panelX, panelY, PANEL_W, PANEL_H, "SHOP");
+    drawTechFrame(panelX, panelY, PANEL_W, PANEL_H, "WORKSHOP", 44);
 
+    const sysBarTop = panelY + 68, sysBarH = 30;
     noStroke();
     fill(28, 42, 54, 220);
-    rect(panelX + 30, panelY + 52, PANEL_W - 280, 30, 4);
+    rect(panelX + 30, sysBarTop, 608, sysBarH, 4);
+    noStroke();
+    fill(220, 237, 242);
     textAlign(LEFT, CENTER);
     textSize(16);
-    fill(220, 237, 242);
-    text("SYSTEMS", panelX + 42, panelY + 67);
+    text("SYSTEMS", panelX + 42, sysBarTop + sysBarH / 2);
 
+    const subBarTop = panelY + 252, subBarH = 30;
     noStroke();
     fill(24, 38, 50, 220);
-    rect(panelX + 30, panelY + 203, PANEL_W - 280, 30, 4);
+    rect(panelX + 30, subBarTop, 608, subBarH, 4);
+    noStroke();
     fill(220, 237, 242);
-    text("SUBSYSTEMS", panelX + 42, panelY + 218);
+    textAlign(LEFT, CENTER);
+    textSize(16);
+    text("SUBSYSTEMS", panelX + 42, subBarTop + subBarH / 2);
 
     for (const card of layout.upgradeCards) {
       drawUpgradeCard(card.key, upgrades[card.key], card.x, card.y);
@@ -340,7 +360,32 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     fill(190, 228, 236);
     textSize(13);
     textAlign(LEFT, TOP);
-    text(`Credits: ${player?.credits ?? 0}`, info.x + 20, info.y + 56);
+
+    // Scrap row — highlighted box
+    const scrapIcon = getScrapIcon?.();
+    const iconSize = 20;
+    const boxX = info.x + 14, boxY = info.y + 48, boxW = info.w - 28, boxH = 26;
+    noStroke();
+    fill(12, 23, 31, 200);
+    rect(boxX, boxY, boxW, boxH, 4);
+    stroke(126, 220, 224, 140);
+    strokeWeight(1.2);
+    noFill();
+    rect(boxX, boxY, boxW, boxH, 4);
+    noStroke();
+
+    const scrapRowY = boxY + boxH / 2;
+    if (scrapIcon) {
+      image(scrapIcon, boxX + 8, scrapRowY - iconSize / 2, iconSize, iconSize);
+    }
+    fill(255, 223, 136);
+    textSize(13);
+    textAlign(LEFT, CENTER);
+    text(`Scrap: ${player?.scrap ?? 0}`, boxX + 8 + (scrapIcon ? iconSize + 4 : 0), scrapRowY);
+
+    fill(190, 228, 236);
+    textSize(13);
+    textAlign(LEFT, TOP);
     text(`Missiles: ${player?.missiles ?? 0}`, info.x + 20, info.y + 82);
     text(`Power Lvl: ${player?.upgrades?.power ?? 1}`, info.x + 20, info.y + 108);
     text(`Torch Lvl: ${player?.upgrades?.torch ?? 1}`, info.x + 20, info.y + 134);
@@ -349,10 +394,10 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     fill(116, 160, 171);
     textSize(11);
     const shopKey = keyLabel(CONTROLS.MODES[controlMode].ACCEPT);
-    text(`Click any card to buy. Press ${shopKey} or close to return.`, info.x + 20, info.y + 204, info.w - 40, 80);
+    text(`Click any card to buy. Press ${shopKey} or close to return.`, info.x + 20, info.y + 218, info.w - 40, 80);
 
     drawButton(
-      `ACCEPT (${shopKey})`,
+      `CLOSE (${shopKey})`,
       layout.closeButton.x,
       layout.closeButton.y,
       layout.closeButton.w,
@@ -369,14 +414,14 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     const upgrade = upgrades[upgradeName];
     if (!upgrade) return false;
 
-    const playerCredits = player?.credits ?? 0;
-    if (playerCredits < upgrade.cost) {
-      console.log(`❌ Not enough credits for ${upgradeName} upgrade. Need: ${upgrade.cost}, Have: ${playerCredits}`);
+    const playerScrap = player?.scrap ?? 0;
+    if (playerScrap < upgrade.cost) {
+      console.log(`❌ Not enough scrap for ${upgradeName} upgrade. Need: ${upgrade.cost}, Have: ${playerScrap}`);
       return false;
     }
 
-    // Deduct credits
-    player.credits -= upgrade.cost;
+    // Deduct scrap
+    player.scrap -= upgrade.cost;
     
     // Increment upgrade level
     if (player.upgrades && upgradeName in player.upgrades) {
@@ -387,7 +432,7 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     upgrade.level++;
     upgrade.cost = Math.ceil(upgrade.cost * 1.5); // Increase cost for next level
     
-    console.log(`✓ Purchased ${upgradeName} upgrade! New level: ${upgrade.level}, Credits left: ${player.credits}`);
+    console.log(`✓ Purchased ${upgradeName} upgrade! New level: ${upgrade.level}, Scrap left: ${player.scrap}`);
     return true;
   }
 
@@ -396,14 +441,14 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     if (!item) return false;
 
     const totalCost = item.costPerUnit * quantity;
-    const playerCredits = player?.credits ?? 0;
-    if (playerCredits < totalCost) {
-      console.log(`❌ Not enough credits for ${quantity}x ${itemName}. Need: ${totalCost}, Have: ${playerCredits}`);
+    const playerScrap = player?.scrap ?? 0;
+    if (playerScrap < totalCost) {
+      console.log(`❌ Not enough scrap for ${quantity}x ${itemName}. Need: ${totalCost}, Have: ${playerScrap}`);
       return false;
     }
 
-    // Deduct credits
-    player.credits -= totalCost;
+    // Deduct scrap
+    player.scrap -= totalCost;
     
     // Add to inventory
     if (itemName === 'missiles') {
@@ -413,7 +458,7 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     // Update shop display
     item.quantity += quantity;
     
-    console.log(`✓ Purchased ${quantity}x ${itemName}! Total owned: ${item.quantity}, Credits left: ${player.credits}`);
+    console.log(`✓ Purchased ${quantity}x ${itemName}! Total owned: ${item.quantity}, Scrap left: ${player.scrap}`);
     return true;
   }
 
@@ -421,21 +466,21 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
   // CLICK HANDLING
   //--------------------------------------
   function handleClick() {
-    if (!shopOpen) return;
+    if (!workshopOpen) return;
 
-    console.log(`[shop] click detected at mouseX=${mouseX}, mouseY=${mouseY}, credits=${player?.credits ?? 0}`);
+    console.log(`[workshop] click detected at mouseX=${mouseX}, mouseY=${mouseY}, scrap=${player?.scrap ?? 0}`);
 
     const layout = getLayout();
 
     if (isOver(layout.closeButton.x, layout.closeButton.y, layout.closeButton.w, layout.closeButton.h)) {
-      console.log('[shop] close button clicked');
-      shopOpen = false;
+      console.log('[workshop] close button clicked');
+      workshopOpen = false;
       return;
     }
 
     for (const card of layout.upgradeCards) {
       if (isOver(card.x, card.y, card.w, card.h)) {
-        console.log(`[shop] upgrade card clicked: ${card.key}`);
+        console.log(`[workshop] upgrade card clicked: ${card.key}`);
         attemptUpgradePurchase(card.key);
         return;
       }
@@ -443,13 +488,13 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
 
     for (const card of layout.itemCards) {
       if (isOver(card.x, card.y, card.w, card.h)) {
-        console.log(`[shop] item card clicked: ${card.key}`);
+        console.log(`[workshop] item card clicked: ${card.key}`);
         attemptItemPurchase(card.key, 1);
         return;
       }
     }
 
-    console.log('[shop] click did not hit any button');
+    console.log('[workshop] click did not hit any button');
   }
 
   //--------------------------------------
@@ -457,8 +502,8 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
   //--------------------------------------
   return {
     // STATE QUERIES
-    isShopOpen() {
-      return shopOpen;
+    isWorkshopOpen() {
+      return workshopOpen;
     },
 
     setControlMode(mode) {
@@ -466,37 +511,37 @@ export function createShopSystem(player, initialControlMode = CONTROLS.DEFAULT_M
     },
 
     // STATE CONTROL
-    toggleShop() {
-      shopOpen = !shopOpen;
+    toggleWorkshop() {
+      workshopOpen = !workshopOpen;
     },
 
-    openShop() {
-      shopOpen = true;
+    openWorkshop() {
+      workshopOpen = true;
     },
 
-    closeShop() {
-      shopOpen = false;
+    closeWorkshop() {
+      workshopOpen = false;
     },
 
     // ENGINE INTERFACE
     update() {
       // Update logic here if needed
-      // Currently shop is stateless except for open/closed
+      // Currently workshop is stateless except for open/closed
     },
 
     draw() {
-      if (!shopOpen) return;
-      drawShopUI();
+      if (!workshopOpen) return;
+      drawWorkshopUI();
     },
 
     // INPUT INTERFACE
     onMousePressed() {
-      if (!shopOpen) return;
+      if (!workshopOpen) return;
       handleClick();
     },
 
     reset() {
-      shopOpen = false;
+      workshopOpen = false;
       for (const name of Object.keys(upgrades)) {
         upgrades[name].level = 1;
         upgrades[name].cost  = INITIAL_UPGRADE_COSTS[name];

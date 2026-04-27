@@ -96,6 +96,16 @@ global.loadImage = jest.fn((src, onLoad) => {
   if (onLoad) setTimeout(() => onLoad(img), 0);
   return img;
 });
+global.drawingContext = {
+  globalCompositeOperation: 'source-over',
+  fillStyle: '',
+  createRadialGradient: jest.fn(() => ({ addColorStop: jest.fn() })),
+  createLinearGradient: jest.fn(() => ({ addColorStop: jest.fn() })),
+  fillRect: jest.fn(),
+  beginPath: jest.fn(),
+  arc: jest.fn(),
+  fill: jest.fn(),
+};
 global.color      = (r, g, b, a) => makeColor(r, g, b, a);
 global.lerpColor  = (c1, c2, t) => c1;
 global.map        = (v, i1, i2, o1, o2) => o1 + (o2 - o1) * ((v - i1) / (i2 - i1));
