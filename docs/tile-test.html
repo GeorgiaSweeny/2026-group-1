@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Tile Render Test</title>
+  <style>
+    body { background: #111; color: #eee; font-family: monospace; margin: 20px; }
+    h1 { font-size: 16px; }
+    h2 { font-size: 14px; color: #aaa; margin-top: 24px; }
+    .status { color: #0f0; margin: 4px 0; }
+    .error { color: #f55; margin: 4px 0; }
+    .warn  { color: #fa0; margin: 4px 0; }
+    canvas  { border: 1px solid #333; margin: 8px 0; display: block; }
+    #results { margin-top: 16px; max-width: 700px; }
+    .result-line { margin: 2px 0; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>Tile Render Test — THE ABYSS</h1>
+  <div id="status" class="status">Loading...</div>
+
+  <h2>Tile previews (collision layer GIDs)</h2>
+  <div id="tile-previews"></div>
+
+  <h2>Debug log</h2>
+  <div id="results"></div>
+
+  <script src="p5/p5.js"></script>
+  <script>
+    // ============================================================
+    // Minimal reproduction of the tile rendering pipeline from the game
+    // Key function under test: tilesetSourceToImagePath
+    // ============================================================
+
+    const BASE = 'http://127.0.0.1:5501';
+
+    const assets = {};
+
+    // ---- Utility functions (copied from sketch.js) ----
+
+    function normalizeRelativePath(basePath, relativePath) {
+      const baseParts = String(basePath).split("/").filter(Boolean);
+      const relParts  = String(relativePath ?? "").split("/").filter(Boolean);
+      for (const part of relParts) {
+        if (part === ".")  continue;
+        if (part === "..") { baseParts.pop(); continue; }
+        baseParts.push(part);
+      }
+      return baseParts.join("/");
+    }
+
+    function getPathDir(path) {
+      const parts = String(path ?? "").split("/").filter(Boolean);
+      parts.pop();
+      return parts.join("/");
+    }
+
+    /**
+     * THE KEY FUNCTION under test.
+     * Current game code uses tsx FILENAME to derive image path.
+     * Should use tsx <image source="..."> attribute instead.
+     */
+    function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
+      if (!source) return null;
+      if (String(source).toLowerCase().endsWith("backgrounds.tsx")) return null;
+      const resolvedSource = normalizeRelativePath(mapDir, source);
+      const tsxDir = getPathDir(resolvedSource);
+      const pngFilename = resolvedSource.split("/").pop().replace(/\.tsx$/i, ".png");
+      return normalizeRelativePath(tsxDir, pngFilename);
+    }
+
+    function parseTsxMetadata(xmlText, sourcePath = "") {
+      const empty = {
+        tilePropertiesById: {}, tileImagesById: {},
+        resolvedImagePath: null, tilewidth: null, tileheight: null,
+        columns: null, tilecount: null,
+      };
+      if (!xmlText || typeof DOMParser === "undefined") return empty;
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xmlText, "application/xml");
+      const tilesetNode = doc.querySelector("tileset");
+      if (!tilesetNode) return empty;
+      const baseDir = getPathDir(sourcePath);
+      const tilePropertiesById = {};
+      const tileImagesById = {};
+      const rootChildren = Array.from(tilesetNode.children ?? []);
+      const rootImageNode = rootChildren.find(
+        (node) => String(node?.tagName).toLowerCase() === "image",
+      );
+      const rootImageSource = rootImageNode?.getAttribute("source") ?? null;
+      const resolvedImagePath = rootImageSource
+        ? normalizeRelativePath(baseDir, rootImageSource)
+        : null;
+      const tileNodes = Array.from(tilesetNode.querySelectorAll("tile"));
+      for (const tileNode of tileNodes) {
+        const localId = Number(tileNode.getAttribute("id"));
+        if (!Number.isFinite(localId)) continue;
+        const props = {};
+        for (const propNode of Array.from(tileNode.querySelectorAll("properties > property"))) {
+          const name = propNode.getAttribute("name");
+          if (name) props[name] = propNode.getAttribute("value") ?? propNode.textContent ?? "";
+        }
+        if (Object.keys(props).length) tilePropertiesById[localId] = props;
+        const tileChildren = Array.from(tileNode.children ?? []);
+        const tileImageNode = tileChildren.find(
+          (node) => String(node?.tagName).toLowerCase() === "image",
+        );
+        const tileImageSource = tileImageNode?.getAttribute("source") ?? null;
+        if (!tileImageSource) continue;
+        tileImagesById[localId] = {
+          source: tileImageSource,
+          resolvedImagePath: normalizeRelativePath(baseDir, tileImageSource),
+        };
+      }
+      return {
+        tilePropertiesById, tileImagesById, resolvedImagePath,
+        tilewidth: Number(tilesetNode.getAttribute("tilewidth")  ?? 0) || null,
+        tileheight: Number(tilesetNode.getAttribute("tileheight") ?? 0) || null,
+        columns: Number(tilesetNode.getAttribute("columns") ?? 0) || null,
+        tilecount: Number(tilesetNode.getAttribute("tilecount") ?? 0) || null,
+      };
+    }
+
+    function getTilesetForGid(gid, tilesets) {
+      let best = null;
+      for (const ts of tilesets) {
+        const firstgid = Number(ts?.firstgid ?? 0);
+        if (!firstgid || gid < firstgid) continue;
+        if (!best || firstgid > best.firstgid) best = { ...ts, firstgid };
+      }
+      return best;
+    }
+
+    // ---- Test configuration ----
+    const TILESETS = [
+      { firstgid: 1,    source: "../tilesets/prototype-tileset/prototype-tileset.tsx" },
+      { firstgid: 111,  source: "../tilesets/Atlantis/atlantis-tileset-1.tsx" },
+      { firstgid: 687,  source: "../tilesets/Atlantis/atlantis-tileset-2.tsx" },
+      { firstgid: 1263, source: "../tilesets/Atlantis/atlantis-tileset-3.tsx" },
+    ];
+
+    // GIDs from collision layer in demoStart.json
+    const COLLISION_GIDS = [23, 508];
+
+    const CANVAS_W = 600;
+    const TILE_DISPLAY = 64; // rendered size of each tile
+
+    let tsxCache = {};
+    let tilesetMetaCache = {};
+    let loadedCount = 0;
+    let totalCount = TILESETS.length;
+
+    function setup() {
+      createCanvas(CANVAS_W, 300);
+      pixelDensity(1);
+      background(30);
+      textSize(11);
+      log("=== Starting tile render test ===");
+      loadEverything();
+    }
+
+    async function loadEverything() {
+      // Step 1: Load all TSX files
+      log("\n[1] Loading TSX metadata files...");
+      for (const ts of TILESETS) {
+        const mapDir = "data/rooms";
+        const resolvedSource = normalizeRelativePath(mapDir, ts.source);
+        ts._resolvedSource = resolvedSource;
+        log(`    Fetching: ${resolvedSource}`);
+        try {
+          const resp = await fetch(`${BASE}/${resolvedSource}`);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const text = await resp.text();
+          tsxCache[resolvedSource] = text;
+          const meta = parseTsxMetadata(text, resolvedSource);
+          tilesetMetaCache[resolvedSource] = meta;
+          log(`    ✓ resolvedImagePath="${meta.resolvedImagePath}" (from tsx <image source>)`);
+          log(`    × fallback path="${tilesetSourceToImagePath(ts.source, mapDir)}" (from tsx filename)`);
+        } catch (e) {
+          log(`    ✗ FAILED: ${e.message}`, "error");
+        }
+      }
+
+      // Step 2: Load atlas images — try BOTH paths for each tileset
+      log("\n[2] Loading atlas images...");
+      for (const ts of TILESETS) {
+        const mapDir = "data/rooms";
+        const meta = tilesetMetaCache[ts._resolvedSource];
+        const fromTsx     = meta?.resolvedImagePath;
+        const fromFallback = tilesetSourceToImagePath(ts.source, mapDir);
+
+        log(`\n    Tileset: ${ts.source}`);
+        log(`      tsx metadata path  = "${fromTsx || 'MISSING'}"`);
+        log(`      fallback path      = "${fromFallback}"`);
+
+        // Try tsx path first (correct), then fallback (wrong for atlantis)
+        const paths = [fromTsx, fromFallback].filter(Boolean).reduce((acc, p) => {
+          if (!acc.includes(p)) acc.push(p);
+          return acc;
+        }, []);
+
+        let loaded = false;
+        for (const path of paths) {
+          if (loaded) break;
+          const url = `${BASE}/${path}`;
+          log(`      Trying: ${url}`);
+          try {
+            const img = await loadImage(url);
+            assets[`tileset:${path}`] = img;
+            ts._loadedPath = path;
+            ts._loadedImg = img;
+            loadedCount++;
+            loaded = true;
+            const ok = (path === fromFallback)
+              ? `✓ (but WRONG path — should be "${fromTsx}")`
+              : `✓ CORRECT`;
+            log(`      ${ok}: loaded ${img.width}x${img.height} from "${path}"`, "status");
+          } catch (e) {
+            log(`      ✗ "${path}" → 404 or error`, "error");
+          }
+        }
+        if (!loaded) log(`      ✗ All paths exhausted for this tileset`, "error");
+      }
+
+      log(`\n[3] Loaded ${loadedCount}/${totalCount} atlases.`);
+      renderTiles();
+    }
+
+    function renderTiles() {
+      background(30);
+      fill(200);
+
+      const marginX = 10, marginY = 10;
+      const gapX = 8, gapY = 8;
+      const cols = 4;
+      let x = marginX, y = marginY, col = 0;
+
+      for (const gid of COLLISION_GIDS) {
+        const tileset = getTilesetForGid(gid, TILESETS);
+        const localId = gid - Number(tileset.firstgid);
+        const atlasPath = tileset._loadedPath;
+        const img = assets[`tileset:${atlasPath}`];
+
+        text(`GID=${gid}  localId=${localId}  tileset="${tileset.source.split("/").pop()}"`, x, y - 2);
+        y += 12;
+
+        if (img && img.width > 0) {
+          // Real tile render — exact copy of drawSpriteFromTileset logic
+          const tileW = tileset.tilewidth ?? 16;
+          const tileH = tileset.tileheight ?? 16;
+          const columns = tileset.columns ?? Math.max(1, Math.floor(img.width / tileW));
+          const srcX = (localId % columns) * tileW;
+          const srcY = Math.floor(localId / columns) * tileH;
+          image(img, x, y, TILE_DISPLAY, TILE_DISPLAY, srcX, srcY, tileW, tileH);
+
+          // Tile border
+          noFill();
+          stroke(0, 200, 100);
+          strokeWeight(1);
+          rect(x, y, TILE_DISPLAY, TILE_DISPLAY);
+          noStroke();
+        } else {
+          noFill();
+          stroke(255, 0, 0);
+          strokeWeight(2);
+          rect(x, y, TILE_DISPLAY, TILE_DISPLAY);
+          noStroke();
+          fill(255, 100, 100);
+          text("MISSING ATLAS", x, y + TILE_DISPLAY / 2);
+          fill(200);
+        }
+
+        y += TILE_DISPLAY + gapY + 20;
+        col++;
+        if (col >= cols) { col = 0; x = marginX; y = marginY + 120; }
+        else x += TILE_DISPLAY + gapX;
+      }
+
+      // Summary box
+      noStroke();
+      fill(loadedCount === totalCount ? color(0,220,100) : color(255,150,0));
+      rect(0, height - 30, width, 30);
+      fill(0);
+      textAlign(LEFT, CENTER);
+      text(`RESULT: ${loadedCount}/${totalCount} atlases loaded  |  tsx path = CORRECT (TilesetN.png)  |  fallback path = WRONG (atlantis-tileset-N.png)`, 8, height - 15);
+      textAlign(LEFT);
+    }
+
+    function draw() { /* static */ }
+
+    // ---- Logging ----
+    function log(msg, type = "status") {
+      console.warn(`[tile-test] ${msg}`);
+      const el = document.createElement("div");
+      el.className = `result-line ${type}`;
+      el.textContent = msg;
+      document.getElementById("results").appendChild(el);
+      document.getElementById("status").textContent =
+        loadedCount === totalCount ? "✓ All atlases loaded" :
+        loadedCount > 0 ? `⚠ ${loadedCount}/${totalCount} loaded` : "✗ Loading...";
+    }
+  </script>
+</body>
+</html>
