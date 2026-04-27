@@ -139,8 +139,9 @@ export function createRenderSystem({
 
       const imagePath = tileset.resolvedImagePath ?? tilesetSourceToImagePath(tileset.source);
       const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
-      if (!tilesetImage) {
-         console.warn(`[renderSystem] Missing tileset image for path: "${imagePath}" (source: "${tileset.source}")`);
+      // Validate the atlas image is actually loaded (p5.js creates a zero-size placeholder on 404)
+      if (!tilesetImage || !(tilesetImage.width > 0)) {
+         console.warn(`[renderSystem] Missing or unloaded tileset image for path: "${imagePath}" (source: "${tileset.source}")`);
          return false;
       }
 
@@ -213,9 +214,8 @@ export function createRenderSystem({
       for (const p of platforms) {
          if (p.isDestroyed) continue;
          if (drawSpriteFromTileset(p)) continue;
-         // Fallback: no sprite atlas tile available — draw solid rect so the
-         // platform is never invisible. Breakable platforms always get a rect;
-         // non-breakable (e.g. collision-layer walls) get one too as a fallback.
+         // Fallback: no sprite atlas tile available — draw solid rect so platforms
+         // are never invisible (collision-layer walls with no atlas tile still visible).
          fill(platformColor);
          rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
       }
