@@ -402,8 +402,8 @@ Our team worked through a process of collaborative planning, exploratory prototy
 After agreeing on the main theme, we began with a two-week exploratory sprint. Team members selected feature areas from the user stories and built early prototypes using the p5.js online editor. These prototypes were then shared on Notion so that the rest of the team could review the design, compare different approaches, and decide which ideas were suitable for the MVP. This allowed us to test early versions of sonar, lighting, movement, UI, and room-navigation mechanics before committing to a single implementation.
 
 <p align="center">
-    <img src="project-docs/report_figures/F8-1-Feature Tests.png" alt="Feature tests" width="250" />
-    <img src="project-docs/report_figures/F8-2-Feature Tests.png" alt="Feature tests" width="250" />
+    <img src="project-docs/report_figures/F8-1-Feature Tests.png" alt="Feature tests" width="400" />
+    <img src="project-docs/report_figures/F8-2-Feature Tests.png" alt="Feature tests" width="400" />
 </p>
 
 This approach worked well during the early creative stage because it encouraged low-risk experimentation. Team members could test ideas independently without immediately affecting the shared codebase, and the feature tests provided visual evidence that made discussions more concrete. However, the limitation of this approach became clearer during implementation. Since prototypes were built separately, they often used different assumptions about game state or object structure. As a result, they could not simply be copied into the final game and required additional integration work.
