@@ -71,6 +71,7 @@ export function createInputSystem(player) {
 
   return {
     update() {
+      if (!player?.moveIntent) return;
       const map = getMap();
       player.moveIntent.left  = keyIsDown(map.MOVE_LEFT);
       player.moveIntent.right = keyIsDown(map.MOVE_RIGHT);
@@ -79,6 +80,7 @@ export function createInputSystem(player) {
     },
 
     onKeyPressed(key, keyCode) {
+      if (!player?.actionIntent) return;
       const map = getMap();
       if (matchesBinding(map.TOGGLE_PAUSE,   key, keyCode)) player.actionIntent.togglePause   = true;
       if (matchesBinding(map.TOGGLE_WORKSHOP,    key, keyCode)) player.actionIntent.toggleWorkshop    = true;
@@ -89,7 +91,11 @@ export function createInputSystem(player) {
     },
 
     setControlMode(mode) {
-      if (CONTROLS.MODES[mode]) controlMode = mode;
+      if (mode === null || mode === undefined) {
+        controlMode = CONTROLS.DEFAULT_MODE;
+      } else if (CONTROLS.MODES[mode]) {
+        controlMode = mode;
+      }
     },
 
     getControlMode() {
