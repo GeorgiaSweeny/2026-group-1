@@ -264,7 +264,7 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
       if (!contactSet.has(enemy)) {
         player.power.current = Math.max(0, player.power.current - contactPenalty);
         contactSet.add(enemy);
-        soundSystem?.play('playerHit', 0.3);
+        soundSystem?.play('playerHit', 0.2);
       }
       player.power.drain(drainRate);
     } else {

@@ -578,7 +578,7 @@ function setup() {
     },
     onWin: () => {
       soundSystem?.stop('gamebg1');
-      soundSystem?.play('win', 0.9);
+      soundSystem?.play('win', 0.4);
       gameState = WIN_STATE;
     },
     getAllowedRooms: () => GAME_VERSIONS[gameVersion].rooms,
