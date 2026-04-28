@@ -841,6 +841,11 @@ function draw() {
     soundSystem?.stop('movement');
   }
 
+  // Check power depletion before any state routing so game over renders on the SAME frame
+  if (isGameplayState && player.power?.isEmpty()) {
+    gameState = GAME_OVER_STATE;
+  }
+
   if (gameState === "MAIN_PAGE") {
     mainPageSystem.draw(mainPageBg);
     return;
@@ -917,6 +922,7 @@ function draw() {
       engine.update();
       accumulator -= TIME.fixedDeltaTime;
     }
+    // Check power depletion BEFORE rendering so game over appears immediately
     if (player.power?.isEmpty()) {
       gameState = GAME_OVER_STATE;
     }

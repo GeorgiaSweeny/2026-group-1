@@ -422,10 +422,16 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
 
     // Deduct scrap
     player.scrap -= upgrade.cost;
-    
+
     // Increment upgrade level
     if (player.upgrades && upgradeName in player.upgrades) {
       player.upgrades[upgradeName]++;
+    }
+
+    // Power upgrade: restore current power immediately for a satisfying feedback loop
+    if (upgradeName === 'power' && player.power) {
+      const bonus = player.power.upgradeBonusPerLevel ?? 20;
+      player.power.current = Math.min(player.power.current + bonus * 1.5, player.power.maxPower);
     }
 
     // Update shop display
