@@ -91,6 +91,7 @@ let lastEnsuredRoom = null;
 let gameState = "MAIN_PAGE";
 let showControlsOverlay = false;   // toggled by H key
 let storyDialogActive = false;     // story dialog shown on game start
+let hasSeenIntro = false;          // true after player passes STORY_PAGE → CONTROLS flow
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
 let gameVersion = "full"; // "demo" | "full"
 let sessionVersion = "full";   // locked-in version for the current session
@@ -1041,6 +1042,7 @@ function mousePressed() {
       gameState = "STORY_PAGE";
     } else if (selection === "NEXT") {
       soundSystem?.play('buttonClick', 0.8);
+      hasSeenIntro = true;
       gameState = "MENU";
     }
     return;
@@ -1090,7 +1092,7 @@ function mousePressed() {
       sessionDifficulty = GAME_VERSIONS.demo.difficulty;
       applyDifficultyConfig(sessionDifficulty);
       resetGameToStart();
-      storyDialogActive = true;
+      storyDialogActive = !hasSeenIntro;
       gameState = "PLAYING";
     } else if (selection === "EASY" || selection === "HARD") {
       soundSystem?.stop('introMusic');
@@ -1102,7 +1104,7 @@ function mousePressed() {
       sessionDifficulty = selection;
       applyDifficultyConfig(selection);
       resetGameToStart();
-      storyDialogActive = true;
+      storyDialogActive = !hasSeenIntro;
       gameState = "PLAYING";
     } else if (selection === "SETTINGS") {
       soundSystem?.play('buttonClick', 0.8);

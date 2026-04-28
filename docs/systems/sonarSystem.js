@@ -52,7 +52,7 @@ engine.register(sonarSystem);
 
 import { SONAR, TIME } from '../config.js';
 
-const RAY_COUNT = 360;
+const RAY_COUNT = 180;
 const BASE_RAY_SPEED = 2;
 const RAY_DECAY = 2;
 const BASE_RAY_LIFETIME = 255;
@@ -111,6 +111,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
   const collectableAlpha = new WeakMap();
   const enemyAlpha = new WeakMap();
   let cooldownTimerMs = 0;  // real milliseconds in sonar system time
+  let effectiveCooldownMs = BASE_COOLDOWN_MS;
   let prevCollectableSet = new Set();
   let effectiveCooldownMs = BASE_COOLDOWN_MS;  // persists across frames, updated each update()
 
