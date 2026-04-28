@@ -2,8 +2,8 @@
     "activeFile": "rooms/demoStart.json",
     "expandedProjectPaths": [
         ".",
-        "rooms",
-        "tilesets"
+        "tilesets",
+        "rooms"
     ],
     "fileStates": {
         "rooms/cave.tsx": {
@@ -19,11 +19,11 @@
             }
         },
         "rooms/demoStart.json": {
-            "scale": 0.8978,
-            "selectedLayer": 1,
+            "scale": 2.3854,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 1279.7950545778567,
-                "y": 719.5366451325463
+                "x": 1831.558648444705,
+                "y": 747.4637377379055
             }
         },
         "rooms/endlessAbyss.json": {
