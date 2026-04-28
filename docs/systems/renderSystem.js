@@ -1199,17 +1199,17 @@ export function createRenderSystem({
 
       // Outer tech-frame ring
       stroke(126, 220, 224, 100);
-      strokeWeight(1.5);
-      circle(x, y, size + 18);
+      strokeWeight(2);
+      circle(x, y, size + 20);
 
       // Background ring (empty portion)
       stroke(30, 50, 65, 200);
-      strokeWeight(10);
+      strokeWeight(12);
       circle(x, y, size);
 
       // Active fill arc
       stroke(ringColor);
-      strokeWeight(10);
+      strokeWeight(12);
       strokeCap(ROUND);
       arc(
          x,
@@ -1223,7 +1223,7 @@ export function createRenderSystem({
       noStroke();
       fill(labelColor ?? color(234, 246, 248));
       textAlign(CENTER, CENTER);
-      textSize(16);
+      textSize(20);
       text(centerLabel, x, y);
       pop();
    }
@@ -1296,7 +1296,7 @@ export function createRenderSystem({
       noStroke();
       fill(255, 223, 136);
       textAlign(LEFT, CENTER);
-      textSize(12);
+      textSize(14);
       text('SCRAP:', ix + iconSize / 2 + 14, cy);
 
       // Count with pickup scale animation
@@ -1305,7 +1305,7 @@ export function createRenderSystem({
       scale(animScale, animScale);
       fill(234, 246, 248);
       textAlign(LEFT, CENTER);
-      textSize(20);
+      textSize(24);
       text(scrap, 0, 0);
       pop();
 
@@ -1314,7 +1314,7 @@ export function createRenderSystem({
 
    function drawWorkshopHint() {
       // Sits directly below the scrap counter (panelY=16, panelH=50)
-      const panelX = 16, panelY = 72, panelW = 175, panelH = 34;
+      const panelX = 16, panelY = 72, panelW = 185, panelH = 40;
       const cy = panelY + panelH / 2;
 
       push();
@@ -1332,7 +1332,7 @@ export function createRenderSystem({
 
       // B key badge
       const keyX = panelX + 10;
-      const keyW = 20, keyH = 18;
+      const keyW = 26, keyH = 22;
       fill(26, 42, 54, 240);
       stroke(126, 220, 224, 120);
       strokeWeight(1);
@@ -1341,22 +1341,63 @@ export function createRenderSystem({
       noStroke();
       fill(174, 205, 211);
       textAlign(CENTER, CENTER);
-      textSize(10);
+      textSize(13);
       text('B', keyX + keyW / 2, cy);
 
       // Label
       fill(174, 205, 211);
       textAlign(LEFT, CENTER);
-      textSize(11);
-      text('OPEN WORKSHOP', keyX + keyW + 8, cy);
+      textSize(14);
+      text('OPEN WORKSHOP', keyX + keyW + 10, cy);
+
+      pop();
+   }
+
+   function drawSneakHint() {
+      // Sits below workshop hint — SHIFT to sneak
+      const panelX = 16, panelY = 118, panelW = 185, panelH = 40;
+      const cy = panelY + panelH / 2;
+
+      push();
+
+      // Panel background
+      noStroke();
+      fill(12, 23, 31, 220);
+      rect(panelX, panelY, panelW, panelH, 6);
+
+      // Cyan border
+      stroke(126, 220, 224, 160);
+      strokeWeight(1.5);
+      noFill();
+      rect(panelX, panelY, panelW, panelH, 6);
+
+      // SHIFT key badge
+      const keyX = panelX + 10;
+      const keyW = 48, keyH = 22;
+      fill(26, 42, 54, 240);
+      stroke(126, 220, 224, 120);
+      strokeWeight(1);
+      rect(keyX, cy - keyH / 2, keyW, keyH, 3);
+
+      noStroke();
+      fill(174, 205, 211);
+      textAlign(CENTER, CENTER);
+      textSize(9);
+      text('SHIFT', keyX + keyW / 2, cy);
+
+      // Label
+      fill(174, 205, 211);
+      textAlign(LEFT, CENTER);
+      textSize(14);
+      text('Sneak', keyX + keyW + 10, cy);
 
       pop();
    }
 
    function drawUpgradeBars() {
-      const rowY    = HUD_DIALS.BOTTOM_ROW_Y        ?? 1025;
-      const labelY  = HUD_DIALS.BOTTOM_ROW_LABEL_Y  ?? 1048;
-      const spacing = HUD_DIALS.BOTTOM_ROW_SPACING  ?? 150;
+      const rowY    = HUD_DIALS.BOTTOM_ROW_Y        ?? 1010;
+      const labelY  = HUD_DIALS.BOTTOM_ROW_LABEL_Y  ?? 1040;
+      const spacing = HUD_DIALS.BOTTOM_ROW_SPACING  ?? 185;
       const centerX = HUD_DIALS.BOTTOM_ROW_CENTER_X ?? 960;
 
       const MAX_UPGRADE = 8;
@@ -1379,35 +1420,34 @@ export function createRenderSystem({
          const cx = startX + i * spacing;
 
          if (item.type === 'bar') {
-            drawSegmentBar(cx, rowY, item.value, item.max, 8, 12, 2);
+            drawSegmentBar(cx, rowY, item.value, item.max, 12, 16, 3);
          } else {
-            drawDotRow(cx, rowY, item.value, item.max, 12, 3);
+            drawDotRow(cx, rowY, item.value, item.max, 15, 4);
          }
 
          // Label — TORCH turns gold when active
          noStroke();
          fill(item.label === 'TORCH' && torchOn ? color(255, 200, 80) : color(174, 205, 211));
          textAlign(CENTER, TOP);
-         textSize(10);
+         textSize(14);
          text(item.label, cx, labelY);
 
          // Key hint badge to the right of label
          const keyHints = { SONAR: 'E', TORCH: 'F', MISSILES: 'SPACE' };
          const keyLabel = keyHints[item.label];
          if (keyLabel) {
-            const badgeW = item.label === 'MISSILES' ? 46 : 22;
-            const badgeH = 16;
-            const badgeX = cx + 22;
+            const badgeW = item.label === 'MISSILES' ? 56 : 30;
+            const badgeH = 20;
+            const badgeX = cx + 28;
             const badgeY = labelY - 1;
-            // Small rounded badge
             fill(10, 30, 45, 200);
             stroke(100, 200, 210, 120);
-            strokeWeight(1);
-            rect(badgeX, badgeY, badgeW, badgeH, 3);
+            strokeWeight(1.5);
+            rect(badgeX, badgeY, badgeW, badgeH, 4);
             noStroke();
             fill(174, 205, 211);
             textAlign(CENTER, CENTER);
-            textSize(8);
+            textSize(11);
             text(keyLabel, badgeX + badgeW / 2, badgeY + badgeH / 2);
          }
       }
@@ -1415,33 +1455,33 @@ export function createRenderSystem({
    }
 
    function drawPauseHint() {
-      // ESC key hint — top right corner, above the upgrade bars
-      const hintX = width - 80;
-      const hintY = height - 120;
-      const badgeW = 30;
-      const badgeH = 18;
+      // ESC key hint — top LEFT corner, beside workshop/sneak hints
+      const hintX = 210;
+      const hintY = 16;
+      const badgeW = 64;
+      const badgeH = 30;
 
       push();
       // Background pill
       noStroke();
-      fill(10, 30, 45, 200);
-      rect(hintX - badgeW / 2, hintY, badgeW, badgeH, 3);
-      stroke(100, 200, 210, 120);
-      strokeWeight(1);
-      rect(hintX - badgeW / 2, hintY, badgeW, badgeH, 3);
+      fill(10, 30, 45, 220);
+      rect(hintX - badgeW / 2, hintY, badgeW, badgeH, 5);
+      stroke(100, 200, 210, 140);
+      strokeWeight(1.5);
+      rect(hintX - badgeW / 2, hintY, badgeW, badgeH, 5);
 
       // ESC label
       noStroke();
       fill(174, 205, 211);
       textAlign(CENTER, CENTER);
-      textSize(8);
+      textSize(13);
       text('ESC', hintX, hintY + badgeH / 2);
 
       // PAUSE label below
       fill(130, 170, 180);
-      textSize(9);
+      textSize(11);
       textAlign(CENTER, TOP);
-      text('PAUSE', hintX, hintY + badgeH + 2);
+      text('PAUSE', hintX, hintY + badgeH + 4);
       pop();
    }
 
@@ -1457,8 +1497,10 @@ export function createRenderSystem({
       const powerDialSize = baseDialSize * powerDialScale;
       const sonarDialSize = baseDialSize * sonarDialScale;
 
+      // Fill ratio: 0 = empty (at 60% baseline), 1 = full
+      // Display fill % so player sees the bar move as power increases above baseline
       const powerFillRatio = Math.max(0, Math.min(1, player.power.getPercent()));
-      const powerPercent = Math.round(powerFillRatio * 100);
+      const powerFillPct = Math.round(powerFillRatio * 100);
 
       // Hard colour steps: green above 40%, amber 40–15%, red below 15%
       let powerStrokeColor;
@@ -1496,7 +1538,7 @@ export function createRenderSystem({
          y: powerDialY,
          size: powerDialSize,
          fillRatio: powerFillRatio,
-         centerLabel: `${powerPercent}%`,
+         centerLabel: `${powerFillPct}%`,
          ringColor: powerStrokeColor,
          labelColor: color(234, 246, 248),
       });
@@ -1540,6 +1582,7 @@ export function createRenderSystem({
       drawMiniMap?.();
       drawScrapCounter();
       drawWorkshopHint();
+      drawSneakHint();
       drawUpgradeBars();
       drawPauseHint();
    }

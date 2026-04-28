@@ -652,6 +652,8 @@ function setup() {
     () => enemySystem?.getEnemies() ?? [],
   );
 
+  particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
+
   missileSystem = createMissileSystem(
     player,
     () => enemySystem?.getEnemies() ?? [],
@@ -659,8 +661,6 @@ function setup() {
     soundSystem,
     particleSystem,
   );
-
-  particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 
   glowSystem = createGlowSystem(
     player,

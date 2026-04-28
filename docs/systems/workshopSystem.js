@@ -80,7 +80,7 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
     power: {
       level: player?.upgrades?.power ?? 1,
       cost: INITIAL_UPGRADE_COSTS.power,
-      description: "Increase max power capacity",
+      description: "Increase max power & refills some current power",
     },
     sonar: {
       level: player?.upgrades?.sonar ?? 1,

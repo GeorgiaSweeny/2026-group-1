@@ -37,20 +37,24 @@ export class PowerSystem {
    }
 
    reset() {
-      this.current = this.initialPower;
+      this.current = this.maxPower * 0.6;  // always start at 60% of current max
    }
 
    // Scales maxPower based on upgrade level. Level 1 = base, higher = more capacity.
    // Called every frame so level changes are picked up immediately.
    setMaxPower(level) {
       const safeLevel = Math.max(1, level);
-      // Remove previously applied bonus
-      const prevBonus = (Math.max(1, this.currentUpgradeLevel) - 1) * this.upgradeBonusPerLevel;
+      const prevLevel = this.currentUpgradeLevel;
+      const prevBonus = (Math.max(1, prevLevel) - 1) * this.upgradeBonusPerLevel;
       const newBonus = (safeLevel - 1) * this.upgradeBonusPerLevel;
       this.maxPower = this.baseMaxPower + newBonus;
       this.currentUpgradeLevel = safeLevel;
-      // Keep current within new cap
-      this.current = Math.min(this.current, this.maxPower);
+      // On upgrade, boost current power — gives player a meaningful reward
+      if (safeLevel > prevLevel) {
+         this.current = Math.min(this.current + this.upgradeBonusPerLevel, this.maxPower);
+      } else {
+         this.current = Math.min(this.current, this.maxPower);
+      }
    }
 
    drain(rate = this.drainRate) {
@@ -65,7 +69,12 @@ export class PowerSystem {
       return this.current <= this.maxPower * threshold;
    }
 
+   // Returns fill ratio for the power bar UI.
+   // Baseline is 60% of maxPower (the "empty" starting point).
+   // Each upgrade pushes the baseline up, so the bar appears to move rightward in the UI.
    getPercent() {
-      return this.current / this.maxPower;
+      const baseline = this.maxPower * 0.6;
+      const headroom = this.maxPower - baseline;
+      return Math.max(0, Math.min(1, (this.current - baseline) / headroom));
    }
 }
