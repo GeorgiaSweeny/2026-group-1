@@ -59,12 +59,12 @@ describe('PowerSystem — constructor', () => {
 //======================================
 
 describe('PowerSystem — reset()', () => {
-   it('restores current to 60% of maxPower (the new baseline)', () => {
+   it('restores current to maxPower (full bar)', () => {
       const power = makePower({ MAX_POWER: 100, CURRENT_POWER: 100 });
       power.drain();
       power.reset();
-      // reset() now restores to 60% of current maxPower, not initialPower
-      expect(power.current).toBe(power.maxPower * 0.6);
+      // reset() restores to full — player always starts a new life with a full bar
+      expect(power.current).toBe(power.maxPower);
    });
 
    it('works after multiple drains', () => {
@@ -73,7 +73,7 @@ describe('PowerSystem — reset()', () => {
       power.drain();
       power.drain();
       power.reset();
-      expect(power.current).toBe(power.maxPower * 0.6);
+      expect(power.current).toBe(power.maxPower);
    });
 
    it('does not exceed maxPower', () => {
