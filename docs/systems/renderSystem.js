@@ -49,6 +49,7 @@ export function createRenderSystem({
    getMissileTarget,
    getMissileFireFeedback,
    getParticles,
+   getBurstParticles,
    getPiranhas,
    getGlowObjects,
    drawMiniMap,
@@ -1242,7 +1243,6 @@ export function createRenderSystem({
    //===PARTICLES===//
    function drawParticles() {
       const particles = getParticles?.() ?? [];
-      if (!particles.length) return;
       noStroke();
       for (const p of particles) {
          const a = Math.max(0, Math.min(255, p.life ?? 255));
@@ -1251,6 +1251,14 @@ export function createRenderSystem({
          } else {
             fill(140, 200, 230, a * 0.5);
          }
+         circle(p.x, p.y, p.size * 2);
+      }
+
+      // Burst/debris particles (enemy death, wall destruction)
+      const burst = getBurstParticles?.() ?? [];
+      for (const p of burst) {
+         const a = Math.max(0, Math.min(255, p.life ?? 255));
+         fill(p.r ?? 255, p.g ?? 100, p.b ?? 40, a);
          circle(p.x, p.y, p.size * 2);
       }
    }

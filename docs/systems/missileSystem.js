@@ -84,7 +84,7 @@ class Missile extends Hitbox {
     }
 }
 
-export function createMissileSystem(player, getTargets, getWalls, soundSystem = null) {
+export function createMissileSystem(player, getTargets, getWalls, soundSystem = null, particleSystem = null) {
     let missiles = [];
     let lastFireTime = 0;
     let currentTarget = null;
@@ -163,11 +163,13 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
                     if (walls.includes(entity)) {
                         if (entity.isBreakable) {
                             entity.isDestroyed = true;
+                            particleSystem?.emitBurst(entity.position?.x ?? entity.x, entity.position?.y ?? entity.y, 'wall');
                             if (GAME.DIFFICULTY === 'EASY') {
                                 const blastRadius = 64;
                                 for (const w of walls) {
                                     if (w.isBreakable && w !== entity && p5.Vector.dist(entity.position, w.position) <= blastRadius) {
                                         w.isDestroyed = true;
+                                        particleSystem?.emitBurst(w.position?.x ?? w.x, w.position?.y ?? w.y, 'wall');
                                     }
                                 }
                             }

@@ -24,7 +24,7 @@ const RETURN_THRESHOLD = 6;
 const RETURN_SPEED_MULT = 0.6;
 const CHASE_DURATION_FRAMES = 180;
 
-export function createEnemySystem(player, getEnemies, getActivePulses, soundSystem = null) {
+export function createEnemySystem(player, getEnemies, getActivePulses, soundSystem = null, particleSystem = null) {
   const contactSet = new Set();
   let crabs = [];
   let jellyfish = [];
@@ -297,6 +297,7 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
       syncEnemies();
       for (let i = crabs.length - 1; i >= 0; i--) {
         if (crabs[i].pendingDestroy) {
+          particleSystem?.emitBurst(crabs[i].x, crabs[i].y, 'enemy');
           crabs.splice(i, 1);
         }
       }
@@ -308,7 +309,10 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
       }
 
       for (let i = jellyfish.length - 1; i >= 0; i--) {
-        if (jellyfish[i].pendingDestroy) jellyfish.splice(i, 1);
+        if (jellyfish[i].pendingDestroy) {
+          particleSystem?.emitBurst(jellyfish[i].x, jellyfish[i].y, 'enemy');
+          jellyfish.splice(i, 1);
+        }
       }
 
       for (const jelly of jellyfish) {
@@ -317,7 +321,10 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
       }
 
       for (let i = piranhas.length - 1; i >= 0; i--) {
-        if (piranhas[i].pendingDestroy) { piranhas.splice(i, 1); continue; }
+        if (piranhas[i].pendingDestroy) {
+          particleSystem?.emitBurst(piranhas[i].x, piranhas[i].y, 'enemy');
+          piranhas.splice(i, 1);
+        }
       }
 
       for (const piranha of piranhas) {

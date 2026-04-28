@@ -657,6 +657,7 @@ function setup() {
     () => enemySystem?.getEnemies() ?? [],
     () => roomSystem.getPlatforms(),
     soundSystem,
+    particleSystem,
   );
 
   particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
@@ -688,6 +689,7 @@ function setup() {
     () => roomSystem.getEnemies(),
     () => sonarSystem?.getActivePulses?.() ?? [],
     soundSystem,
+    particleSystem,
   );
 
   miniMapSystem = createMiniMapSystem({
@@ -750,6 +752,7 @@ function setup() {
     getMissileTarget: () => missileSystem.getCurrentTarget(),
     getMissileFireFeedback: () => missileSystem.getFireFeedbackTimer(),
     getParticles: () => particleSystem.getParticles(),
+    getBurstParticles: () => particleSystem.getBurstParticles(),
     drawMiniMap: () => miniMapSystem.draw(),
     getHudDialSettings: () => ({
       powerX: HUD_DIALS.POWER_X,
