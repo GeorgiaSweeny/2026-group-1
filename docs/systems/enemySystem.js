@@ -12,7 +12,7 @@ DESCRIPTION:
 import { isColliding } from './hitboxSystem.js';
 import { Crab } from '../entities/crab.js';
 import { Jellyfish } from '../entities/jellyfish.js';
-import { TIME } from '../config.js';
+import { TIME, JELLYFISH_GLOW } from '../config.js';
 import { Piranha } from '../entities/piranha.js';
 
 const CRAB_CONTACT_PENALTY = 4;  // burst drain on touch
@@ -170,6 +170,10 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
     jelly.previousPos.x = jelly.position.x;
     jelly.previousPos.y = jelly.position.y;
 
+    if (!jelly.trail) jelly.trail = [];
+    jelly.trail.unshift({ x: jelly.position.x, y: jelly.position.y });
+    if (jelly.trail.length > 4) jelly.trail.length = 4;
+
     jelly.time += fixedDtSeconds * jelly.frequency;
     jelly.pulsePhase = jelly.time;
 
@@ -186,6 +190,15 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
       }
 
       jelly.position.x = jelly.spawnX + jelly.driftDistance;
+    }
+
+    // Body glow height — driven by the same signal that animates tentacle stretch
+    const tentacleSignal = Math.abs(Math.sin(jelly.time));
+    const targetGlowH = JELLYFISH_GLOW.BODY_MIN_RADIUS + tentacleSignal * JELLYFISH_GLOW.BODY_HEIGHT_RANGE;
+    if (jelly.glowHeight === null || jelly.glowHeight === undefined) {
+      jelly.glowHeight = targetGlowH;
+    } else {
+      jelly.glowHeight += (targetGlowH - jelly.glowHeight) * JELLYFISH_GLOW.BODY_LERP;
     }
 
     jelly.nextPos.x = jelly.position.x;
@@ -340,6 +353,47 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
 
     getEnemies() {
       return [...crabs, ...jellyfish, ...piranhas];
-    }
+    },
+
+    getJellyfishLights() {
+      const lights = [];
+      for (const j of jellyfish) {
+        if (j.pendingDestroy) continue;
+        const t = j.time || 0;
+        const offset = j.cycleOffset ?? 0;
+
+        // Bidirectional pulse matching GLOW tile style (2.5 Hz)
+        const pulseSin = Math.sin(t * Math.PI * 2 * JELLYFISH_GLOW.PULSE_SPEED);
+        const flicker  = Math.sin(t * JELLYFISH_GLOW.FLICKER_SPEED) * JELLYFISH_GLOW.FLICKER_STRENGTH;
+        const glowPulse = 0.5 + 0.5 * pulseSin;  // 0–1 for gradient use
+        const intensity = Math.max(0, JELLYFISH_GLOW.BASE_INTENSITY + pulseSin * JELLYFISH_GLOW.PULSE_VARIATION + flicker);
+
+        // Head and body cycle through the palette independently
+        const headT = ((t / JELLYFISH_GLOW.HEAD_CYCLE_S) + offset) % 1;
+        const bodyT = ((t / JELLYFISH_GLOW.BODY_CYCLE_S) + offset + JELLYFISH_GLOW.BODY_PHASE_OFFSET) % 1;
+
+        lights.push({
+          kind: 'jellyfishHead',
+          x: j.position.x,
+          y: j.position.y - (j.h ?? 22) * 0.375,  // centre on dome
+          radius: JELLYFISH_GLOW.HEAD_RADIUS,
+          intensity,
+          glowPulse,
+          cycleT: headT,
+        });
+        const bodyH = j.glowHeight ?? JELLYFISH_GLOW.BODY_MIN_RADIUS;
+        lights.push({
+          kind: 'jellyfishBody',
+          x: j.position.x,
+          y: j.position.y + (j.h ?? 22) * 0.15,  // shifted to visual body centre
+          radius: bodyH,
+          aspect: JELLYFISH_GLOW.BODY_HALF_WIDTH / bodyH,  // keeps width stable as height changes
+          intensity: intensity * 0.65,
+          glowPulse: glowPulse * 0.7,
+          cycleT: bodyT,
+        });
+      }
+      return lights;
+    },
   };
 }

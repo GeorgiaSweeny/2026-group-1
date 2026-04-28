@@ -669,6 +669,7 @@ function setup() {
     () => sonarSystem?.getSonarLights?.() ?? [],
     () => glowSystem.getGlowLights(),
     () => roomSystem?.getCurrentRoom?.() ?? null,
+    () => enemySystem?.getJellyfishLights?.() ?? [],
   );
 
   resourceManagementSystem = createResourceManagementSystem(

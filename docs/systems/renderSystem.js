@@ -14,6 +14,33 @@ DESCRIPTION:
 
 import { DEBUG_COLOR, COMBAT, MISSILE, HUD_DIALS } from "../config.js";
 
+// Horizontal squash applied to body glow — gives the tall narrow oval shape
+const JELLY_BODY_ASPECT = 0.42;
+// Horizontal stretch applied to head glow — wider than tall to match dome shape
+const JELLY_HEAD_ASPECT = 1.5;
+
+// Jellyfish bioluminescent colour palette — magenta → pink → purple → lilac → blue
+const JELLY_PALETTE = [
+  [255,  60, 180],  // magenta
+  [255, 140, 210],  // pink
+  [200,  80, 255],  // purple
+  [200, 160, 255],  // lilac
+  [100, 120, 255],  // blue
+];
+function jellyColour(t) {
+  const n = JELLY_PALETTE.length;
+  const pos = (((t % 1) + 1) % 1) * n;
+  const i   = Math.floor(pos) % n;
+  const f   = pos - Math.floor(pos);
+  const prev = JELLY_PALETTE[i];
+  const next = JELLY_PALETTE[(i + 1) % n];
+  return [
+    Math.round(prev[0] + (next[0] - prev[0]) * f),
+    Math.round(prev[1] + (next[1] - prev[1]) * f),
+    Math.round(prev[2] + (next[2] - prev[2]) * f),
+  ];
+}
+
 //======================================
 // RENDER SYSTEM
 //======================================
@@ -429,6 +456,23 @@ export function createRenderSystem({
          const jellyW = Number(jelly?.w ?? jelly?.width ?? 48) || 48;
          const jellyH = Number(jelly?.h ?? jelly?.height ?? 52) || 52;
 
+         // Subtle hue shift: slow sine cycles between blue-purple and violet
+         const colorCycle = Math.sin((jelly.time || 0) * 0.25);
+         const bodyR = 150 + Math.round(colorCycle * 30);  // 120–180
+         const bodyG = 100 - Math.round(colorCycle * 20);  // 80–120
+
+         // Trail — ghost echoes drawn oldest-first so newest sits closest to body
+         const trailArr = Array.isArray(jelly.trail) ? jelly.trail : [];
+         for (let t = trailArr.length - 1; t >= 0; t--) {
+            push();
+            translate(trailArr[t].x, trailArr[t].y);
+            scale(1.5, 1.5);
+            noStroke();
+            fill(bodyR, bodyG, 255, Math.round(35 * (1 - t / trailArr.length)));
+            ellipse(0, -jellyH / 4, jellyW * (1 - t * 0.06), jellyH / 2 * (1 - t * 0.06));
+            pop();
+         }
+
          push();
          translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
 
@@ -438,10 +482,11 @@ export function createRenderSystem({
          const glowPulse = Math.abs(Math.sin(jelly.pulsePhase || 0));
          const jellyCtx = drawingContext;
 
+         // Body — colour-shifted fill and shadow
          jellyCtx.shadowBlur = 18 + glowPulse * 12;
-         jellyCtx.shadowColor = 'rgba(180, 100, 255, 0.85)';
+         jellyCtx.shadowColor = `rgba(${bodyR}, ${bodyG - 10}, 255, 0.85)`;
          noStroke();
-         fill(150, 100, 255, 180);
+         fill(bodyR, bodyG, 255, 180);
          ellipse(0, -jellyH / 4, jellyW, jellyH / 2);
          jellyCtx.shadowBlur = 0;
 
@@ -452,8 +497,9 @@ export function createRenderSystem({
          ellipse(-4, -jellyH / 4 - 2, 1.5, 1.5);
          ellipse(4, -jellyH / 4 - 2, 1.5, 1.5);
 
+         // Tentacle lines
          jellyCtx.shadowBlur = 8 + glowPulse * 6;
-         jellyCtx.shadowColor = 'rgba(150, 80, 255, 0.7)';
+         jellyCtx.shadowColor = `rgba(${bodyR - 30}, ${bodyG - 20}, 255, 0.7)`;
          stroke(120, 80, 200, 150);
          strokeWeight(2);
          for (let i = -1; i <= 1; i++) {
@@ -461,10 +507,22 @@ export function createRenderSystem({
             const tentacleWave = Math.sin((jelly.time || 0) + i) * 3;
             line(xOff, 0, xOff + tentacleWave, jellyH / 2);
          }
+
+         // Glowing tip dots at the end of each tentacle
+         noStroke();
+         jellyCtx.shadowBlur = 12 + glowPulse * 10;
+         jellyCtx.shadowColor = `rgba(${bodyR + 40}, 180, 255, 0.95)`;
+         for (let i = -1; i <= 1; i++) {
+            const xOff = i * 5;
+            const tentacleWave = Math.sin((jelly.time || 0) + i) * 3;
+            fill(230, 180 + Math.round(colorCycle * 20), 255, 160 + Math.round(glowPulse * 70));
+            circle(xOff + tentacleWave, jellyH / 2, 2.5);
+         }
          jellyCtx.shadowBlur = 0;
 
+         // Inner highlight — colour-shifted to match body
          noStroke();
-         fill(200, 150, 255, 100);
+         fill(bodyR + 50, bodyG + 50, 255, 100);
          ellipse(0, -jellyH / 4, jellyW * 0.6, jellyH * 0.3);
 
          pop();
@@ -689,6 +747,55 @@ export function createRenderSystem({
             gradient.addColorStop(0.94, 'rgba(255,255,255,0.05)');
             gradient.addColorStop(0.98, 'rgba(255,255,255,0.01)');
             gradient.addColorStop(1,    'rgba(0,0,0,0)');
+         } else if (kind === 'jellyfishHead') {
+            // Wide oval punch — horizontally stretched to match dome, wider than body oval
+            const p = light.glowPulse ?? 0;
+            const b1 = Math.min(1, 0.92 + p * 0.07);
+            const b2 = 0.52 + p * 0.08;
+            const b3 = 0.22 + p * 0.04;
+            const b4 = 0.07;
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.scale(JELLY_HEAD_ASPECT, 1.0);
+            const headGrad = ctx.createRadialGradient(0, 0, scaledRadius * 0.1, 0, 0, scaledRadius);
+            headGrad.addColorStop(0,    `rgba(255,255,255,${b1.toFixed(3)})`);
+            headGrad.addColorStop(0.06, `rgba(255,255,255,${b1.toFixed(3)})`);
+            headGrad.addColorStop(0.09, `rgba(255,255,255,${b2.toFixed(3)})`);
+            headGrad.addColorStop(0.24, `rgba(255,255,255,${b2.toFixed(3)})`);
+            headGrad.addColorStop(0.28, `rgba(255,255,255,${b3.toFixed(3)})`);
+            headGrad.addColorStop(0.55, `rgba(255,255,255,${b3.toFixed(3)})`);
+            headGrad.addColorStop(0.59, `rgba(255,255,255,${b4.toFixed(3)})`);
+            headGrad.addColorStop(0.88, `rgba(255,255,255,${b4.toFixed(3)})`);
+            headGrad.addColorStop(1,    'rgba(255,255,255,0)');
+            ctx.fillStyle = headGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            continue;
+         } else if (kind === 'jellyfishBody') {
+            // Tall narrow oval: transparent centre avoids stacking with head, very soft throughout
+            const p = light.glowPulse ?? 0;
+            const b1 = 0.16 + p * 0.04;  // peak: 0.16–0.20
+            const b2 = 0.08 + p * 0.02;  // mid:  0.08–0.10
+            const b3 = 0.03;              // outer: barely there
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.scale(light.aspect ?? JELLY_BODY_ASPECT, 1.0);
+            const ovalGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, scaledRadius);
+            ovalGrad.addColorStop(0,    'rgba(255,255,255,0)');                         // transparent — no contribution at core
+            ovalGrad.addColorStop(0.35, `rgba(255,255,255,${b1.toFixed(3)})`);         // fades in beyond head zone
+            ovalGrad.addColorStop(0.52, `rgba(255,255,255,${b1.toFixed(3)})`);         // hold
+            ovalGrad.addColorStop(0.60, `rgba(255,255,255,${b2.toFixed(3)})`);         // step down
+            ovalGrad.addColorStop(0.78, `rgba(255,255,255,${b2.toFixed(3)})`);         // hold
+            ovalGrad.addColorStop(0.86, `rgba(255,255,255,${b3.toFixed(3)})`);         // fade to edge
+            ovalGrad.addColorStop(1,    'rgba(255,255,255,0)');
+            ctx.fillStyle = ovalGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            continue;
          } else if (kind === 'ambient') {
             gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
             gradient.addColorStop(0.15, 'rgba(255,255,255,0.45)');
@@ -724,7 +831,9 @@ export function createRenderSystem({
       // Only the transparent (lit) areas pick up the colour; opaque dark areas are unaffected.
       ctx.globalCompositeOperation = 'source-over';
       for (const light of lightSources) {
-         if (light.kind !== 'glow') continue;
+         const isHead = light.kind === 'jellyfishHead';
+         const isBody = light.kind === 'jellyfishBody';
+         if (light.kind !== 'glow' && !isHead && !isBody) continue;
          const { x, y, radius, intensity = 1 } = light;
          const screenX = (x - cam.x) * camScale;
          const screenY = (y - cam.y) * camScale;
@@ -732,13 +841,78 @@ export function createRenderSystem({
          if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius) || scaledRadius <= 0) continue;
 
          const tint = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, scaledRadius);
-         const peak = 0.4 * intensity;
-         // centre is near-white so suppress colour there; tint peaks in the mid-ring zone
-         tint.addColorStop(0,    'rgba(40, 230, 180, 0)');
-         tint.addColorStop(0.2,  `rgba(20, 220, 170, ${peak * 0.3})`);
-         tint.addColorStop(0.45, `rgba(10, 200, 160, ${peak})`);
-         tint.addColorStop(0.7,  `rgba(0,  170, 140, ${peak * 0.4})`);
-         tint.addColorStop(1,    'rgba(0, 0, 0, 0)');
+         if (isHead) {
+            // Wide oval tint — horizontally stretched, wider than body oval, matches dome shape
+            const p  = light.glowPulse ?? 0;
+            const ct = light.cycleT ?? 0;
+            const coreA = Math.min(1, 0.75 + p * 0.22);
+            const b2A   = 0.52 + p * 0.08;
+            const b3A   = 0.28 + p * 0.04;
+            const outA  = 0.10;
+            const [r0, g0, c0] = jellyColour(ct);
+            const [r1, g1, c1] = jellyColour(ct + 0.20);
+            const [r2, g2, c2] = jellyColour(ct + 0.40);
+            const [r3, g3, c3] = jellyColour(ct + 0.60);
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.scale(JELLY_HEAD_ASPECT, 1.0);
+            const headTint = ctx.createRadialGradient(0, 0, 0, 0, 0, scaledRadius);
+            headTint.addColorStop(0,    `rgba(255,255,255,${(coreA * 0.88).toFixed(3)})`);
+            headTint.addColorStop(0.04, `rgba(255,255,255,${(coreA * 0.88).toFixed(3)})`);
+            headTint.addColorStop(0.06, `rgba(${r0},${g0},${c0},${coreA.toFixed(3)})`);
+            headTint.addColorStop(0.20, `rgba(${r0},${g0},${c0},${(coreA*0.85).toFixed(3)})`);
+            headTint.addColorStop(0.24, `rgba(${r1},${g1},${c1},${b2A.toFixed(3)})`);
+            headTint.addColorStop(0.40, `rgba(${r1},${g1},${c1},${(b2A*0.70).toFixed(3)})`);
+            headTint.addColorStop(0.44, `rgba(${r2},${g2},${c2},${b3A.toFixed(3)})`);
+            headTint.addColorStop(0.62, `rgba(${r2},${g2},${c2},${(b3A*0.50).toFixed(3)})`);
+            headTint.addColorStop(0.66, `rgba(${r3},${g3},${c3},${outA.toFixed(3)})`);
+            headTint.addColorStop(0.90, `rgba(${r3},${g3},${c3},${(outA*0.25).toFixed(3)})`);
+            headTint.addColorStop(1,    'rgba(0,0,0,0)');
+            ctx.fillStyle = headTint;
+            ctx.beginPath();
+            ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            continue;
+         } else if (isBody) {
+            // Tall narrow oval tint: transparent centre, soft colour shift from mid outward
+            const p  = light.glowPulse ?? 0;
+            const ct = light.cycleT ?? 0;
+            const midA  = 0.22 + p * 0.05;  // 0.22–0.27
+            const outA  = 0.10 + p * 0.02;  // 0.10–0.12
+            const edgeA = 0.04;              // static
+            const [r0, g0, c0] = jellyColour(ct);
+            const [r1, g1, c1] = jellyColour(ct + 0.30);
+            const dr = Math.round(r1 * 0.55 + 70 * 0.45);
+            const dg = Math.round(g1 * 0.55 + 55 * 0.45);
+            const dc = Math.round(c1 * 0.55 + 140 * 0.45);
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.scale(light.aspect ?? JELLY_BODY_ASPECT, 1.0);
+            const ovalTint = ctx.createRadialGradient(0, 0, 0, 0, 0, scaledRadius);
+            ovalTint.addColorStop(0,    `rgba(${r0},${g0},${c0},0)`);                         // transparent — no overlap at core
+            ovalTint.addColorStop(0.35, `rgba(${r0},${g0},${c0},${midA.toFixed(3)})`);        // fades in
+            ovalTint.addColorStop(0.52, `rgba(${r0},${g0},${c0},${(midA*0.80).toFixed(3)})`);
+            ovalTint.addColorStop(0.56, `rgba(${r1},${g1},${c1},${outA.toFixed(3)})`);        // colour shifts outward
+            ovalTint.addColorStop(0.75, `rgba(${dr},${dg},${dc},${(outA*0.60).toFixed(3)})`); // desaturated
+            ovalTint.addColorStop(0.82, `rgba(${dr},${dg},${dc},${edgeA.toFixed(3)})`);
+            ovalTint.addColorStop(0.96, `rgba(${dr},${dg},${dc},0)`);
+            ovalTint.addColorStop(1,    'rgba(0,0,0,0)');
+            ctx.fillStyle = ovalTint;
+            ctx.beginPath();
+            ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            continue;
+         } else {
+            // Existing cyan-green tint for glow interactable objects
+            const peak = 0.4 * intensity;
+            tint.addColorStop(0,    'rgba(40, 230, 180, 0)');
+            tint.addColorStop(0.2,  `rgba(20, 220, 170, ${peak * 0.3})`);
+            tint.addColorStop(0.45, `rgba(10, 200, 160, ${peak})`);
+            tint.addColorStop(0.7,  `rgba(0,  170, 140, ${peak * 0.4})`);
+            tint.addColorStop(1,    'rgba(0, 0, 0, 0)');
+         }
 
          ctx.fillStyle = tint;
          ctx.beginPath();

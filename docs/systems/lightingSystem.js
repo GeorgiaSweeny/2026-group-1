@@ -52,7 +52,7 @@ import { LIGHTING, TORCH } from '../config.js';
 const SURFACE_BOTTOM_Y = 3184; // player spawn row — darkest point
 const SURFACE_TOP_Y    = 320;  // win trigger row  — brightest point
 
-export function createLightingSystem(player = null, getSonarLights = () => [], getGlowLights = () => [], getCurrentRoom = () => null) {
+export function createLightingSystem(player = null, getSonarLights = () => [], getGlowLights = () => [], getCurrentRoom = () => null, getJellyfishLights = () => []) {
    return {
 
       //--- GET LIGHT SOURCES ---//
@@ -94,6 +94,12 @@ export function createLightingSystem(player = null, getSonarLights = () => [], g
          // Glow object lights
          const glowLights = getGlowLights?.() ?? [];
          for (const light of glowLights) {
+            lightSources.push(light);
+         }
+
+         // Jellyfish bioluminescent lights
+         const jellyfishLights = getJellyfishLights?.() ?? [];
+         for (const light of jellyfishLights) {
             lightSources.push(light);
          }
 
