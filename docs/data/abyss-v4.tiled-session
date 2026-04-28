@@ -72,7 +72,9 @@
             "scaleInDock": 1
         }
     },
+    "last.exportedFilePath": "/Users/georgia/COMSCI/SEP/2026-group-1/docs/data/tilesets/cave-tileset",
     "last.imagePath": "/Users/georgia/COMSCI/SEP/2026-group-1/docs/data/tilesets/cave-tileset",
+    "lastUsedTilesetExportFilter": "Tiled tileset files (*.tsx *.xml)",
     "openFiles": [
     ],
     "project": "abyss-v4.tiled-project",
