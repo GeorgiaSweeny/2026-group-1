@@ -419,7 +419,7 @@ After the first sprint, we identified the tasks needed to move from separate pro
     <img src="project-docs/report_figures/F10-Kanban.png" alt="GitHub Kanban board" width="600" />
 </p>
 
-Although this gave the team a clearer task structure, it was difficult to follow perfectly in practice. Many features depended on unfinished work from other areas. For example, sonar, lighting, and camera movement all needed access to shared game state. This created overlap between tasks and made isolated development harder than expected. It also meant that task ownership was not always clear when several people were working on related systems at the same time.
+Although this gave the team a clearer task structure, it was difficult to follow perfectly in practice. Many features depended on unfinished work from other areas. For example, sonar, lighting, and camera movement all needed access to shared game state. AI coding support also changed the workflow. Team members could quickly generate draft implementations of others' features instead of waiting for another task to be completed. This helped individuals make progress, but it also created overlap between tasks and made isolated development harder than expected.
 
 #### First sprint retrospective
 The main outcome of the first sprint was that the team had generated useful feature ideas, but the workflow was still too fragmented for implementation. The retrospective lesson was that prototypes were valuable for exploration, but they needed to be followed by clearer integration planning, shared architecture decisions, and better visibility over dependencies between tasks.
@@ -436,15 +436,16 @@ Overall, the team’s process evolved from open-ended exploration into a more st
 
 ### 7. Sustainability
 
-This section is written based on the assumption that how sustainability would apply if *The Abyss* became a large-scale, widely played game in the future. In that scenario, sustainability would not only mean reducing the environmental footprint of the software, but also considering the individual, social, economic, technical, and environmental effects created by long-term use. We therefore discussed the impact on each effect and how 
+This section is written based on the assumption that how sustainability would apply if *The Abyss* massively succeeded and widely played game in the future. In that scenario, sustainability would not only mean reducing the environmental footprint of the software, but also considering the individual, social, economic, technical, and environmental effects created by long-term use. This follows the idea that sustainability is cross-cutting concern. It affects software requirements, implementation, deployment, and the wider behaviour encouraged by the system.
+
+#### Technical sustainability
+
+#### Social, individual, and economic impact
 
 #### Direct environmental impact
 
 #### Enabling and behavioural effects
 
-#### Social, individual, and economic impact
-
-#### Technical sustainability
 
 ### 8. Conclusion (DL: 27 Apr 2026)
 
@@ -503,9 +504,7 @@ Some parts of the project were also largely manual design work rather than code 
     <img src="project-docs/map-design-photos/spike maze map v2.png" alt="Spike maze map" width="400" />
 </p>
 
-Overall, AI helped us work faster, but it did not remove the need for architectural understanding, debugging, code review, and design judgement. Final responsibility for the project remained with the team.
-
-
+Overall, AI helped us move faster, but moving further still required professional software engineering skills, including architectural understanding, debugging, code review, testing, and design judgement. Final responsibility for the project remained with the team.
 
 
 ### Additional Marks
