@@ -12,7 +12,7 @@ DESCRIPTION:
 ========================================
 */
 
-import { DEBUG_COLOR, COMBAT, MISSILE, HUD_DIALS } from "../config.js";
+import { DEBUG_COLOR, COMBAT, MISSILE, HUD_DIALS, RENDER } from "../config.js";
 
 // Horizontal squash applied to body glow — gives the tall narrow oval shape
 const JELLY_BODY_ASPECT = 0.42;
@@ -1512,9 +1512,13 @@ function renderInterpolate(oldState, newState, alpha){
             drawEnemies(alpha);
             drawCollectables();
             drawInteractables();
-            drawTriggers();
-            drawEntities(); //- will need interpolation
-            drawSpawnPoints();
+            if (RENDER.SHOW_TRIGGER_AND_ENTITY_VISUALS) {
+               drawTriggers();
+               drawEntities(); //- will need interpolation
+            }
+            if (RENDER.SHOW_TRIGGER_AND_ENTITY_VISUALS) {
+               drawSpawnPoints();
+            }
             drawSonarWalls(); // COMMENT OUT TO REMOVE VISUALS WHEN TORCH ON
             drawBubbles();
             drawParticles();

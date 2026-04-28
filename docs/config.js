@@ -32,6 +32,14 @@ export const GAME = {
 };
 
 //======================
+// RENDER CONFIG
+//======================
+export const RENDER = {
+  // Debug visuals from room object layers (does not affect gameplay logic/collisions).
+  SHOW_TRIGGER_AND_ENTITY_VISUALS: false,
+};
+
+//======================
 // GAME VERSIONS CONFIG
 //======================
 export const GAME_VERSIONS = {
