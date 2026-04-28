@@ -42,11 +42,7 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 
 </br>
 
-### Kanban Board & Organisation
-
-[GitHub Kanban](https://github.com/orgs/UoB-COMSM0166/projects/171/views/1) - Used track feature tracking & tickets
-
-[Notion Kanban Page](https://www.notion.so/2eef3902b1f0803590afe2a31c236dab?v=2eef3902b1f080509478000c3aa3a4a6&source=copy_link) - Used to manage general planning, organisation, share and document research (hub)
+[Notion Kanban Page](https://www.notion.so/2eef3902b1f0803590afe2a31c236dab?v=2eef3902b1f080509478000c3aa3a4a6&source=copy_link)
 
 ---
 </br>
@@ -80,14 +76,14 @@ The game concept was developed collaboratively through group discussions and pit
       <img 
         src="project-docs/report_figures/Figure 1 - Game Ideas.png" 
         alt="Figure 1" 
-        width="300"><br>
+        width="400"><br>
       <sub>Figure 1: Game Ideas</sub>
     </td>
     <td align="center">
       <img 
         src="project-docs/report_figures/Figure 2 - Poll Results for Game Ideas.png" 
         alt="Figure 2" 
-        width="300"><br>
+        width="400"><br>
       <sub>Figure 2: Poll Results for Game Ideas</sub>
     </td>
   </tr>
@@ -159,14 +155,14 @@ In addition to the inital concept proposals, the lead developer documented discu
         src="project-docs/map-design-photos/game world sketch v1.jpg" 
         alt="Figure 3" 
         width="300"><br>
-      <sub>Figure 3: Initial Game World Sketch by Georgia Sweeny</sub>
+      <sub>Figure 5: Initial Game World Sketch by Georgia Sweeny</sub>
     </td>
     <td align="center">
       <img 
         src="project-docs/map-design-photos/demo world map.png" 
         alt="Figure 4" 
         width="300"><br>
-      <sub>Figure 4: Demo World Map by Georgia Sweeny</sub>
+      <sub>Figure 6: Demo World Map by Georgia Sweeny</sub>
     </td>
   </tr>
 </table>
@@ -336,7 +332,9 @@ flowchart TD
 The structural architecture diagram shows how the main systems are connected. This behavioural flow shows how those systems cooperate during one core gameplay action: activating sonar.
 
 <p align="center">
-  <img src="project-docs/report_figures/F7-Runtime behaviour flow.png" alt="Runtime behaviour flow" width="300" />
+  <img src="project-docs/report_figures/F7-Runtime behaviour flow.png" alt="Runtime behaviour flow" width="400" />
+  <br>
+    <sub>Figure 7: Runtime Behavioural Flow for Sonar Activation</sub>
 </p>
 
 This flow shows that sonar is not drawn directly from player input. The input first becomes an intent, then the relevant systems update resources, visibility, enemy behaviour, and rendering in sequence. This keeps the core mechanic modular and prevents rendering logic from being mixed with gameplay logic.
@@ -404,22 +402,28 @@ After agreeing on the main theme, we began with a two-week exploratory sprint. T
 <p align="center">
     <img src="project-docs/report_figures/F8-1-Feature Tests.png" alt="Feature tests" width="400" />
     <img src="project-docs/report_figures/F8-2-Feature Tests.png" alt="Feature tests" width="400" />
+    <br>
+    <sub>Figure 8: Feature Test Examples</sub>
 </p>
 
 This approach worked well during the early creative stage because it encouraged low-risk experimentation. Team members could test ideas independently without immediately affecting the shared codebase, and the feature tests provided visual evidence that made discussions more concrete. However, the limitation of this approach became clearer during implementation. Since prototypes were built separately, they often used different assumptions about game state or object structure. As a result, they could not simply be copied into the final game and required additional integration work.
 
-After the first sprint, we identified the tasks needed to move from separate prototypes toward a runnable MVP. Team members selected tasks based on their interests and added their names to the relevant task cards. [Figure 9] Alongside Notion, we used the GitHub Kanban board to track feature development, progress, and outstanding issues.
+After the first sprint, we identified the tasks needed to move from separate prototypes toward a runnable MVP. Team members selected tasks based on their interests and added their names to the relevant task cards as shown in Figure 9. Alongside Notion, we used the GitHub Kanban board as shown in Figure 10 to track feature development, progress, and outstanding issues.
 
 <p align="center">
     <img src="project-docs/report_figures/F9-1 Task Assignment.png" alt="Task assignment" width="400" />
     <img src="project-docs/report_figures/F9-2 Task Assignment.png" alt="Task assignment" width="400" />
+    <br>
+    <sub>Figure 9: Task Assignment Examples</sub>
 </p>
 
 <p align="center">
     <img src="project-docs/report_figures/F10-Kanban.png" alt="GitHub Kanban board" width="600" />
+    <br>
+    <sub>Figure 10: GitHub Kanban Board</sub>
 </p>
 
-Although this gave the team a clearer task structure, it was difficult to follow perfectly in practice. Many features depended on unfinished work from other areas. For example, sonar, lighting, and camera movement all needed access to shared game state. AI coding support also changed the workflow. Team members could quickly generate draft implementations of others' features instead of waiting for another task to be completed. This helped individuals make progress, but it also created overlap between tasks and made isolated development harder than expected.
+Although this gave the team a clearer task structure, it was difficult to follow perfectly in practice. Many features depended on unfinished work from other areas. For example, sonar, lighting, and camera movement all needed access to shared game state. AI coding support also changed the workflow: team members could quickly generate draft implementations of others' features instead of waiting for another task to be completed. This helped individuals make progress, but it also created overlap between tasks and made isolated development harder than expected.
 
 #### First sprint retrospective
 The main outcome of the first sprint was that the team had generated useful feature ideas, but the workflow was still too fragmented for implementation. The retrospective lesson was that prototypes were valuable for exploration, but they needed to be followed by clearer integration planning, shared architecture decisions, and better visibility over dependencies between tasks.
@@ -436,18 +440,34 @@ Overall, the team’s process evolved from open-ended exploration into a more st
 
 ### 7. Sustainability
 
-This section is written based on the assumption that how sustainability would apply if *The Abyss* massively succeeded and widely played game in the future. In that scenario, sustainability would not only mean reducing the environmental footprint of the software, but also considering the individual, social, economic, technical, and environmental effects created by long-term use. This follows the idea that sustainability is cross-cutting concern. It affects software requirements, implementation, deployment, and the wider behaviour encouraged by the system.
+This section considers how sustainability would apply if *The Abyss* became a large-scale, widely played game in the future. In that scenario, sustainability would not only mean reducing the environmental footprint of the software, but also considering the technical, social, individual, economic, and environmental effects created by long-term use. This follows the idea that sustainability is a cross-cutting concern: it affects software requirements, architecture, implementation, deployment, and the wider behaviour encouraged by the system.
 
 #### Technical sustainability
 
-#### Social, individual, and economic impact
+Technical sustainability would be important if the game continued to grow after the project. The current modular architecture supports this because input, player movement, gameplay features, and rendering are separated into different modules. This would make the game easier to maintain and extend if new rooms, mechanics, or accessibility options were added later.
 
-#### Direct environmental impact
+A future version should also avoid letting the codebase become too complex to maintain. Code review, documentation, performance checks, and clear system boundaries would reduce the risk of the game becoming difficult to change as it scales. This supports technical sustainability because future developers would be able to add features without rewriting the whole codebase.
+
+#### Social, individual, and economic sustainability
+
+If the game succeeded massively in the future, social and individual sustainability would become more important. A future version should therefore be accessible to people with different abilities, devices, and experience levels. For example, it should consider remappable controls, readable UI, colour-contrast checks for players with visual impairments, and support for lower-spec hardware to reduce pressure on players to upgrade devices unnecessarily. These choices would make the game more inclusive.
+
+Economic sustainability would also matter if the game became commercial. The game should use a fair pricing model that helps maintain player trust while still supporting future development and maintenance.
+
+#### Direct environmental sustainability
+
+If the game succeeded massively in the future, it would also have a direct environmental footprint. This would come from player devices, downloads, network traffic, hosting, analytics, and the tools used to develop and update the game. To reduce this impact, developers should keep the game lightweight and efficient. For example, images and audio files could be compressed, unnecessary background processing could be avoided, and CPU, storage, and network use should be monitored as the game scales.
+
+If online features such as cloud saves or multiplayer were added, the server infrastructure should scale with actual player demand instead of running more resources than needed. Hosting choices should also consider data-centre efficiency and the availability of renewable energy.
 
 #### Enabling and behavioural effects
 
+The game could also encourage players to reflect on sustainability through its design. *The Abyss* already uses limited power, darkness, and careful exploration as core mechanics. A future version could connect these mechanics more clearly to environmental issues such as resource scarcity, fragile underwater ecosystems, or water pollution. This should be done through gameplay rather than only through text. For example, overusing light or sonar could drain resources or disturb sensitive coral areas, while careful exploration could be rewarded. Instead of simply telling players that resources are limited, the game would allow them to experience the consequences of over-consumption and potential environmental risk.
 
-### 8. Conclusion (DL: 27 Apr 2026)
+Overall, *The Abyss* already contains mechanics that could support sustainability awareness by allowing players to engage with sustainability ideas through gameplay rather than direct instruction. If the game succeeded massively in the future, sustainability would need to be considered across all major dimentions including technical, social, individual, economic, and environmental effects, and the behaviour encouraged by the game.
+
+
+### 8. Conclusion 
 
 - 10% ~500 words
 
@@ -499,12 +519,20 @@ However, AI-generated code could not be accepted unconditionally. Suggested solu
 
 Some parts of the project were also largely manual design work rather than code generation. For example, the game maps were created using Tiled and exported as `.json` files for the game to load. Although AI could suggest possible map layouts or design ideas, the actual maps still had to be built, checked, and adjusted manually so that room structure, collision boundaries, and gameplay flow worked correctly.
 
-<p align="center">
-    <img src="project-docs/map-design-photos/crab caverns map.png" alt="Crab caverns map" width="400" />
-    <img src="project-docs/map-design-photos/spike maze map v2.png" alt="Spike maze map" width="400" />
-</p>
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="project-docs/map-design-photos/crab caverns map.png" alt="Crab caverns map" width="400" /><br>
+      <sub>Figure 11: Crab Caverns Map Created in Tiled</sub>
+    </td>
+    <td align="center">
+      <img src="project-docs/map-design-photos/spike maze map v2.png" alt="Spike maze map" width="400" /><br>
+      <sub>Figure 12: Spike Maze Map Created in Tiled</sub>
+    </td>
+  </tr>
+</table>
 
-Overall, AI helped us move faster, but moving further still required professional software engineering skills, including architectural understanding, debugging, code review, testing, and design judgement. Final responsibility for the project remained with the team.
+Overall, AI helped us move faster, but moving further still required professional software engineering skills, including architectural understanding, debugging, code review, testing, and design judgement. As AI makes code generation easier, critical thinking becomes more important than ever. In the end, final responsibility for the project remained with the developers.
 
 
 ### Additional Marks
