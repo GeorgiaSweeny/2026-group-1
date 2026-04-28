@@ -3,20 +3,63 @@
     "expandedProjectPaths": [
     ],
     "fileStates": {
-        "rooms/demoStart.json": {
-            "scale": 0.6486,
+        "rooms/crabCaverns.json": {
+            "scale": 0.5901,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 1996.608078939254,
-                "y": 650.6321307431391
+                "x": 886.2904592441959,
+                "y": 828.6731062531774
+            }
+        },
+        "rooms/demoStart.json": {
+            "scale": 0.4579,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1672.8543350076438,
+                "y": 949.9890805852808
+            }
+        },
+        "rooms/endlessAbyss.json": {
+            "scale": 0.5413020833333333,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 912.6142595978063,
+                "y": 770.3646685268931
             }
         },
         "rooms/jellyfishAtrium.json": {
             "scale": 0.2976,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 1377.688172043011,
-                "y": 1105.510752688172
+                "x": 967.7419354838711,
+                "y": 1374.3279569892475
+            }
+        },
+        "rooms/spikeMaze.json": {
+            "scale": 0.5351,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 868.9964492618203,
+                "y": 702.6723976826761
+            }
+        },
+        "rooms/theDrop.json": {
+            "scale": 0.38,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 78.94736842105249,
+                "y": 1078.947368421053
+            }
+        },
+        "rooms/tunnel.json": {
+            "expandedObjectLayers": [
+                10
+            ],
+            "scale": 0.6686,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 800.1794795094228,
+                "y": 233.32336224947653
             }
         },
         "tilesets/Atlantis/atlantis-tileset-1.tsx": {
