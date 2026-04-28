@@ -59,11 +59,11 @@ const BASE_RAY_LIFETIME = 255;
 
 const REVEAL_BONUS = 70;
 // Base fade per second; reduced by sonar upgrades so tiles persist longer at higher levels
-const REVEAL_FADE_BASE = 255;       // alpha units faded per second at level 1
+const REVEAL_FADE_BASE = 160;       // alpha units faded per second at level 1
 const REVEAL_FADE_PER_LEVEL = 28;  // extra alpha units retained per level (slower fade)
 
 // Cooldown: base in ms, reduced by sonar level
-const BASE_COOLDOWN_MS = 4500;      // 4.5 seconds at level 1
+const BASE_COOLDOWN_MS = 2000;      // 4.5 seconds at level 1
 
 function getNormalisedWalls(getWallsFinal) {
   const input = getWallsFinal?.() || [];

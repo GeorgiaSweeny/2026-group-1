@@ -49,9 +49,8 @@ export const GAME_VERSIONS = {
     difficulty: "EASY",
   },
   full: {
-    startRoom: "startArea",
-    rooms: ["startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
-            "theDrop", "endlessAbyss", "theBiolume", "jellyfishAtrium", "theSurface"],
+    startRoom: "demoStart",
+    rooms: ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "spikeMaze", "jellyfishAtrium", "theSurface"],
   },
 };
 
