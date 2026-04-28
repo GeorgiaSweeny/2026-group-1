@@ -89,6 +89,8 @@ let glowSystem;
 let lastEnsuredRoom = null;
 //let gameState = "MENU";
 let gameState = "MAIN_PAGE";
+let showControlsOverlay = false;   // toggled by H key
+let storyDialogActive = false;     // story dialog shown on game start
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
 let gameVersion = "full"; // "demo" | "full"
 let sessionVersion = "full";   // locked-in version for the current session
@@ -886,6 +888,13 @@ function draw() {
     return;
   }
 
+  // Story dialog overlay — shown once at start of a game session
+  if (storyDialogActive) {
+    renderSystem?.draw?.(0);
+    drawStoryDialog();
+    return;
+  }
+
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
@@ -902,6 +911,11 @@ function draw() {
     //soundSystem.setMasterVolume(pauseMenuSystem.getSettings().volume);
     alpha = accumulator / TIME.fixedDeltaTime;
     renderSystem.draw(alpha);
+  }
+
+  // Controls overlay — shown on top of game when toggled (does not block gameplay)
+  if (showControlsOverlay) {
+    drawControlsOverlay();
   }
 }
 
@@ -950,6 +964,11 @@ function keyPressed() {
     player.actionIntent.toggleWorkshop = false;
   }
 
+  if (player?.actionIntent?.toggleControls) {
+    showControlsOverlay = !showControlsOverlay;
+    player.actionIntent.toggleControls = false;
+  }
+
   if (player?.actionIntent?.accept) {
     if (workshopSystem?.isWorkshopOpen()) workshopSystem.toggleWorkshop();
     player.actionIntent.accept = false;
@@ -965,6 +984,22 @@ function mousePressed() {
   // Workshop overlay blocks all clicks
   if (workshopSystem?.isWorkshopOpen()) {
     workshopSystem?.onMousePressed();
+    return;
+  }
+
+  // Story dialog click — dismisses the dialog
+  if (storyDialogActive) {
+    const result = checkStoryDialogClick(mouseX, mouseY);
+    if (result === 'dismiss') {
+      storyDialogActive = false;
+      gameState = "PLAYING";
+    }
+    return;
+  }
+
+  // Controls overlay click — dismisses the overlay
+  if (showControlsOverlay) {
+    showControlsOverlay = false;
     return;
   }
 
@@ -1042,7 +1077,7 @@ function mousePressed() {
       sessionDifficulty = GAME_VERSIONS.demo.difficulty;
       applyDifficultyConfig(sessionDifficulty);
       resetGameToStart();
-      gameState = "PLAYING";
+      storyDialogActive = true;
     } else if (selection === "EASY" || selection === "HARD") {
       soundSystem?.stop('introMusic');
       soundSystem?.play('buttonClick', 0.8);
@@ -1053,7 +1088,7 @@ function mousePressed() {
       sessionDifficulty = selection;
       applyDifficultyConfig(selection);
       resetGameToStart();
-      gameState = "PLAYING";
+      storyDialogActive = true;
     } else if (selection === "SETTINGS") {
       soundSystem?.play('buttonClick', 0.8);
       settingsReturnState = "MENU";
@@ -1174,6 +1209,116 @@ function resetGameToStart() {
   ) {
     resourceManagementSystem.reset();
   }
+}
+
+//======================================
+// STORY DIALOG OVERLAY
+// Shown once when a new game session starts, must be dismissed to play
+//======================================
+const STORY_DIALOG_TEXT = `
+A deep sea expedition takes an unexpected turn when your submersible breaks down far below the surface
+
+With limited power and a long journey ahead, you'll need to navigate carefully
+
+Your sonar will guide you through the dark
+
+Your torch will help you see, but "light comes at a cost"
+
+Somewhere above the surface waits
+
+Can you find your way back?
+`;
+
+function drawStoryDialog() {
+  // Darken the game background
+  fill(0, 0, 0, 200);
+  noStroke();
+  rect(0, 0, width, height);
+
+  const boxW = width * 0.75;
+  const boxH = height * 0.60;
+  const boxX = width / 2 - boxW / 2;
+  const boxY = height / 2 - boxH / 2;
+
+  // Dialog box
+  fill(10, 20, 35, 240);
+  stroke(0, 180, 200);
+  strokeWeight(3);
+  rect(boxX, boxY, boxW, boxH, 16);
+
+  // Title
+  noStroke();
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(36);
+  text("THE ABYSS", width / 2, boxY + 45);
+
+  // Story text
+  fill(200, 220, 240);
+  textStyle(NORMAL);
+  textSize(20);
+  textAlign(CENTER, TOP);
+  const textPadding = 40;
+  text(STORY_DIALOG_TEXT, boxX + textPadding, boxY + 95, boxW - textPadding * 2, boxH - 140);
+
+  // Dismiss button
+  const btnW = 200;
+  const btnH = 55;
+  const btnX = width / 2 - btnW / 2;
+  const btnY = boxY + boxH - btnH - 30;
+
+  const hovering = mouseX > btnX && mouseX < btnX + btnW && mouseY > btnY && mouseY < btnY + btnH;
+  noStroke();
+  fill(0, 0, 0, 100);
+  rect(btnX + 3, btnY + 4, btnW, btnH, 10);
+  fill(hovering ? color(0, 210, 190) : color(0, 140, 130));
+  rect(btnX, btnY, btnW, btnH, 10);
+  fill(255, 255, 255, 60);
+  rect(btnX, btnY, btnW, btnH * 0.35, 10, 10, 0, 0);
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(22);
+  text("BEGIN", width / 2, btnY + btnH / 2);
+  textStyle(NORMAL);
+}
+
+function checkStoryDialogClick(mX, mY) {
+  const boxW = width * 0.75;
+  const boxH = height * 0.60;
+  const boxX = width / 2 - boxW / 2;
+  const boxY = height / 2 - boxH / 2;
+  const btnW = 200;
+  const btnH = 55;
+  const btnX = width / 2 - btnW / 2;
+  const btnY = boxY + boxH - btnH - 30;
+
+  if (mX > btnX && mX < btnX + btnW && mY > btnY && mY < btnY + btnH) {
+    soundSystem?.play('buttonClick', 0.8);
+    return 'dismiss';
+  }
+  return null;
+}
+
+//======================================
+// CONTROLS OVERLAY
+// Toggled by H key — shows control bindings on top of gameplay
+//======================================
+function drawControlsOverlay() {
+  // Semi-transparent backdrop
+  fill(0, 0, 0, 160);
+  noStroke();
+  rect(0, 0, width, height);
+
+  // Draw the controls page system on top
+  controlsPageSystem.draw(null);
+
+  // Close hint at bottom
+  fill(255, 255, 255, 180);
+  textAlign(CENTER, CENTER);
+  textSize(16);
+  text("Press H or click to close", width / 2, height - 30);
 }
 
 function windowResized() {

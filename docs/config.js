@@ -155,6 +155,7 @@ export const PLAYER = {
   MOVE_SPEED: 200,        // Pixels per second (scaled by TIME.fixedDeltaTime per frame)
   ACCELERATION: 4,        // Velocity increase per frame
   DRAG: 0.9  ,            // Higher = less friction (0.9-0.95 feels good)
+  SNEAK_SPEED_MULT: 0.4,  // Movement speed multiplier when sneaking (hold Shift)
   BOUNCE_DAMPING: 0.5,    // Velocity kept after bounce (0.5 = half speed)
   MIN_VELOCITY: 0.1,      // Stop if slower than this
 };
@@ -310,6 +311,7 @@ export const DIFFICULTY = {
 export function keyLabel(binding) {
   if (typeof binding === 'string') return binding.toUpperCase();
   const names = {
+    16:  'Shift',
     27:  'ESC',
     32:  'Space',
     37:  '←',
@@ -324,6 +326,7 @@ export function keyLabel(binding) {
     81:  'Q',
     83:  'S',
     87:  'W',
+    72:  'H',
     192: '`',
   };
   return names[binding] ?? `#${binding}`;
@@ -349,6 +352,8 @@ export const CONTROLS = {
       TOGGLE_WORKSHOP:       66,    // B
       ACCEPT:            81,    // Q
       TOGGLE_FULLSCREEN: 192,   // Backtick
+      SNEAK:             16,    // Shift
+      TOGGLE_CONTROLS:   72,    // H
     },
     /* Arrow-keys option for movement */
     arrows: {
@@ -363,6 +368,8 @@ export const CONTROLS = {
       TOGGLE_WORKSHOP:       66,    // B
       ACCEPT:            81,    // Q
       TOGGLE_FULLSCREEN: 192,   // Backtick
+      SNEAK:             16,    // Shift
+      TOGGLE_CONTROLS:   72,    // H
     },
   },
 };

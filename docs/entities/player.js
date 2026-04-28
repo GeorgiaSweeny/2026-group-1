@@ -83,6 +83,7 @@ export class Player extends Hitbox{
          right: false,
          up: false,
          down: false,
+         sneak: false,
       };
       this.actionIntent = {
          toggleTorch: false,
@@ -90,6 +91,7 @@ export class Player extends Hitbox{
          launchMissile: false,
          toggleWorkshop: false,
          togglePause: false,
+         toggleControls: false,
       };
    
    }

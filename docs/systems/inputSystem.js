@@ -77,6 +77,7 @@ export function createInputSystem(player) {
       player.moveIntent.right = keyIsDown(map.MOVE_RIGHT);
       player.moveIntent.up    = keyIsDown(map.MOVE_UP);
       player.moveIntent.down  = keyIsDown(map.MOVE_DOWN);
+      player.moveIntent.sneak = keyIsDown(map.SNEAK);
     },
 
     onKeyPressed(key, keyCode) {
@@ -84,6 +85,7 @@ export function createInputSystem(player) {
       const map = getMap();
       if (matchesBinding(map.TOGGLE_PAUSE,   key, keyCode)) player.actionIntent.togglePause   = true;
       if (matchesBinding(map.TOGGLE_WORKSHOP,    key, keyCode)) player.actionIntent.toggleWorkshop    = true;
+      if (matchesBinding(map.TOGGLE_CONTROLS,   key, keyCode)) player.actionIntent.toggleControls   = true;
       if (matchesBinding(map.ACCEPT,         key, keyCode)) player.actionIntent.accept         = true;
       if (matchesBinding(map.TOGGLE_TORCH,   key, keyCode)) player.actionIntent.toggleTorch   = true;
       if (matchesBinding(map.SONAR,          key, keyCode)) player.actionIntent.emitSonar     = true;

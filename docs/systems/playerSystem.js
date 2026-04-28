@@ -72,7 +72,9 @@ export function createPlayerSystem(player, soundSystem = null) {
       }
 
       // Clamp velocity to max speed (MOVE_SPEED is px/sec, clamped per frame)
-      const maxSpeed = PLAYER.MOVE_SPEED * TIME.fixedDeltaTime;
+      // If sneaking, apply reduced speed multiplier
+      const speedMult = player.moveIntent?.sneak ? (PLAYER.SNEAK_SPEED_MULT ?? 0.4) : 1.0;
+      const maxSpeed = PLAYER.MOVE_SPEED * TIME.fixedDeltaTime * speedMult;
       player.velocity.x = constrain(player.velocity.x, -maxSpeed, maxSpeed);
       player.velocity.y = constrain(player.velocity.y, -maxSpeed, maxSpeed);
 
