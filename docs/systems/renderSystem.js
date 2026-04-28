@@ -685,7 +685,12 @@ export function createRenderSystem({
       ctx.globalCompositeOperation = 'destination-out';
 
       for (const light of lightSources) {
-         const { x, y, radius, intensity = 1, kind } = light;
+         const { x, y, radius, kind } = light;
+         let intensity = light.intensity ?? 1;
+         const isCollectableLight = kind === 'collectablePower' || kind === 'collectableScrap';
+         if (isCollectableLight) {
+            intensity = Math.max(intensity, 0.6);
+         }
 
          /* Fixed-position zone lighting for theSurface room.
             Stepped linear gradient in world space — zones stay put as the player climbs.
@@ -724,7 +729,14 @@ export function createRenderSystem({
 
          const screenX = (x - cam.x) * camScale;
          const screenY = (y - cam.y) * camScale;
-         const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         let scaledRadius;
+         if (kind === 'collectablePower') {
+            scaledRadius = radius * (1.4 + 0.4 * intensity) * camScale;
+         } else if (kind === 'collectableScrap') {
+            scaledRadius = radius * (1.2 + 0.3 * intensity) * camScale;
+         } else {
+            scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         }
          // prevents crash when using PLAYER.WIDTH in config
          if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius) || scaledRadius <= 0) continue;
 
@@ -746,6 +758,24 @@ export function createRenderSystem({
             gradient.addColorStop(0.88, 'rgba(255,255,255,0.15)');
             gradient.addColorStop(0.94, 'rgba(255,255,255,0.05)');
             gradient.addColorStop(0.98, 'rgba(255,255,255,0.01)');
+            gradient.addColorStop(1,    'rgba(0,0,0,0)');
+         } else if (kind === 'collectablePower') {
+            intensity = Math.max(intensity, 0.6);
+            // Mask shaping only: keep a clear carve without overdriving the whole pass.
+            const a = Math.max(0.78, Math.min(0.92, 0.84 + (intensity - 0.6) * 0.10));
+            gradient.addColorStop(0,    `rgba(255,255,255,${a.toFixed(3)})`);
+            gradient.addColorStop(0.12, `rgba(255,255,255,${Math.max(0.62, a * 0.82).toFixed(3)})`);
+            gradient.addColorStop(0.34, `rgba(255,255,255,${Math.max(0.44, a * 0.62).toFixed(3)})`);
+            gradient.addColorStop(0.60, `rgba(255,255,255,${Math.max(0.26, a * 0.40).toFixed(3)})`);
+            gradient.addColorStop(0.82, `rgba(255,255,255,${Math.max(0.10, a * 0.18).toFixed(3)})`);
+            gradient.addColorStop(1,    'rgba(0,0,0,0)');
+         } else if (kind === 'collectableScrap') {
+            intensity = Math.max(intensity, 0.6);
+            const a = Math.max(0.62, Math.min(0.78, 0.69 + (intensity - 0.6) * 0.10));
+            gradient.addColorStop(0,    `rgba(255,255,255,${a.toFixed(3)})`);
+            gradient.addColorStop(0.16, `rgba(255,255,255,${Math.max(0.44, a * 0.76).toFixed(3)})`);
+            gradient.addColorStop(0.40, `rgba(255,255,255,${Math.max(0.30, a * 0.56).toFixed(3)})`);
+            gradient.addColorStop(0.70, `rgba(255,255,255,${Math.max(0.18, a * 0.34).toFixed(3)})`);
             gradient.addColorStop(1,    'rgba(0,0,0,0)');
          } else if (kind === 'jellyfishHead') {
             // Wide oval punch — horizontally stretched to match dome, wider than body oval
@@ -833,11 +863,22 @@ export function createRenderSystem({
       for (const light of lightSources) {
          const isHead = light.kind === 'jellyfishHead';
          const isBody = light.kind === 'jellyfishBody';
-         if (light.kind !== 'glow' && !isHead && !isBody) continue;
-         const { x, y, radius, intensity = 1 } = light;
+         const isCollectablePower = light.kind === 'collectablePower';
+         const isCollectableScrap = light.kind === 'collectableScrap';
+         if (light.kind !== 'glow' && !isHead && !isBody && !isCollectablePower && !isCollectableScrap) continue;
+         const { x, y, radius } = light;
+         let intensity = light.intensity ?? 1;
+         if (isCollectablePower || isCollectableScrap) {
+            intensity = Math.max(intensity, 0.6);
+         }
          const screenX = (x - cam.x) * camScale;
          const screenY = (y - cam.y) * camScale;
-         const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         let scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         if (isCollectablePower) {
+            scaledRadius = radius * (1.25 + 0.4 * intensity) * camScale;
+         } else if (isCollectableScrap) {
+            scaledRadius = radius * (1.15 + 0.3 * intensity) * camScale;
+         }
          if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius) || scaledRadius <= 0) continue;
 
          const tint = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, scaledRadius);
@@ -904,6 +945,21 @@ export function createRenderSystem({
             ctx.fill();
             ctx.restore();
             continue;
+         } else if (isCollectablePower) {
+            intensity = Math.max(intensity, 0.6);
+            const a = 0.65 * Math.max(0.6, Math.min(1.2, intensity));
+            tint.addColorStop(0,    `rgba(215,248,255,${Math.max(0.40, a * 0.72).toFixed(3)})`);
+            tint.addColorStop(0.22, `rgba(120,225,255,${Math.max(0.44, a * 0.84).toFixed(3)})`);
+            tint.addColorStop(0.50, `rgba(60,182,250,${Math.max(0.34, a * 0.66).toFixed(3)})`);
+            tint.addColorStop(0.76, `rgba(28,128,216,${Math.max(0.22, a * 0.42).toFixed(3)})`);
+            tint.addColorStop(1,    'rgba(0,0,0,0)');
+         } else if (isCollectableScrap) {
+            intensity = Math.max(intensity, 0.6);
+            const a = 0.45 * Math.max(0.5, Math.min(1, intensity * 1.5));
+            tint.addColorStop(0,    `rgba(255,244,198,${Math.max(0.22, a * 0.62).toFixed(3)})`);
+            tint.addColorStop(0.30, `rgba(255,219,128,${Math.max(0.24, a * 0.70).toFixed(3)})`);
+            tint.addColorStop(0.64, `rgba(220,172,88,${Math.max(0.20, a * 0.54).toFixed(3)})`);
+            tint.addColorStop(1,    'rgba(0,0,0,0)');
          } else {
             // Existing cyan-green tint for glow interactable objects
             const peak = 0.4 * intensity;

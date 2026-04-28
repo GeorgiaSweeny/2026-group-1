@@ -670,6 +670,10 @@ function setup() {
     () => glowSystem.getGlowLights(),
     () => roomSystem?.getCurrentRoom?.() ?? null,
     () => enemySystem?.getJellyfishLights?.() ?? [],
+    () =>
+      roomSystem
+        .getCollectables()
+        .filter((c) => !resourceManagementSystem?.isCollected(c)),
   );
 
   resourceManagementSystem = createResourceManagementSystem(

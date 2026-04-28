@@ -3,10 +3,10 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "rooms/endlessAbyss.json",
+    "activeFile": "",
     "expandedProjectPaths": [
-        "rooms",
-        "."
+        ".",
+        "rooms"
     ],
     "fileStates": {
         "rooms/crabCaverns.json": {
@@ -42,13 +42,14 @@
         "rooms/endlessAbyss.json": {
             "expandedObjectLayers": [
                 10,
-                6
+                6,
+                4
             ],
-            "scale": 0.8288,
+            "scale": 0.47,
             "selectedLayer": 8,
             "viewCenter": {
-                "x": 941.1196911196911,
-                "y": 288.36872586872585
+                "x": 1110.6382978723404,
+                "y": 1119.148936170213
             }
         },
         "rooms/jellyfishAtrium.json": {
@@ -60,8 +61,8 @@
             "scale": 0.3473,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 800.4606968039159,
-                "y": 1281.3129858911602
+                "x": 794.7019867549668,
+                "y": 1226.6052404261445
             }
         },
         "rooms/jellyfishAtrium.json.tmj": {
@@ -104,11 +105,15 @@
             }
         },
         "rooms/startArea.json": {
-            "scale": 0.3907,
-            "selectedLayer": 1,
+            "expandedObjectLayers": [
+                10,
+                5
+            ],
+            "scale": 0.5785,
+            "selectedLayer": 5,
             "viewCenter": {
-                "x": 1279.7542871768621,
-                "y": 719.2219093933963
+                "x": 698.3578219533276,
+                "y": 821.0890233362143
             }
         },
         "rooms/theDrop.json": {
@@ -162,28 +167,19 @@
     "map.tileWidth": 16,
     "map.width": 70,
     "openFiles": [
-        "rooms/demoStart.json",
-        "rooms/tunnel.json",
-        "rooms/theDrop.json",
-        "rooms/endlessAbyss.json",
-        "rooms/jellyfishAtrium.json",
-        "rooms/spikeMaze.json",
-        "rooms/theSurface.json",
-        "rooms/crabCaverns.json",
-        "rooms/startArea.json"
     ],
     "project": "abyssMaps.tiled-project",
     "property.type": "string",
     "recentFiles": [
+        "rooms/endlessAbyss.json",
+        "rooms/jellyfishAtrium.json",
+        "rooms/spikeMaze.json",
+        "rooms/theSurface.json",
+        "rooms/crabCaverns.json",
+        "rooms/startArea.json",
         "rooms/theDrop.json",
         "rooms/tunnel.json",
         "rooms/demoStart.json",
-        "rooms/startArea.json",
-        "rooms/crabCaverns.json",
-        "rooms/theSurface.json",
-        "rooms/spikeMaze.json",
-        "rooms/jellyfishAtrium.json",
-        "rooms/endlessAbyss.json",
         "rooms/deepCaverns.json"
     ],
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)"
