@@ -1,0 +1,43 @@
+{
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "rooms/demoStart.json": {
+            "scale": 0.6486,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1996.608078939254,
+                "y": 650.6321307431391
+            }
+        },
+        "rooms/jellyfishAtrium.json": {
+            "scale": 0.2976,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 1377.688172043011,
+                "y": 1105.510752688172
+            }
+        },
+        "tilesets/Atlantis/atlantis-tileset-1.tsx": {
+            "scaleInDock": 1
+        },
+        "tilesets/Atlantis/atlantis-tileset-2.tsx": {
+            "scaleInDock": 1
+        },
+        "tilesets/Atlantis/atlantis-tileset-3.tsx": {
+            "scaleInDock": 1
+        }
+    },
+    "last.imagePath": "/Users/georgia/COMSCI/SEP/2026-group-1/docs/data/tilesets/cave-tileset",
+    "openFiles": [
+    ],
+    "project": "abyss-v4.tiled-project",
+    "recentFiles": [
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}

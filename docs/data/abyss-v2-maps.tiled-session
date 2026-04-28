@@ -1,7 +1,12 @@
 {
     "activeFile": "",
     "expandedProjectPaths": [
+        "tilesets/cave-tileset",
+        ".",
+        "rooms",
+        "tilesets"
     ],
+    "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
     },
     "openFiles": [
