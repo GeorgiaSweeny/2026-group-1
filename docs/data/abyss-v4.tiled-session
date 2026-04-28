@@ -1,9 +1,9 @@
 {
-    "activeFile": "rooms/jellyfishAtrium.json",
+    "activeFile": "rooms/endlessAbyss.json",
     "expandedProjectPaths": [
-        "tilesets",
+        ".",
         "rooms",
-        "."
+        "tilesets"
     ],
     "fileStates": {
         "rooms/cave.tsx": {
@@ -20,7 +20,7 @@
         },
         "rooms/demoStart.json": {
             "scale": 0.6297,
-            "selectedLayer": 2,
+            "selectedLayer": -1,
             "viewCenter": {
                 "x": 1279.9745910751153,
                 "y": 719.3901858027632
@@ -101,10 +101,10 @@
         "rooms/demoStart.json",
         "rooms/tunnel.json",
         "rooms/theDrop.json",
-        "rooms/endlessAbyss.json",
-        "rooms/crabCaverns.json",
+        "rooms/jellyfishAtrium.json",
         "rooms/spikeMaze.json",
-        "rooms/jellyfishAtrium.json"
+        "rooms/crabCaverns.json",
+        "rooms/endlessAbyss.json"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

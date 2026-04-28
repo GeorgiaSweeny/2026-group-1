@@ -52,7 +52,7 @@ engine.register(sonarSystem);
 
 import { SONAR, TIME } from '../config.js';
 
-const RAY_COUNT = 360;
+const RAY_COUNT = 180;
 const BASE_RAY_SPEED = 2;
 const RAY_DECAY = 2;
 const BASE_RAY_LIFETIME = 255;

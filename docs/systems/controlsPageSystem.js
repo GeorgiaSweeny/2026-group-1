@@ -121,7 +121,7 @@ export function createControlsPageSystem(){
             textAlign(LEFT, CENTER);
             textStyle(BOLD);
             textSize(labelSize);
-            text("Move", labelX, y + keyW + 4 + midKey);
+            text("Move & [SHIFT] Sneak", labelX, y + keyW + 4 + midKey);
 
             y += keyW * 2 + 4 + 22;
 
