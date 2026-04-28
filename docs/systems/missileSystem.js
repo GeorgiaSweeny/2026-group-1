@@ -62,7 +62,7 @@ class Missile extends Hitbox {
         }
 
         if (this.target && !this.target.pendingDestroy && !this.target.isDestroyed && this.target.position) {
-            const targetPos = this.target.position;
+            const targetPos = createVector(this.target.position.x, this.target.position.y);
             const missilePos = this.position;
             const dist = p5.Vector.dist(targetPos, missilePos);
 
@@ -88,6 +88,10 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
     let missiles = [];
     let lastFireTime = 0;
     let currentTarget = null;
+    let lastFiredTarget = null;
+    let lastFiredTime = -1;
+    let fireFeedbackTimer = 0;
+    const FIRE_FEEDBACK_DURATION = 0.25;
 
     function findNearestTarget(px, py) {
         let nearest = null;
@@ -132,7 +136,11 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
     return {
         update() {
             const now = performance.now();
-            
+
+            if (fireFeedbackTimer > 0) {
+                fireFeedbackTimer = Math.max(0, fireFeedbackTimer - TIME.fixedDeltaTime);
+            }
+
             // Constantly track the nearest target every frame
             currentTarget = findNearestTarget(player.position.x, player.position.y);
 
@@ -180,6 +188,9 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
                     missiles.push(new Missile(player.position.x, player.position.y, currentTarget, player.facing));
                     player.missiles--;
                     lastFireTime = now;
+                    lastFiredTarget = currentTarget;
+                    lastFiredTime = now;
+                    if (currentTarget) fireFeedbackTimer = FIRE_FEEDBACK_DURATION;
 
                     soundSystem?.play('missileFired', 0.2);
                 }
@@ -193,6 +204,14 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
 
         getCurrentTarget() {
             return currentTarget;
+        },
+
+        getLastFiredTarget() {
+            return { target: lastFiredTarget, time: lastFiredTime };
+        },
+
+        getFireFeedbackTimer() {
+            return fireFeedbackTimer;
         }
     };
 }

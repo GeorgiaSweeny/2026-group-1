@@ -316,6 +316,10 @@ export function createEnemySystem(player, getEnemies, getActivePulses, soundSyst
         checkPlayerContact(jelly, JELLYFISH_CONTACT_PENALTY, JELLYFISH_DRAIN_RATE);
       }
 
+      for (let i = piranhas.length - 1; i >= 0; i--) {
+        if (piranhas[i].pendingDestroy) { piranhas.splice(i, 1); continue; }
+      }
+
       for (const piranha of piranhas) {
         updatePiranha(piranha, player, getActivePulses ? getActivePulses() : []);
         checkPlayerContact(piranha, CRAB_CONTACT_PENALTY, CRAB_DRAIN_RATE);

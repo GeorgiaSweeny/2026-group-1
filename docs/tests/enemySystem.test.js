@@ -235,7 +235,7 @@ describe('EnemySystem', () => {
       ];
       const es = createEnemySystem(player, () => enemies, () => [], mockSoundSystem);
       es.update();
-      expect(mockSoundSystem.play).toHaveBeenCalledWith('playerHit', 0.3);
+      expect(mockSoundSystem.play).toHaveBeenCalledWith('playerHit', 0.2);
     });
   });
 
