@@ -60,6 +60,9 @@ function updateGlow(player, obj) {
       handlePlayerHit(player, obj, GLOW);
       player.damageFlashColor = 'white';
       obj._glow.lastKnockbackTime = now;
+      if (obj.gid === 33) {
+        soundSystem?.play('bounce', 0.6);
+      }
     }
     const pulse = GLOW.PULSE_AMPLITUDE * Math.sin((now / 1000) * GLOW.PULSE_SPEED * Math.PI * 2);
     obj._glow.intensity = Math.min(1, Math.max(0.75, 1 + pulse));
@@ -68,7 +71,7 @@ function updateGlow(player, obj) {
   }
 }
 
-export function createGlowSystem(player, getGlowObjects) {
+export function createGlowSystem(player, getGlowObjects, soundSystem = null) {
   return {
     update() {
       const glowObjects = getGlowObjects?.() ?? [];

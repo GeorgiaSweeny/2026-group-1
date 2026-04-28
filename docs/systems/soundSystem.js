@@ -35,6 +35,9 @@ export function createSoundSystem() {
       sounds.waterSplash = loadSound('assets/sounds/waterSplash.mp3');
       sounds.gamebg1 = loadSound('assets/sounds/gamebg1.wav');
       sounds.powerCollected = loadSound('assets/sounds/powerCollected.mp3');
+      sounds.scrap    = loadSound('assets/sounds/scrap.wav');
+      sounds.upgrade  = loadSound('assets/sounds/upgrade.wav');
+      sounds.bounce   = loadSound('assets/sounds/bounce.wav');
       sounds.movement = loadSound('assets/sounds/movement1.mp3');
       sounds.win = loadSound('assets/sounds/win.mp3');
       sounds.achievementBell = loadSound('assets/sounds/achievementBell.wav');

@@ -314,6 +314,29 @@ export function createRenderSystem({
       }
    }
 
+   // White-then-red flash overlay matching the player hit response.
+   // For enemies pass isRect=false (ellipse), for walls pass isRect=true (rect).
+   function drawDamageFlash(entity, cx, cy, w, h, isRect = false) {
+      if (entity.damageFlashTime == null) return;
+      const elapsed = millis() - entity.damageFlashTime;
+      const duration = COMBAT.DAMAGE_FLASH_DURATION_MS;
+      if (elapsed >= duration) return;
+      const whitePhase = duration * 0.25;
+      noStroke();
+      if (elapsed < whitePhase) {
+         fill(255, 255, 255, 180);
+      } else {
+         const t = (elapsed - whitePhase) / (duration - whitePhase);
+         fill(255, 50, 50, 150 * (1 - t));
+      }
+      if (isRect) {
+         rectMode(CORNER);
+         rect(cx - w / 2, cy - h / 2, w, h);
+      } else {
+         ellipse(cx, cy, w * 1.4, h * 1.4);
+      }
+   }
+
    //===TERRAIN===//
    function drawPlatforms() {
       const platforms = getPlatforms?.() ?? [];
@@ -326,12 +349,82 @@ export function createRenderSystem({
      // todo: move the fill logic inside the loop and support per-platform colors via properties, with the default as the global platform color.
 
       for (const p of platforms) {
-         if (p.isDestroyed) continue;
+         if (p.isDestroyed) {
+            if (p.isBreakable) {
+               const cx = p.getCornerX() + p.getWidth() / 2;
+               const cy = p.getCornerY() + p.getHeight() / 2;
+               drawDamageFlash(p, cx, cy, p.getWidth(), p.getHeight(), true);
+            }
+            continue;
+         }
          // When visual tile layers handle rendering, skip sprite drawing —
          // only keep the solid-rect fallback as a safety net underneath.
          if (!hasVisualLayers && drawSpriteFromTileset(p)) continue;
          fill(platformColor);
          rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
+         if (p.isBreakable) {
+            const cx = p.getCornerX() + p.getWidth() / 2;
+            const cy = p.getCornerY() + p.getHeight() / 2;
+            drawDamageFlash(p, cx, cy, p.getWidth(), p.getHeight(), true);
+         }
+      }
+   }
+
+   // Returns true when the tile at (col, row) in the terrain visual layer is solid.
+   function isTileOccupied(col, row) {
+      const terrain = getVisualLayers?.()?.terrain;
+      if (!terrain?.data) return false;
+      const { data, width, height } = terrain;
+      if (col < 0 || col >= width || row < 0 || row >= height) return false;
+      return data[row * width + col] !== 0;
+   }
+
+   // Returns the direction the spike tips should point ('up'|'down'|'left'|'right')
+   // by checking which side of the hazard (cx, cy, w, h) has solid terrain.
+   function detectSpikeDirection(cx, cy, w, h) {
+      const tileSize = getTileSize?.() ?? {};
+      const tW = tileSize.tileWidth  ?? 16;
+      const tH = tileSize.tileHeight ?? 16;
+      const col   = Math.floor(cx / tW);
+      const row   = Math.floor(cy / tH);
+      const above = isTileOccupied(col, Math.floor((cy - h / 2 - 1) / tH));
+      const below = isTileOccupied(col, Math.floor((cy + h / 2 + 1) / tH));
+      const left  = isTileOccupied(Math.floor((cx - w / 2 - 1) / tW), row);
+      const right = isTileOccupied(Math.floor((cx + w / 2 + 1) / tW), row);
+      if (above && !below) return 'down';
+      if (below && !above) return 'up';
+      if (left  && !right) return 'right';
+      if (right && !left)  return 'left';
+      return 'up';
+   }
+
+   // Draws 2 triangular spikes per tile along the hazard edge, tips pointing in
+   // direction ('up'|'down'|'left'|'right'). Box given as corner (x, y, w, h).
+   function drawSpikes(x, y, w, h, r, g, b, alpha, direction = 'up') {
+      const tileSize = getTileSize?.() ?? {};
+      const tileW = tileSize.tileWidth  ?? 16;
+      const tileH = tileSize.tileHeight ?? 16;
+      noStroke();
+      fill(r, g, b, alpha);
+
+      if (direction === 'up' || direction === 'down') {
+         const count  = Math.max(2, Math.round(w / tileW) * 2);
+         const spikeW = w / count;
+         const tip    = direction === 'down' ? y + h : y;
+         const base   = direction === 'down' ? y     : y + h;
+         for (let i = 0; i < count; i++) {
+            const left = x + i * spikeW;
+            triangle(left, base,  left + spikeW, base,  left + spikeW / 2, tip);
+         }
+      } else {
+         const count  = Math.max(2, Math.round(h / tileH) * 2);
+         const spikeH = h / count;
+         const tip    = direction === 'right' ? x + w : x;
+         const base   = direction === 'right' ? x     : x + w;
+         for (let i = 0; i < count; i++) {
+            const top = y + i * spikeH;
+            triangle(base, top,  base, top + spikeH,  tip, top + spikeH / 2);
+         }
       }
    }
 
@@ -339,6 +432,20 @@ export function createRenderSystem({
    function drawHazards() {
       const hazards = getHazards?.() ?? [];
       if (!hazards.length) return;
+
+      const torchOn = getTorchOn?.() ?? false;
+      if (torchOn) {
+         for (const hazard of hazards) {
+            if (hazard.visible === false) continue;
+            const dir = detectSpikeDirection(hazard.x, hazard.y, hazard.w, hazard.h);
+            drawSpikes(
+               hazard.x - hazard.w / 2, hazard.y - hazard.h / 2,
+               hazard.w, hazard.h,
+               120, 120, 130, 200, dir
+            );
+         }
+         return;
+      }
 
       noStroke();
       fill(220, 70, 70, 180);
@@ -475,10 +582,10 @@ export function createRenderSystem({
          if (dir === 'right') angle = -Math.PI / 2;
          if (dir === 'left') angle = Math.PI / 2;
 
+         const drawX = renderInterpolate(prevX, currX, alpha);
+         const drawY = renderInterpolate(prevY, currY, alpha);
          push();
-         translate(
-            renderInterpolate(prevX, currX, alpha),
-            renderInterpolate(prevY, currY, alpha));
+         translate(drawX, drawY);
          //scale(facing, 1);
 
          rotate(angle);
@@ -499,6 +606,7 @@ export function createRenderSystem({
          circle(4, -3, 2);
 
          pop();
+         drawDamageFlash(crab, drawX, drawY, crabW, crabH);
       }
 
       const jellies = getJellyfish?.() ?? [];
@@ -527,8 +635,10 @@ export function createRenderSystem({
             pop();
          }
 
+         const jellyDrawX = renderInterpolate(prevX, currX, alpha);
+         const jellyDrawY = renderInterpolate(prevY, currY, alpha);
          push();
-         translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
+         translate(jellyDrawX, jellyDrawY);
 
          const pulse = Math.abs(Math.sin(jelly.pulsePhase || 0)) * 0.15 + 0.85;
          scale(1.5, pulse*1.5);
@@ -580,6 +690,7 @@ export function createRenderSystem({
          ellipse(0, -jellyH / 4, jellyW * 0.6, jellyH * 0.3);
 
          pop();
+         drawDamageFlash(jelly, jellyDrawX, jellyDrawY, jellyW * 1.5, jellyH * 1.5);
       }
 
       const piranhas = getPiranhas?.() ?? [];
@@ -593,8 +704,10 @@ export function createRenderSystem({
          const facing = Number.isFinite(piranha?.facing) && piranha.facing !== 0 ? piranha.facing : 1;
          const isChasing = piranha?.state === 'chase';
 
+         const piranhaDrawX = renderInterpolate(prevX, currX, alpha);
+         const piranhaDrawY = renderInterpolate(prevY, currY, alpha);
          push();
-         translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
+         translate(piranhaDrawX, piranhaDrawY);
          scale(facing, 1);
 
          noStroke();
@@ -617,6 +730,7 @@ export function createRenderSystem({
          }
 
          pop();
+         drawDamageFlash(piranha, piranhaDrawX, piranhaDrawY, pW, pH);
       }
    }
 
@@ -1426,12 +1540,10 @@ export function createRenderSystem({
       const reveals = getSonarHazardReveals?.() ?? [];
       if (!reveals.length) return;
 
-      rectMode(CORNER);
       for (const r of reveals) {
          const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
-         noStroke();
-         fill(220, 70, 70, alpha);
-         rect(r.x, r.y, r.w, r.h);
+         const dir = detectSpikeDirection(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h);
+         drawSpikes(r.x, r.y, r.w, r.h, 220, 70, 70, alpha, dir);
       }
    }
 

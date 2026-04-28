@@ -114,6 +114,7 @@ export function createResourceManagementSystem(
             0,
             player.power.current - HAZARD_ENTRY_PENALTY,
           );
+          soundSystem?.play('playerHit', 0.2);
         }
 
         player.power.drain(HAZARD_DRAIN_RATE);
@@ -166,7 +167,11 @@ export function createResourceManagementSystem(
           handlers[resourceType](player, e);
         }
         collectedEntities.add(e);
-        soundSystem?.play('powerCollected', 0.4);
+        if (resourceType === 'scrap') {
+          soundSystem?.play('scrap', 0.6);
+        } else {
+          soundSystem?.play('powerCollected', 0.4);
+        }
       }
     }
   }

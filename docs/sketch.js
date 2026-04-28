@@ -662,6 +662,7 @@ function setup() {
   glowSystem = createGlowSystem(
     player,
     () => roomSystem.getGlowObjects(),
+    soundSystem,
   );
 
   lightingSystem = createLightingSystem(
@@ -792,7 +793,7 @@ function setup() {
     initialControlMode: CONTROLS.DEFAULT_MODE,
   });
 
-  workshopSystem = createWorkshopSystem(player, CONTROLS.DEFAULT_MODE, () => assets[SCRAP_ICON_ASSET_KEY]);
+  workshopSystem = createWorkshopSystem(player, CONTROLS.DEFAULT_MODE, () => assets[SCRAP_ICON_ASSET_KEY], soundSystem);
 
   engine = new Engine();
   engine.register(inputSystem);
@@ -971,6 +972,7 @@ function mousePressed() {
 
   // Workshop overlay blocks all clicks
   if (workshopSystem?.isWorkshopOpen()) {
+    soundSystem?.play('buttonClick', 0.8);
     workshopSystem?.onMousePressed();
     return;
   }
@@ -1081,6 +1083,7 @@ function mousePressed() {
 
   // Forward clicks to pause menu while game is paused mid-play
   if (pauseMenuSystem?.isPaused()) {
+    soundSystem?.play('buttonClick', 0.8);
     pauseMenuSystem.onMousePressed();
     return;
   }

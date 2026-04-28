@@ -163,17 +163,20 @@ export function createMissileSystem(player, getTargets, getWalls, soundSystem = 
                     if (walls.includes(entity)) {
                         if (entity.isBreakable) {
                             entity.isDestroyed = true;
+                            entity.damageFlashTime = millis();
                             if (GAME.DIFFICULTY === 'EASY') {
                                 const blastRadius = 64;
                                 for (const w of walls) {
                                     if (w.isBreakable && w !== entity && p5.Vector.dist(entity.position, w.position) <= blastRadius) {
                                         w.isDestroyed = true;
+                                        w.damageFlashTime = millis();
                                     }
                                 }
                             }
                         }
                     } else {
                         entity.pendingDestroy = true;
+                        entity.damageFlashTime = millis();
                     }
 
                     missile.pendingDestroy = true;
