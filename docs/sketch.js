@@ -1078,6 +1078,7 @@ function mousePressed() {
       applyDifficultyConfig(sessionDifficulty);
       resetGameToStart();
       storyDialogActive = true;
+      gameState = "PLAYING";
     } else if (selection === "EASY" || selection === "HARD") {
       soundSystem?.stop('introMusic');
       soundSystem?.play('buttonClick', 0.8);
@@ -1089,6 +1090,7 @@ function mousePressed() {
       applyDifficultyConfig(selection);
       resetGameToStart();
       storyDialogActive = true;
+      gameState = "PLAYING";
     } else if (selection === "SETTINGS") {
       soundSystem?.play('buttonClick', 0.8);
       settingsReturnState = "MENU";
