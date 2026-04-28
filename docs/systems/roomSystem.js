@@ -92,6 +92,17 @@ function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
   return result;
 }
 
+const VISUAL_FLIP_MASK = 0x1FFFFFFF;
+
+function copyWallsIntoTerrain(terrain, walls) {
+  const combined = new Array(terrain.data.length);
+  for (let i = 0; i < terrain.data.length; i++) {
+    const wallGid = (walls.data[i] >>> 0) & VISUAL_FLIP_MASK;
+    combined[i] = wallGid !== 0 ? wallGid : terrain.data[i];
+  }
+  return { data: combined, width: terrain.width, height: terrain.height };
+}
+
 function getTilesetForGid(tilesets, gid) {
   if (!Number.isFinite(gid) || gid <= 0 || !Array.isArray(tilesets)) return null;
   let best = null;
@@ -103,6 +114,15 @@ function getTilesetForGid(tilesets, gid) {
     }
   }
   return best;
+}
+
+function getTileTypeFromGid(tilesets, gid) {
+  const tileset = getTilesetForGid(tilesets, Number(gid));
+  if (!tileset) return null;
+  const localTileId = Number(gid) - Number(tileset.firstgid);
+  if (!Number.isFinite(localTileId) || localTileId < 0) return null;
+  const tileProps = tileset?.tilePropertiesById?.[localTileId] ?? null;
+  return String(tileProps?.type ?? '').toLowerCase() || null;
 }
 
 function getCollectableTypeFromGid(tilesets, gid) {
@@ -127,7 +147,7 @@ function normalizeTiledRoom(roomKey, mapData) {
     tileHeight,
     tilesets: [...(mapData?.tilesets ?? [])],
     background: {
-      color: getTiledProperty(mapData, 'backgroundColor', '#000000'),
+      color: getTiledProperty(mapData, 'backgroundColor', '#021B3A'),
       image: getTiledProperty(mapData, 'backgroundImage', null),
       gid: null,
       w: null,
@@ -144,6 +164,8 @@ function normalizeTiledRoom(roomKey, mapData) {
     exits: [],
     foreground: [],
     enemies: [],
+    glowObjects: [],
+    visualLayers: { terrain: null, walls: null, combined: null },
   };
 
   for (const layer of mapData?.layers ?? []) {
@@ -154,16 +176,45 @@ function normalizeTiledRoom(roomKey, mapData) {
       continue;
     }
 
+    if (layer?.type === 'tilelayer' && layerName === 'terrain') {
+      normalized.visualLayers.terrain = {
+        data: [...(layer.data ?? [])],
+        width: layer.width ?? 0,
+        height: layer.height ?? 0,
+      };
+      continue;
+    }
+
+    if (layer?.type === 'tilelayer' && layerName === 'walls') {
+      normalized.visualLayers.walls = {
+        data: [...(layer.data ?? [])],
+        width: layer.width ?? 0,
+        height: layer.height ?? 0,
+      };
+      continue;
+    }
+
     if (layer?.type === 'objectgroup' && layerName === 'terrain') {
       for (const obj of layer.objects ?? []) {
         const { x, y, w, h } = getObjectBox(obj, tileWidth, tileHeight);
         const wall = new Wall(x, y, w, h);
         wall.gid = obj?.gid ?? null;
-        
+
         // Checks if breakable in tiled
         if (obj.properties && (obj.properties.breakable === true || obj.properties.type === 'breakable')) {
             wall.isBreakable = true;
         }
+        normalized.platforms.push(wall);
+      }
+      continue;
+    }
+
+    if (layer?.type === 'objectgroup' && layerName === 'breakable') {
+      for (const obj of layer.objects ?? []) {
+        const { x, y, w, h } = getObjectBox(obj, tileWidth, tileHeight);
+        const wall = new Wall(x, y, w, h);
+        wall.gid = obj?.gid ?? null;
+        wall.isBreakable = true;
         normalized.platforms.push(wall);
       }
       continue;
@@ -210,6 +261,13 @@ function normalizeTiledRoom(roomKey, mapData) {
       continue;
     }
 
+    if (layer?.type === 'objectgroup' && layerName === 'glow') {
+      normalized.glowObjects = (layer.objects ?? []).map((obj) =>
+        normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
+      );
+      continue;
+    }
+
     if (layer?.type === 'objectgroup' && layerName === 'triggers') {
       normalized.triggers = (layer.objects ?? []).map((obj) =>
         normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
@@ -246,6 +304,25 @@ function normalizeTiledRoom(roomKey, mapData) {
     if (layer?.type === 'imagelayer' && !normalized.background.image && layer?.image) {
       normalized.background.image = layer.image;
     }
+
+    // Fallback: scan any unrecognised objectgroup for glow-typed tiles so
+    // glow objects are found even if the layer name in Tiled is wrong.
+    if (layer?.type === 'objectgroup') {
+      for (const obj of layer.objects ?? []) {
+        if (getTileTypeFromGid(normalized.tilesets, obj.gid) === 'glow') {
+          normalized.glowObjects.push(
+            normalizeLayerObject(obj, tileWidth, tileHeight, layer.opacity ?? 1)
+          );
+        }
+      }
+    }
+  }
+
+  if (normalized.visualLayers.terrain && normalized.visualLayers.walls) {
+    normalized.visualLayers.combined = copyWallsIntoTerrain(
+      normalized.visualLayers.terrain,
+      normalized.visualLayers.walls
+    );
   }
 
   if (!normalized.playerStart) {
@@ -324,6 +401,7 @@ function normalizeLegacyRoom(roomKey, roomConfig) {
   normalized.platformColor = roomConfig.platformColor ?? null;
   normalized.hazards = [...(roomConfig.hazards ?? [])];
   normalized.collectables = [...(roomConfig.collectables ?? [])];
+  normalized.enemies = [...(roomConfig.enemies ?? [])];
   normalized.triggers = [...(roomConfig.triggers ?? [])];
   normalized.foreground = [...(roomConfig.foreground ?? [])];
 
@@ -342,7 +420,10 @@ export function createRoomSystem({
   roomData = {},
   player = null,
   onRoomLoaded = null,
-  onWin = null
+  onWin = null,
+  getAllowedRooms = null,
+  getGameVersion = null,
+  soundSystem = null,
 } = {}) {
   let currentRoom = null;
   let currentConfig = null;
@@ -356,10 +437,12 @@ export function createRoomSystem({
   let exits = [];
   let spawnPoints = [];
   let foreground = [];
+  let glowObjects = [];
   let tilesets = [];
   let tileWidth = CANVAS.TILE_SIZE;
   let tileHeight = CANVAS.TILE_SIZE;
   let exitCoolDownSeconds = 0;
+  let visualLayers = null;
 
   function loadRoom(roomKey, { spawnId = null } = {}) {
     const roomSource = roomData[roomKey];
@@ -381,9 +464,11 @@ export function createRoomSystem({
     spawnPoints = [...(normalized.spawnPoints ?? [])];
     foreground = [...(normalized.foreground ?? [])];
     entities = [...(normalized.entities ?? [])];
+    glowObjects = [...(normalized.glowObjects ?? [])];
     tilesets = [...(normalized.tilesets ?? [])];
     tileWidth = normalized.tileWidth ?? CANVAS.TILE_SIZE;
     tileHeight = normalized.tileHeight ?? CANVAS.TILE_SIZE;
+    visualLayers = normalized.visualLayers ?? null;
 
     const explicitSpawn = spawnId
       ? spawnPoints.find((spawn) => String(spawn.spawnId).toLowerCase() === String(spawnId).toLowerCase())
@@ -452,11 +537,18 @@ export function createRoomSystem({
         break;
       }
 
+      const exitVersion = exit?.properties?.gameVersion ?? null;
+      if (exitVersion && exitVersion !== getGameVersion?.()) continue;
+
       const targetRoom = exit?.properties?.targetRoom;
       if (!targetRoom || !roomData[targetRoom]) continue;
 
+      const allowed = getAllowedRooms?.();
+      if (allowed && !allowed.includes(targetRoom)) continue;
+
       const targetSpawn = exit?.properties?.targetSpawn ?? null;
       loadRoom(targetRoom, { spawnId: targetSpawn });
+      soundSystem?.play('achievementBell', 0.5);
       exitCoolDownSeconds = 0.25;
       break;
     }
@@ -518,6 +610,10 @@ export function createRoomSystem({
       return foreground;
     },
 
+    getGlowObjects() {
+      return glowObjects;
+    },
+
     getTilesets() {
       return tilesets;
     },
@@ -556,6 +652,10 @@ export function createRoomSystem({
 
     getPlatformColor() {
       return currentConfig?.platformColor ?? null;
+    },
+
+    getVisualLayers() {
+      return visualLayers;
     }
   };
 }

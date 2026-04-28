@@ -30,16 +30,32 @@ import { createSonarSystem } from "./systems/sonarSystem.js";
 import { createRoomSystem } from "./systems/roomSystem.js";
 import { createPauseMenuSystem } from "./systems/pauseMenuSystem.js";
 import { createCameraSystem } from "./systems/cameraSystem.js";
-import { CANVAS, PLAYER, TIME, GAME, INPUT, CONTROLS } from "./config.js";
+import {
+  CANVAS,
+  PLAYER,
+  TIME,
+  GAME,
+  CONTROLS,
+  GAMEPLAY_OVERLAY,
+  MINIMAP,
+  HUD_DIALS,
+  GAME_VERSIONS,
+} from "./config.js";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
+import { createMainPageSystem } from "./systems/mainPageSystem.js";
 import { createMenuSystem } from "./systems/menuSystem.js";
-import { createShopSystem } from "./systems/shopSystem.js";
+import { createWorkshopSystem } from "./systems/workshopSystem.js";
+import { createMissileSystem } from "./systems/missileSystem.js";
 import { createParticleSystem } from "./systems/particleSystem.js";
 import { createEnemySystem } from './systems/enemySystem.js';
 import { createWinScreenSystem } from "./systems/winScreenSystem.js";
 import { createGameOverSystem } from "./systems/gameOverSystem.js";
-import { createMissileSystem } from "./systems/missileSystem.js";
+import { createMiniMapSystem } from "./systems/miniMapSystem.js";
+import { createGlowSystem } from "./systems/glowSystem.js";
+import { createSoundSystem } from "./systems/soundSystem.js";
+import { createStoryPageSystem } from "./systems/storyPageSystem.js";
+import { createControlsPageSystem } from "./systems/controlsPageSystem.js";
 
 let accumulator = 0;
 let alpha;
@@ -47,7 +63,11 @@ let alpha;
 let engine;
 let darknessLayer;
 let player;
-
+let mainPageSystem;
+let mainPageBg;
+let menuBg;
+let storyPageSystem;
+let controlsPageSystem;
 let inputSystem;
 let playerSystem;
 let physicsSystem;
@@ -59,25 +79,38 @@ let lightingSystem;
 let roomSystem;
 let resourceManagementSystem;
 let enemySystem;
-let missileSystem;
 let pauseMenuSystem;
-let shopSystem;
+let workshopSystem;
+let missileSystem;
 let particleSystem;
 let cameraSystem;
+let miniMapSystem;
+let glowSystem;
 let lastEnsuredRoom = null;
-let gameState = "MENU";
+//let gameState = "MENU";
+let gameState = "MAIN_PAGE";
+let showControlsOverlay = false;   // toggled by H key
+let storyDialogActive = false;     // story dialog shown on game start
+let hasSeenIntro = false;          // true after player passes STORY_PAGE → CONTROLS flow
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
+let gameVersion = "full"; // "demo" | "full"
+let sessionVersion = "full";   // locked-in version for the current session
+let sessionDifficulty = null;  // locked-in difficulty for the current session ("EASY"|"HARD")
 let menuSystem;
 let winScreenSystem;
 let gameOverSystem;
+let audioUnlocked = false;
+let soundSystem;  
 const WIN_STATE = "WIN";
 const GAME_OVER_STATE = "GAME_OVER";
 
 let assets = {};
-const INITIAL_ROOM_ID = "startArea";
 // NOTE: Some rooms are placeholders (see docs/data/rooms/*.json) so the build runs end-to-end.
-const ROOM_IDS = ["roomA", "roomB", "startArea", "spikeMaze", "tunnel", "crabCaverns", "deepCaverns",
-                  "theDrop", "endlessAbyss", "theBiolume", "jellyfishAtrium", "theSurface"];
+// Prototype rooms are preloaded for testing but not part of any game version.
+const ROOM_IDS = [
+  "roomA", "roomB",
+  ...new Set(Object.values(GAME_VERSIONS).flatMap(v => v.rooms)),
+];
 const roomData = {};
 const FIT_CANVAS_TO_ROOM = false;
 let useDevResolution = false;
@@ -85,6 +118,14 @@ const BACKGROUND_FILE_MAP = {
   "bg-atmosphere": "bg-atmosphere.jpg",
   "bg-atmosphere.jpg": "bg-atmosphere.jpg",
 };
+const GAMEPLAY_OVERLAY_ASSET_KEY = "ui:gameplayOverlay";
+const GAMEPLAY_OVERLAY_PATH = "assets/ui/gameplay-overlay.png";
+const SCRAP_ICON_ASSET_KEY = "ui:scrapIcon";
+const SCRAP_ICON_PATH = "assets/ui/scrap-icon.png";
+const POWER_CELL_ASSET_KEY = "sprite:powerCell";
+const POWER_CELL_PATH = "assets/sprites/power-cell.png";
+const SCRAP_SPRITE_ASSET_KEY = "sprite:scrap";
+const SCRAP_SPRITE_PATH = "assets/sprites/scrap.png";
 
 function getTilesetForGid(room, gid) {
   if (!Number.isFinite(gid)) return null;
@@ -113,12 +154,37 @@ function normalizeRelativePath(basePath, relativePath) {
   return baseParts.join("/");
 }
 
+function getPathDir(path) {
+  const parts = String(path ?? "")
+    .split("/")
+    .filter(Boolean);
+  parts.pop();
+  return parts.join("/");
+}
+
+function normalizeTilesetSource(source, mapDir) {
+  if (!source) return source;
+  const resolved = normalizeRelativePath(mapDir, source);
+  if (resolved.startsWith("data/tilesets/")) return source;
+  const idx = source.indexOf("tilesets/");
+  if (idx !== -1) {
+    const fixed = `../${source.slice(idx)}`;
+    console.warn(`[preload] Fixed tileset source: "${source}" → "${fixed}"`);
+    return fixed;
+  }
+  return source;
+}
+
 function tilesetSourceToImagePath(source, mapDir = "data/rooms") {
   if (!source) return null;
-  // backgrounds.tsx is an image collection (no single .png atlas file to load).
   if (String(source).toLowerCase().endsWith("backgrounds.tsx")) return null;
-  const pngSource = source.replace(/\.tsx$/i, ".png");
-  return normalizeRelativePath(mapDir, pngSource);
+  // Normalize the tsx path relative to the map directory first, so that a
+  // relative source like "../tilesets/X.tsx" resolves to "data/tilesets/X"
+  // before we extract its directory for image resolution.
+  const resolvedSource = normalizeRelativePath(mapDir, source);
+  const tsxDir = getPathDir(resolvedSource);
+  const pngFilename = resolvedSource.split("/").pop().replace(/\.tsx$/i, ".png");
+  return normalizeRelativePath(tsxDir, pngFilename);
 }
 
 function parseTsxTileProperties(xmlText) {
@@ -148,6 +214,81 @@ function parseTsxTileProperties(xmlText) {
   }
 
   return byId;
+}
+
+function parseTsxMetadata(xmlText, sourcePath = "") {
+  const empty = {
+    tilePropertiesById: {},
+    tileImagesById: {},
+    resolvedImagePath: null,
+    tilewidth: null,
+    tileheight: null,
+    columns: null,
+    tilecount: null,
+  };
+  if (!xmlText || typeof DOMParser === "undefined") return empty;
+
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, "application/xml");
+  const tilesetNode = doc.querySelector("tileset");
+  if (!tilesetNode) return empty;
+
+  const baseDir = getPathDir(sourcePath);
+  const tilePropertiesById = {};
+  const tileImagesById = {};
+
+  const rootChildren = Array.from(tilesetNode.children ?? []);
+  const rootImageNode = rootChildren.find(
+    (node) => String(node?.tagName).toLowerCase() === "image",
+  );
+  const rootImageSource = rootImageNode?.getAttribute("source") ?? null;
+  const resolvedImagePath = rootImageSource
+    ? normalizeRelativePath(baseDir, rootImageSource)
+    : null;
+
+  const tileNodes = Array.from(tilesetNode.querySelectorAll("tile"));
+  for (const tileNode of tileNodes) {
+    const localId = Number(tileNode.getAttribute("id"));
+    if (!Number.isFinite(localId)) continue;
+
+    const props = {};
+    const propertyNodes = Array.from(
+      tileNode.querySelectorAll("properties > property"),
+    );
+    for (const propNode of propertyNodes) {
+      const name = propNode.getAttribute("name");
+      if (!name) continue;
+      const valueAttr = propNode.getAttribute("value");
+      props[name] = valueAttr ?? propNode.textContent ?? "";
+    }
+    if (Object.keys(props).length) {
+      tilePropertiesById[localId] = props;
+    }
+
+    const tileChildren = Array.from(tileNode.children ?? []);
+    const tileImageNode = tileChildren.find(
+      (node) => String(node?.tagName).toLowerCase() === "image",
+    );
+    const tileImageSource = tileImageNode?.getAttribute("source") ?? null;
+    if (!tileImageSource) continue;
+
+    tileImagesById[localId] = {
+      source: tileImageSource,
+      resolvedImagePath: normalizeRelativePath(baseDir, tileImageSource),
+      width: Number(tileImageNode.getAttribute("width") ?? 0) || null,
+      height: Number(tileImageNode.getAttribute("height") ?? 0) || null,
+    };
+  }
+
+  return {
+    tilePropertiesById,
+    tileImagesById,
+    resolvedImagePath,
+    tilewidth: Number(tilesetNode.getAttribute("tilewidth") ?? 0) || null,
+    tileheight: Number(tilesetNode.getAttribute("tileheight") ?? 0) || null,
+    columns: Number(tilesetNode.getAttribute("columns") ?? 0) || null,
+    tilecount: Number(tilesetNode.getAttribute("tilecount") ?? 0) || null,
+  };
 }
 
 function getMapProperty(mapData, key, fallback = null) {
@@ -241,12 +382,33 @@ function ensureRoomAssetsLoaded(roomId) {
 
   const mapDir = roomMapDir(roomId);
   for (const tileset of room?.tilesets ?? []) {
-    const imagePath = tilesetSourceToImagePath(tileset?.source, mapDir);
-    if (!imagePath) continue;
-    tileset.resolvedImagePath = imagePath;
-    const key = `tileset:${imagePath}`;
-    if (!assets[key]) {
-      assets[key] = loadImage(imagePath);
+    const imagePath =
+      tileset.resolvedImagePath ??
+      tilesetSourceToImagePath(tileset?.source, mapDir);
+    console.warn(`[ensureRoomAssetsLoaded] tileset.source="${tileset.source}" resolvedImagePath="${tileset.resolvedImagePath}" imagePath="${imagePath}" tsxDirForImage="${tileset.resolvedImagePath ? getPathDir(tileset.resolvedImagePath) : 'N/A(resolvedImagePath was undefined)'}"`);
+    if (imagePath) {
+      tileset.resolvedImagePath = imagePath;
+      const key = `tileset:${imagePath}`;
+      if (!assets[key]) {
+        console.warn(`[preload] Loading ATLAS image: imagePath="${imagePath}" key="${key}" assetsDir=docs/data/`);
+        assets[key] = loadImage(imagePath);
+      }
+    }
+
+    for (const tileImage of Object.values(tileset?.tileImagesById ?? {})) {
+      const tileImagePath = tileImage?.resolvedImagePath;
+      if (!tileImagePath) continue;
+      const tileKey = `tileset:${tileImagePath}`;
+      if (!assets[tileKey]) {
+        // Only log once per tileset to avoid spam
+        if (!ensureRoomAssetsLoaded._loggedTileImages) {
+          ensureRoomAssetsLoaded._loggedTileImages = true;
+          const allTileImages = Object.values(tileset?.tileImagesById ?? {}).map(ti => ti?.resolvedImagePath);
+          console.warn(`[preload] tileImagesById sample for ${tileset?.name}: ${JSON.stringify(allTileImages.slice(0, 5))} (${Object.keys(tileset?.tileImagesById ?? {}).length} total)`);
+        }
+        console.warn(`[preload] Loading individual tile image: tileImagePath="${tileImagePath}" tileKey="${tileKey}"`);
+        assets[tileKey] = loadImage(tileImagePath);
+      }
     }
   }
 }
@@ -283,22 +445,32 @@ function roomMapDir(_roomId) {
 }
 
 function preload() {
+
+  soundSystem = createSoundSystem();
+  soundSystem.preload();
+
   for (const roomId of ROOM_IDS) {
     roomData[roomId] = loadJSON(`data/rooms/${roomId}.json`);
   }
 
-  const tilePropsBySourcePath = {};
+  const tsxMetaBySourcePath = {};
   for (const [roomId, room] of Object.entries(roomData)) {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
+      tileset.source = normalizeTilesetSource(tileset.source, mapDir);
       const sourcePath = normalizeRelativePath(mapDir, tileset?.source ?? "");
       if (!sourcePath.toLowerCase().endsWith(".tsx")) continue;
-      if (tilePropsBySourcePath[sourcePath]) continue;
+      if (tsxMetaBySourcePath[sourcePath]) continue;
 
       const tsxLines = loadStrings(sourcePath) ?? [];
-      tilePropsBySourcePath[sourcePath] = parseTsxTileProperties(
+      if (!tsxLines.length) {
+        console.warn(`[preload] TSX file empty or failed to load: "${sourcePath}"`);
+      }
+      tsxMetaBySourcePath[sourcePath] = parseTsxMetadata(
         tsxLines.join("\n"),
+        sourcePath,
       );
+      console.warn(`[preload] TSX parsed: "${sourcePath}" → resolvedImagePath="${tsxMetaBySourcePath[sourcePath].resolvedImagePath}" tileImagesById count=${Object.keys(tsxMetaBySourcePath[sourcePath].tileImagesById).length}`);
     }
   }
 
@@ -306,10 +478,21 @@ function preload() {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
       const sourcePath = normalizeRelativePath(mapDir, tileset?.source ?? "");
-      tileset.tilePropertiesById = tilePropsBySourcePath[sourcePath] ?? {};
+      const tsxMeta = tsxMetaBySourcePath[sourcePath] ?? {};
+      tileset.tilePropertiesById = tsxMeta.tilePropertiesById ?? {};
+      tileset.tileImagesById = tsxMeta.tileImagesById ?? {};
       // Attach the resolved image path so the render system can look it up
       // without needing to re-derive the map directory at draw time.
-      tileset.resolvedImagePath = tilesetSourceToImagePath(tileset?.source, mapDir);
+      tileset.resolvedImagePath =
+        tsxMeta.resolvedImagePath ??
+        tilesetSourceToImagePath(tileset?.source, mapDir);
+      const tileImgKeys = Object.keys(tsxMeta.tileImagesById ?? {});
+      const tileImgSample = tileImgKeys.slice(0, 3).map(k => `${k}:"${tsxMeta.tileImagesById[k]?.resolvedImagePath}"`);
+      console.warn(`[preload] Tileset "${tileset.source}" resolvedImagePath="${tileset.resolvedImagePath}" tileImagesById=${tileImgSample.join(', ')}${tileImgKeys.length > 3 ? ' ...' : ''} (${tileImgKeys.length} total)`);
+      if (tsxMeta.tilewidth) tileset.tilewidth = tsxMeta.tilewidth;
+      if (tsxMeta.tileheight) tileset.tileheight = tsxMeta.tileheight;
+      if (tsxMeta.columns != null) tileset.columns = tsxMeta.columns;
+      if (tsxMeta.tilecount != null) tileset.tilecount = tsxMeta.tilecount;
     }
   }
 
@@ -337,14 +520,63 @@ function preload() {
   for (const [roomId, room] of Object.entries(roomData)) {
     const mapDir = roomMapDir(roomId);
     for (const tileset of room?.tilesets ?? []) {
-      const imagePath = tilesetSourceToImagePath(tileset?.source, mapDir);
+      const imagePath =
+        tileset.resolvedImagePath ??
+        tilesetSourceToImagePath(tileset?.source, mapDir);
       if (imagePath) tilesetImagePaths.add(imagePath);
+      for (const tileImage of Object.values(tileset?.tileImagesById ?? {})) {
+        if (tileImage?.resolvedImagePath) {
+          tilesetImagePaths.add(tileImage.resolvedImagePath);
+        }
+      }
     }
   }
 
   for (const imagePath of tilesetImagePaths) {
     assets[`tileset:${imagePath}`] = loadImage(imagePath);
   }
+
+  assets[GAMEPLAY_OVERLAY_ASSET_KEY] = loadImage(
+    GAMEPLAY_OVERLAY_PATH,
+    undefined,
+    () => {
+      assets[GAMEPLAY_OVERLAY_ASSET_KEY] = null;
+      console.warn(
+        `[sketch] Gameplay overlay image not found at ${GAMEPLAY_OVERLAY_PATH}`,
+      );
+    },
+  );
+
+  assets[SCRAP_ICON_ASSET_KEY] = loadImage(
+    SCRAP_ICON_PATH,
+    undefined,
+    () => {
+      assets[SCRAP_ICON_ASSET_KEY] = null;
+      console.warn(`[sketch] Scrap icon not found at ${SCRAP_ICON_PATH}`);
+    },
+  );
+
+  assets[POWER_CELL_ASSET_KEY] = loadImage(
+    POWER_CELL_PATH,
+    undefined,
+    () => {
+      assets[POWER_CELL_ASSET_KEY] = null;
+      console.warn(`[sketch] Power cell sprite not found at ${POWER_CELL_PATH}`);
+    },
+  );
+
+  assets[SCRAP_SPRITE_ASSET_KEY] = loadImage(
+    SCRAP_SPRITE_PATH,
+    undefined,
+    () => {
+      assets[SCRAP_SPRITE_ASSET_KEY] = null;
+      console.warn(`[sketch] Scrap sprite not found at ${SCRAP_SPRITE_PATH}`);
+    },
+  );
+
+
+  mainPageBg = loadImage("assets/backgrounds/titleBackground.png");
+  menuBg = loadImage("assets/backgrounds/bg_black.png");
 }
 
 function setup() {
@@ -353,13 +585,16 @@ function setup() {
   textAlign(LEFT);
   applyDisplayScale();
 
+  mainPageSystem = createMainPageSystem();
+  storyPageSystem = createStoryPageSystem();
+  controlsPageSystem = createControlsPageSystem();
   menuSystem = createMenuSystem();
   winScreenSystem = createWinScreenSystem();
   gameOverSystem = createGameOverSystem();
 
   player = new Player(PLAYER);
 
-  const initialRoom = INITIAL_ROOM_ID;
+  const initialRoom = GAME_VERSIONS.demo.startRoom;
   roomSystem = createRoomSystem({
     initialRoom,
     roomData,
@@ -378,8 +613,13 @@ function setup() {
       }
     },
     onWin: () => {
+      soundSystem?.stop('gamebg1');
+      soundSystem?.play('win', 0.4);
       gameState = WIN_STATE;
     },
+    getAllowedRooms: () => GAME_VERSIONS[gameVersion].rooms,
+    getGameVersion: () => gameVersion,
+    soundSystem,
   });
   roomSystem.goToRoom(initialRoom, { spawnId: "default" });
   syncCanvasToCurrentRoom();
@@ -391,29 +631,54 @@ function setup() {
   darknessLayer = createGraphics(width, height);
 
   inputSystem = createInputSystem(player);
-  playerSystem = createPlayerSystem(player);
+  playerSystem = createPlayerSystem(player, soundSystem);
   physicsSystem = createPhysicsSystem(player, () => roomSystem.getRoomState());
   cameraSystem = createCameraSystem(player, CANVAS.WIDTH, CANVAS.HEIGHT);
   // Snap camera to player's initial position
   cameraSystem.snapTo(player.position.x, player.position.y);
-  powerSystem = createPowerSystem(player);
-  torchSystem = createTorchSystem(player.torch, player, {
-    getDifficulty: () =>
-      pauseMenuSystem ? pauseMenuSystem.getDifficulty() : "normal",
+  powerSystem = createPowerSystem(player, {
+    getDifficulty: () => pauseMenuSystem?.getDifficulty() ?? "easy",
   });
+  torchSystem = createTorchSystem(player.torch, player, { soundSystem });
 
   sonarSystem = createSonarSystem(
     player,
     () => roomSystem.getPlatforms(),
     () => roomSystem.getHazards(),
-    () => roomSystem.getCollectables(),
+    () =>
+      roomSystem
+        .getCollectables()
+        .filter((c) => !resourceManagementSystem?.isCollected(c)),
+    soundSystem,
+    () => enemySystem?.getEnemies() ?? [],
+  );
+
+  missileSystem = createMissileSystem(
+    player,
+    () => enemySystem?.getEnemies() ?? [],
+    () => roomSystem.getPlatforms(),
+    soundSystem,
+    particleSystem,
   );
 
   particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 
+  glowSystem = createGlowSystem(
+    player,
+    () => roomSystem.getGlowObjects(),
+    soundSystem,
+  );
+
   lightingSystem = createLightingSystem(
     player,
     () => sonarSystem?.getSonarLights?.() ?? [],
+    () => glowSystem.getGlowLights(),
+    () => roomSystem?.getCurrentRoom?.() ?? null,
+    () => enemySystem?.getJellyfishLights?.() ?? [],
+    () =>
+      roomSystem
+        .getCollectables()
+        .filter((c) => !resourceManagementSystem?.isCollected(c)),
   );
 
   resourceManagementSystem = createResourceManagementSystem(
@@ -423,18 +688,33 @@ function setup() {
     () => roomSystem.getHazards(),
     () => pauseMenuSystem.getDifficulty(),
     () => enemySystem?.getEnemies() ?? [],
+    soundSystem,
   );
 
   enemySystem = createEnemySystem(
     player,
-    () => roomSystem.getEnemies()
+    () => roomSystem.getEnemies(),
+    () => sonarSystem?.getActivePulses?.() ?? [],
+    soundSystem,
+    particleSystem,
   );
 
-  missileSystem = createMissileSystem(
+  miniMapSystem = createMiniMapSystem({
     player,
-    () => enemySystem.getCrabs(),
-    () => roomSystem.getPlatforms()
-  );
+    zoom: MINIMAP.ZOOM,
+    centerX: MINIMAP.CENTER_X,
+    centerY: MINIMAP.CENTER_Y,
+    dialRadius: MINIMAP.DIAL_RADIUS,
+    dialInset: MINIMAP.DIAL_INSET,
+    playerMarkerTileScale: MINIMAP.PLAYER_MARKER_TILE_SCALE,
+    borderColor: 'rgba(126, 220, 224, 0.78)',
+    borderWidth: 2,
+    backgroundColor: 'rgba(12, 23, 31, 0.80)',
+    getPlayer: () => player,
+    getRoomState: () => roomSystem.getRoomState(),
+    getPlatforms: () => roomSystem.getPlatforms(),
+    getSonarReveals: () => sonarSystem?.getRevealedWalls?.() ?? [],
+  });
   
   renderSystem = createRenderSystem({
     player,
@@ -444,9 +724,12 @@ function setup() {
       roomSystem
         .getCollectables()
         .filter((c) => !resourceManagementSystem.isCollected(c)),
+    getEnemies: () => enemySystem.getCrabs(),
     getCrabs: () => enemySystem.getCrabs(),
     getJellyfish: () => enemySystem.getJellyfish(),
+    getPiranhas: () => enemySystem.getPiranhas(),
     getTriggers: () => roomSystem.getTriggers(),
+    getGlowObjects: () => roomSystem.getGlowObjects(),
     getEntities: () => roomSystem.getEntities(),
     getSpawnPoints: () => roomSystem.getSpawnPoints(),
     getTilesets: () => roomSystem.getTilesets(),
@@ -457,53 +740,124 @@ function setup() {
     getSonarReveals: () => sonarSystem?.getRevealedWalls?.(),
     getSonarHazardReveals: () => sonarSystem?.getRevealedHazards?.(),
     getSonarCollectableReveals: () => sonarSystem?.getRevealedCollectables?.(),
+    getSonarEnemyReveals: () => sonarSystem?.getRevealedEnemies?.(),
     assets,
     darknessLayer,
     getLightSources: () => lightingSystem.getLightSources(),
+    getSkyBand: () => roomSystem?.getCurrentRoom?.() === 'theSurface'
+      ? {
+          y: 0, height: 320, width: 1440, color: '#87CEEB',
+          waterGradient: { topColor: '#1a5f8a', bottomColor: '#021B3A', worldTop: 320, worldBot: 950 },
+        }
+      : null,
     getActivePulses: () => sonarSystem?.getActivePulses?.() ?? [],
     getRevealedWalls: () => sonarSystem?.getRevealedWalls?.() ?? [],
-    getMissiles: () => missileSystem.getMissiles(),
-    getMissileMessage: () => missileSystem.getMessage(),
     getCameraOffset: () => cameraSystem.getOffset(),
     getOldCamPosition: () => cameraSystem.getOldCamPosition(),
     getCameraScale: () => cameraSystem.getScale(),
     getMissiles: () => missileSystem.getMissiles(),
+    getMissileTarget: () => missileSystem.getCurrentTarget(),
+    getMissileFireFeedback: () => missileSystem.getFireFeedbackTimer(),
     getParticles: () => particleSystem.getParticles(),
+    getBurstParticles: () => particleSystem.getBurstParticles(),
+    drawMiniMap: () => miniMapSystem.draw(),
+    getHudDialSettings: () => ({
+      powerX: HUD_DIALS.POWER_X,
+      powerY: HUD_DIALS.POWER_Y,
+      sonarX: HUD_DIALS.SONAR_X,
+      sonarY: HUD_DIALS.SONAR_Y,
+      baseSize: HUD_DIALS.BASE_SIZE,
+      powerScale: HUD_DIALS.POWER_SCALE,
+      sonarScale: HUD_DIALS.SONAR_SCALE,
+    }),
+    getGameplayOverlay: () => assets[GAMEPLAY_OVERLAY_ASSET_KEY],
+    getScrapIcon: () => assets[SCRAP_ICON_ASSET_KEY],
+    getPowerCellSprite: () => assets[POWER_CELL_ASSET_KEY],
+    getScrapSprite: () => assets[SCRAP_SPRITE_ASSET_KEY],
+    getGameplayOverlaySettings: () => ({
+      enabled: GAMEPLAY_OVERLAY.ENABLED,
+      centerOnScreen: GAMEPLAY_OVERLAY.CENTER_ON_SCREEN,
+      offsetX: GAMEPLAY_OVERLAY.OFFSET_X,
+      offsetY: GAMEPLAY_OVERLAY.OFFSET_Y,
+      scaleX: GAMEPLAY_OVERLAY.SCALE_X,
+      scaleY: GAMEPLAY_OVERLAY.SCALE_Y,
+      opacity: GAMEPLAY_OVERLAY.OPACITY,
+    }),
+    getVisualLayers: () => roomSystem.getVisualLayers(),
+    getTorchOn: () => player?.torch?.isOn ?? false,
   });
 
   pauseMenuSystem = createPauseMenuSystem({
-    onDifficultyChange: (diff) => {},
     onResolutionChange: (isDev) => {
       useDevResolution = isDev;
       applyDisplayScale();
     },
-    onControlModeChange: (mode) => inputSystem.setControlMode(mode),
+    onControlModeChange: (mode) => { inputSystem.setControlMode(mode); workshopSystem?.setControlMode(mode); },
+    onVolumeChange: (v) => {
+      soundSystem.setMasterVolume(v);
+    },
     initialControlMode: CONTROLS.DEFAULT_MODE,
   });
 
-  shopSystem = createShopSystem(player);
+  workshopSystem = createWorkshopSystem(player, CONTROLS.DEFAULT_MODE, () => assets[SCRAP_ICON_ASSET_KEY], soundSystem);
 
   engine = new Engine();
   engine.register(inputSystem);
   engine.register(playerSystem);
   engine.register(physicsSystem);
   engine.register(sonarSystem);
+  engine.register(miniMapSystem);
+  engine.register(missileSystem);
   engine.register(particleSystem);
   engine.register(cameraSystem);
   engine.register(powerSystem);
   engine.register(torchSystem);
   engine.register(roomSystem);
   engine.register(resourceManagementSystem);
+  engine.register(glowSystem);
   engine.register(enemySystem);
-  engine.register(missileSystem);
   engine.register(pauseMenuSystem);
-  engine.register(shopSystem);
+  engine.register(workshopSystem);
 }
 
 function draw() {
   frameRate(GAME.FPS);
+
+  const isMenuState = gameState === "MAIN_PAGE" || gameState === "STORY_PAGE"
+    || gameState === "CONTROLS" || gameState === "MENU"
+    || gameState === "SETTINGS";
+
+  if (audioUnlocked && isMenuState && !soundSystem?.isPlaying?.('introMusic')) {
+    soundSystem?.loop?.('introMusic', 0.5);
+  }
+
+  if (!isMenuState) {
+    soundSystem?.stop?.('introMusic');
+  }
+
+  const isGameplayState = gameState === "PLAYING";
+  if (!isGameplayState) {
+    soundSystem?.stop('gamebg1');
+    soundSystem?.stop('movement');
+  }
+
+  if (gameState === "MAIN_PAGE") {
+    mainPageSystem.draw(mainPageBg);
+    return;
+  }
+
+  if (gameState === "STORY_PAGE") {
+    storyPageSystem.draw(menuBg);
+    return;
+  }
+
+  if (gameState === "CONTROLS") {
+  controlsPageSystem.draw(menuBg);
+  return;
+}
+
   if (gameState === "MENU") {
-    menuSystem.draw(null);
+    menuSystem.draw(menuBg);
     return;
   } else if (gameState === "SETTINGS") {
     pauseMenuSystem.draw();
@@ -539,19 +893,25 @@ function draw() {
     lastEnsuredRoom = currentRoom;
   }
 
-  // Shop overlay (blocks all input/gameplay)
-  if (shopSystem && shopSystem.isShopOpen()) {
+  // Workshop overlay (blocks all input/gameplay)
+  if (workshopSystem && workshopSystem.isWorkshopOpen()) {
     renderSystem?.draw?.(0);
-    shopSystem.draw();
+    workshopSystem.draw();
     return;
   }
 
-  accumulator += deltaTime / 1000;
+  // Story dialog overlay — shown once at start of a game session
+  if (storyDialogActive) {
+    renderSystem?.draw?.(0);
+    drawStoryDialog();
+    return;
+  }
 
   if (pauseMenuSystem && pauseMenuSystem.isPaused()) {
     // Render last frame + pause overlay only
     pauseMenuSystem.draw();
   } else {
+    accumulator += deltaTime / 1000;
     // if accumulator gained enough frames
     while (accumulator >= TIME.fixedDeltaTime) {
       engine.update();
@@ -560,15 +920,45 @@ function draw() {
     if (player.power?.isEmpty()) {
       gameState = GAME_OVER_STATE;
     }
+    //soundSystem.setMasterVolume(pauseMenuSystem.getSettings().volume);
     alpha = accumulator / TIME.fixedDeltaTime;
     renderSystem.draw(alpha);
+  }
+
+  // Controls overlay — shown on top of game when toggled (does not block gameplay)
+  if (showControlsOverlay) {
+    drawControlsOverlay();
+  }
+}
+
+function tryUnlockAudioContext() {
+  if (audioUnlocked) return;
+  if (typeof userStartAudio !== "function") return;
+
+  try {
+    const startResult = userStartAudio();
+    if (startResult && typeof startResult.then === "function") {
+      startResult
+        .then(() => {
+          audioUnlocked = true;
+        })
+        .catch(() => {
+          // Keep false; next user gesture can try again.
+        });
+      return;
+    }
+    audioUnlocked = true;
+  } catch {
+    // Keep false; next user gesture can try again.
   }
 }
 
 // TODO: input handling in inputsystem
 function keyPressed() {
+  tryUnlockAudioContext();
+
   // Fullscreen toggle — works from any game state
-  if (keyCode === INPUT.TOGGLE_FULLSCREEN_KEY) {
+  if (keyCode === CONTROLS.MODES[CONTROLS.DEFAULT_MODE].TOGGLE_FULLSCREEN) {
     fullscreen(!fullscreen());
     return;
   }
@@ -581,10 +971,19 @@ function keyPressed() {
     player.actionIntent.togglePause = false;
   }
 
-  // Always process shop toggle (B)
-  if (player?.actionIntent?.toggleShop) {
-    shopSystem?.toggleShop();
-    player.actionIntent.toggleShop = false;
+  if (player?.actionIntent?.toggleWorkshop) {
+    workshopSystem?.toggleWorkshop();
+    player.actionIntent.toggleWorkshop = false;
+  }
+
+  if (player?.actionIntent?.toggleControls) {
+    showControlsOverlay = !showControlsOverlay;
+    player.actionIntent.toggleControls = false;
+  }
+
+  if (player?.actionIntent?.accept) {
+    if (workshopSystem?.isWorkshopOpen()) workshopSystem.toggleWorkshop();
+    player.actionIntent.accept = false;
   }
 
   // Only process other actions if not paused
@@ -592,16 +991,71 @@ function keyPressed() {
 }
 
 function mousePressed() {
-  // Shop overlay blocks all clicks
-  if (shopSystem?.isShopOpen()) {
-    shopSystem?.onMousePressed();
+  tryUnlockAudioContext();
+
+  // Workshop overlay blocks all clicks
+  if (workshopSystem?.isWorkshopOpen()) {
+    soundSystem?.play('buttonClick', 0.8);
+    workshopSystem?.onMousePressed();
+    return;
+  }
+
+  // Story dialog click — dismisses the dialog
+  if (storyDialogActive) {
+    const result = checkStoryDialogClick(mouseX, mouseY);
+    if (result === 'dismiss') {
+      storyDialogActive = false;
+      showControlsOverlay = true;  // show controls before gameplay starts
+    }
+    return;
+  }
+
+  // Controls overlay click — dismisses and starts gameplay
+  if (showControlsOverlay) {
+    showControlsOverlay = false;
+    gameState = "PLAYING";
+    return;
+  }
+
+  if (gameState === "MAIN_PAGE") {
+    const selection = mainPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "PLAY") {
+      soundSystem?.play('buttonClick', 0.8);
+      gameState = "STORY_PAGE";
+    }
+    return;
+  }
+
+  if (gameState === "STORY_PAGE") {
+    const selection = storyPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "CONTINUE") {
+      soundSystem?.play('buttonClick', 0.8);
+      gameState = "CONTROLS";
+    }
+    return;
+  }
+
+  if (gameState === "CONTROLS") {
+    const selection = controlsPageSystem.checkClick(mouseX, mouseY);
+    if (selection === "BACK") {
+      soundSystem?.play('buttonClick', 0.8);
+      gameState = "STORY_PAGE";
+    } else if (selection === "NEXT") {
+      soundSystem?.play('buttonClick', 0.8);
+      hasSeenIntro = true;
+      gameState = "MENU";
+    }
     return;
   }
 
   if (gameState === WIN_STATE) {
     const selection = winScreenSystem.checkClick(mouseX, mouseY);
-    if (selection === "MENU") {
-      resetGameToStart();
+    if (selection === "RESTART") {
+      soundSystem?.play('buttonClick', 0.8);
+      restartCurrentSession();
+      gameState = "PLAYING";
+    } else if (selection === "MENU") {
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "MENU";
     }
     return;
@@ -610,12 +1064,14 @@ function mousePressed() {
   if (gameState === GAME_OVER_STATE) {
     const selection = gameOverSystem.checkClick(mouseX, mouseY);
     if (selection === "YES") {
-      resetGameToStart();
+      soundSystem?.play('buttonClick', 0.8);
+      restartCurrentSession();
       gameState = "PLAYING";
     } else if (selection === "NO") {
-      resetGameToStart();
+      soundSystem?.play('buttonClick', 0.8);
       gameState = "MENU";
     } else if (selection === "SETTINGS") {
+      soundSystem?.play('buttonClick', 0.8);
       settingsReturnState = GAME_OVER_STATE;
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
@@ -626,35 +1082,60 @@ function mousePressed() {
   if (gameState === "MENU") {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
-    if (selection === "EASY" || selection === "HARD") {
+    if (selection === "DEMO") {
+      soundSystem?.stop('introMusic');
+      soundSystem?.play('buttonClick', 0.8);
+      soundSystem?.play('waterSplash', 1.0);
+      soundSystem?.loop('gamebg1', 0.7);
+      gameVersion = "demo";
+      sessionVersion = "demo";
+      sessionDifficulty = GAME_VERSIONS.demo.difficulty;
+      applyDifficultyConfig(sessionDifficulty);
+      resetGameToStart();
+      storyDialogActive = !hasSeenIntro;
+      gameState = "PLAYING";
+    } else if (selection === "EASY" || selection === "HARD") {
+      soundSystem?.stop('introMusic');
+      soundSystem?.play('buttonClick', 0.8);
+      soundSystem?.play('waterSplash', 1.0);
+      soundSystem?.loop('gamebg1', 0.7);
+      gameVersion = "full";
+      sessionVersion = "full";
+      sessionDifficulty = selection;
       applyDifficultyConfig(selection);
+      resetGameToStart();
+      storyDialogActive = !hasSeenIntro;
       gameState = "PLAYING";
     } else if (selection === "SETTINGS") {
+      soundSystem?.play('buttonClick', 0.8);
       settingsReturnState = "MENU";
       gameState = "SETTINGS";
       pauseMenuSystem.openSettingsMenu(true);
+    } else if (selection === "CONTROLS") {
+      soundSystem?.play('buttonClick', 0.8);
+      gameState = "CONTROLS";
     }
     return;
   }
 
   if (gameState === "SETTINGS") {
+    soundSystem?.play('buttonClick', 0.8);
     pauseMenuSystem?.onMousePressed();
     return;
   }
 
   // Forward clicks to pause menu while game is paused mid-play
   if (pauseMenuSystem?.isPaused()) {
+    soundSystem?.play('buttonClick', 0.8);
     pauseMenuSystem.onMousePressed();
     return;
   }
 }
 
 function applyDifficultyConfig(selection) {
-  const diffLevel = selection === "EASY" ? "normal" : "hard";
-
+  const diffLevel = selection === "EASY" ? "easy" : "hard";
   if (pauseMenuSystem) {
     pauseMenuSystem.setDifficulty(diffLevel);
-    console.log(`Game started on ${diffLevel} difficulty.`);
   }
 }
 
@@ -699,9 +1180,18 @@ function applyDisplayScale() {
   }
 }
 
+function restartCurrentSession() {
+  gameVersion = sessionVersion;
+  if (sessionDifficulty) {
+    applyDifficultyConfig(sessionDifficulty);
+  }
+  resetGameToStart();
+}
+
 function resetGameToStart() {
   // 1. Send the player back to the first room
-  roomSystem.goToRoom(INITIAL_ROOM_ID, { spawnId: "default" });
+  const startRoom = GAME_VERSIONS[gameVersion].startRoom;
+  roomSystem.goToRoom(startRoom, { spawnId: "default" });
 
   // 2. Snap the player's physical coordinates to the spawn point
   const playerStart = roomSystem.getPlayerStart();
@@ -710,23 +1200,25 @@ function resetGameToStart() {
   }
 
   // 3. Snap the camera back to the start
-  cameraSystem.snapTo(playerStart.x, playerStart.y);
+  if (playerStart) {
+    cameraSystem.snapTo(playerStart.x, playerStart.y);
+  }
 
   // 4. Reset Player stats
   if (player.power) {
-    player.power.current = player.power.maxPower;
+    player.power.reset();
   }
   if (player.torch) {
     player.torch.isOn = false;
   }
 
-  // 5. Reset upgrades, inventory, and coins
+  // 5. Reset upgrades, inventory, and scrap
   player.upgrades = { power: 1, torch: 1, sonar: 1 };
   player.missiles = 0;
-  player.coins = PLAYER.STARTING_COINS;
+  player.scrap = PLAYER.STARTING_SCRAP;
 
-  // 6. Reset shop internal state (costs, levels, open state)
-  shopSystem?.reset();
+  // 6. Reset workshop internal state (costs, levels, open state)
+  workshopSystem?.reset();
 
   // 7. Reset Collectables (requires a reset method in resourceManagementSystem)
   if (
@@ -735,6 +1227,116 @@ function resetGameToStart() {
   ) {
     resourceManagementSystem.reset();
   }
+}
+
+//======================================
+// STORY DIALOG OVERLAY
+// Shown once when a new game session starts, must be dismissed to play
+//======================================
+const STORY_DIALOG_TEXT = `
+A deep sea expedition takes an unexpected turn when your submersible breaks down far below the surface
+
+With limited power and a long journey ahead, you'll need to navigate carefully
+
+Your sonar will guide you through the dark
+
+Your torch will help you see, but "light comes at a cost"
+
+Somewhere above the surface waits
+
+Can you find your way back?
+`;
+
+function drawStoryDialog() {
+  // Darken the game background
+  fill(0, 0, 0, 200);
+  noStroke();
+  rect(0, 0, width, height);
+
+  const boxW = width * 0.75;
+  const boxH = height * 0.60;
+  const boxX = width / 2 - boxW / 2;
+  const boxY = height / 2 - boxH / 2;
+
+  // Dialog box
+  fill(10, 20, 35, 240);
+  stroke(0, 180, 200);
+  strokeWeight(3);
+  rect(boxX, boxY, boxW, boxH, 16);
+
+  // Title
+  noStroke();
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(36);
+  text("THE ABYSS", width / 2, boxY + 45);
+
+  // Story text
+  fill(200, 220, 240);
+  textStyle(NORMAL);
+  textSize(20);
+  textAlign(CENTER, TOP);
+  const textPadding = 40;
+  text(STORY_DIALOG_TEXT, boxX + textPadding, boxY + 95, boxW - textPadding * 2, boxH - 140);
+
+  // Dismiss button
+  const btnW = 200;
+  const btnH = 55;
+  const btnX = width / 2 - btnW / 2;
+  const btnY = boxY + boxH - btnH - 30;
+
+  const hovering = mouseX > btnX && mouseX < btnX + btnW && mouseY > btnY && mouseY < btnY + btnH;
+  noStroke();
+  fill(0, 0, 0, 100);
+  rect(btnX + 3, btnY + 4, btnW, btnH, 10);
+  fill(hovering ? color(0, 210, 190) : color(0, 140, 130));
+  rect(btnX, btnY, btnW, btnH, 10);
+  fill(255, 255, 255, 60);
+  rect(btnX, btnY, btnW, btnH * 0.35, 10, 10, 0, 0);
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textStyle(BOLD);
+  textSize(22);
+  text("BEGIN", width / 2, btnY + btnH / 2);
+  textStyle(NORMAL);
+}
+
+function checkStoryDialogClick(mX, mY) {
+  const boxW = width * 0.75;
+  const boxH = height * 0.60;
+  const boxX = width / 2 - boxW / 2;
+  const boxY = height / 2 - boxH / 2;
+  const btnW = 200;
+  const btnH = 55;
+  const btnX = width / 2 - btnW / 2;
+  const btnY = boxY + boxH - btnH - 30;
+
+  if (mX > btnX && mX < btnX + btnW && mY > btnY && mY < btnY + btnH) {
+    soundSystem?.play('buttonClick', 0.8);
+    return 'dismiss';
+  }
+  return null;
+}
+
+//======================================
+// CONTROLS OVERLAY
+// Toggled by H key — shows control bindings on top of gameplay
+//======================================
+function drawControlsOverlay() {
+  // Semi-transparent backdrop
+  fill(0, 0, 0, 160);
+  noStroke();
+  rect(0, 0, width, height);
+
+  // Draw the controls page system on top
+  controlsPageSystem.draw(null);
+
+  // Close hint at bottom
+  fill(255, 255, 255, 180);
+  textAlign(CENTER, CENTER);
+  textSize(16);
+  text("Press H or click to close", width / 2, height - 30);
 }
 
 function windowResized() {

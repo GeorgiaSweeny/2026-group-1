@@ -24,7 +24,9 @@ export class Jellyfish extends Hitbox {
     this.driftSpeed = driftSpeed;      // Horizontal drift speed
     
     this.time = Math.random() * Math.PI * 2;  // Random phase offset so jellies don't sync
-    this.driftDirection = Math.random() < 0.5 ? 1 : -1; 
+    this.cycleOffset = Math.random();          // Random start position in colour palette
+    this.glowHeight = null;                    // Smoothed body glow height — initialised on first update
+    this.driftDirection = Math.random() < 0.5 ? 1 : -1;
     this.driftDistance = 0;
     this.maxDrift = 48; 
     this.pulsePhase = 0;  // For animation sync

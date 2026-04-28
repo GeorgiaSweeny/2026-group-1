@@ -13,7 +13,7 @@ DESCRIPTION:
 HIERARCHY:
 - type: "resource" (main category)
   - resourceType: "power" (specific resource)
-  - resourceType: "health" (specific resource)
+  - resourceType: "scrap" (specific resource)
 
 RULES:
 - Runs in update()
@@ -34,7 +34,7 @@ DESIGN GOALS:
 
 import { isColliding } from "./hitboxSystem.js";
 import { handlePlayerHit } from "../utils/playerHitResponse.js";
-import { COMBAT } from "../config.js";
+import { COMBAT, DIFFICULTY } from "../config.js";
 
 export function createResourceManagementSystem(
   player,
@@ -43,6 +43,7 @@ export function createResourceManagementSystem(
   getHazards,
   getDifficulty,
   getEnemies,
+  soundSystem = null,
 ) {
   const collectedEntities = new Set();
 
@@ -71,8 +72,8 @@ export function createResourceManagementSystem(
     if (!best) return null;
 
     const localTileId = gid - best.firstgid;
-    if (localTileId === 20) return "power";
-    if (localTileId === 41 || localTileId === 53) return "health";
+    if (localTileId === 20) return "scrap";
+    if (localTileId === 41) return "power";
     return null;
   }
 
@@ -89,21 +90,13 @@ export function createResourceManagementSystem(
   // Moved game logic from sketch.js to here
   //======================================
   const handlers = {
-    power(player, item) {
-      const difficulty = getDifficulty?.() ?? "normal";
-      const amount = difficulty === "hard" ? 5 : 10;
-      player.power.current = Math.max(
-        0,
-        Math.min(player.power.current + amount, player.power.maxPower),
-      );
+    power(player) {
+      const cfg = DIFFICULTY[getDifficulty?.() ?? "easy"] ?? DIFFICULTY.easy;
+      player.power.current = Math.min(player.power.current + cfg.POWER_PICKUP, player.power.maxPower);
     },
-    health(player, item) {
-      const difficulty = getDifficulty?.() ?? "normal";
-      const amount = difficulty === "hard" ? 2 : 5;
-      player.power.current = Math.max(
-        0,
-        Math.min(player.power.current + amount, player.power.maxPower),
-      );
+    scrap(player, _item) {
+      const cfg = DIFFICULTY[getDifficulty?.() ?? "easy"] ?? DIFFICULTY.easy;
+      player.scrap = (player.scrap ?? 0) + cfg.SCRAP_PICKUP;
     },
   };
 
@@ -121,6 +114,7 @@ export function createResourceManagementSystem(
             0,
             player.power.current - HAZARD_ENTRY_PENALTY,
           );
+          soundSystem?.play('playerHit', 0.2);
         }
 
         player.power.drain(HAZARD_DRAIN_RATE);
@@ -173,6 +167,11 @@ export function createResourceManagementSystem(
           handlers[resourceType](player, e);
         }
         collectedEntities.add(e);
+        if (resourceType === 'scrap') {
+          soundSystem?.play('scrap', 0.6);
+        } else {
+          soundSystem?.play('powerCollected', 0.4);
+        }
       }
     }
   }

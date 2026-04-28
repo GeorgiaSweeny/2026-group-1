@@ -48,7 +48,11 @@ TODO / LIMITATIONS:
 //======================================
 import { LIGHTING, TORCH } from '../config.js';
 
-export function createLightingSystem(player = null, getSonarLights = () => []) {
+// theSurface room vertical bounds (world-space pixels)
+const SURFACE_BOTTOM_Y = 3184; // player spawn row — darkest point
+const SURFACE_TOP_Y    = 320;  // win trigger row  — brightest point
+
+export function createLightingSystem(player = null, getSonarLights = () => [], getGlowLights = () => [], getCurrentRoom = () => null, getJellyfishLights = () => []) {
    return {
 
       //--- GET LIGHT SOURCES ---//
@@ -66,7 +70,7 @@ export function createLightingSystem(player = null, getSonarLights = () => []) {
                   kind: 'torch',
                   x,
                   y,
-                  radius: TORCH.RADIUS, // if upgrades added replace with player.torch.radius
+                  radius: player.torch.radius,  // reflects setUpgradeLevel — scales with torch upgrade
                   intensity
                });
             }
@@ -87,8 +91,29 @@ export function createLightingSystem(player = null, getSonarLights = () => []) {
             lightSources.push(light);
          }
 
+         // Glow object lights
+         const glowLights = getGlowLights?.() ?? [];
+         for (const light of glowLights) {
+            lightSources.push(light);
+         }
+
+         // Jellyfish bioluminescent lights
+         const jellyfishLights = getJellyfishLights?.() ?? [];
+         for (const light of jellyfishLights) {
+            lightSources.push(light);
+         }
+
+         // Surface room: fixed-position ambient zones — brightness tied to world Y, not player Y
+         if (getCurrentRoom?.() === 'theSurface') {
+            lightSources.push({
+               kind: 'surfaceAmbient',
+               topY: SURFACE_TOP_Y,
+               bottomY: SURFACE_BOTTOM_Y,
+            });
+         }
+
          return lightSources;
-      }
+      },
    };
 }
 //======================================

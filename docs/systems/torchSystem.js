@@ -28,7 +28,7 @@ RESPONSIBILITIES:
 DEPENDENCIES:
 - torch object (instance of Torch)
 - player object with a power system
-- Config object for drain rate (TORCH.DRAIN_RATE)
+- Config object (TORCH)
 
 USAGE:
 import { createTorchSystem } from './torchSystem.js';
@@ -51,35 +51,18 @@ TODO / LIMITATIONS:
 //======================
 // TORCH SYSTEM
 //======================
-import { TORCH } from '../config.js';
 
-export function createTorchSystem(torch, player, { getDifficulty = () => 'normal' } = {}) {
-   const baseRadius = TORCH.RADIUS;
-   const upgradeBonusPerLevel = TORCH.UPGRADE_RADIUS_BONUS ?? 20;
-   const reducedRadius = TORCH.MIN_RADIUS_WHEN_DRAINED ?? 50;
-
-   function getUpgradedRadius() {
-      const torchLevel = Math.max(1, player?.upgrades?.torch ?? 1);
-      return baseRadius + (torchLevel - 1) * upgradeBonusPerLevel;
-   }
-
+export function createTorchSystem(torch, player, { soundSystem = null } = {}) {
    return {
       //---UPDATE---//
       update() {
-         // Hard difficulty: force torch off, reduce radius
-         if (getDifficulty() === 'hard') {
-            if (torch.isOn) torch.isOn = false;
-            player.toggleTorchIntent = false;
-            torch.radius = reducedRadius;
-            return;
-         }
-
          // Update internal flicker timer
          torch.update();
 
          // Handle player intent to toggle torch
          if (player.actionIntent?.toggleTorch) {
             torch.tryToggle(!player.power.isEmpty());
+            soundSystem?.play('torchToggle', 0.8);
             player.actionIntent.toggleTorch = false;
          }
 
@@ -87,9 +70,8 @@ export function createTorchSystem(torch, player, { getDifficulty = () => 'normal
          if (torch.isOn) {
             if (player.power.isEmpty()) {
                torch.isOn = false;
-               //torch.radius = reducedRadius;
             } else {
-               torch.radius = getUpgradedRadius();
+               torch.setUpgradeLevel(player?.upgrades?.torch ?? 1);
             }
          }
       }

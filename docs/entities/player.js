@@ -19,7 +19,7 @@ DESIGN GOALS:
 ========================================
 RESPONSIBILITIES:
 - Maintain player positional and state data (x, y, w, h, vy, onGround)
-- Maintain runtime resources (power, torch, health, oxygen)
+- Maintain runtime resources (power, torch, oxygen)
 - Store and expose player moveIntent for systems to consume
 
 DEPENDENCIES:
@@ -38,9 +38,9 @@ engine.register(playerSystem); // playerSystem consumes this class
 //======================
 // PLAYER CLASS
 //======================
-import { TORCH, LIGHTING, PLAYER } from '../config.js';
+import { TORCH, LIGHTING, PLAYER, POWER } from '../config.js';
 import { Torch } from './components/torch.js';  // torch class in same folder
-import { PowerSystem } from '../systems/powerSystem.js';
+import { PowerSystem } from './components/power.js';
 import { Hitbox } from '../systems/hitboxSystem.js';
 
 export class Player extends Hitbox{
@@ -69,13 +69,12 @@ export class Player extends Hitbox{
       this.facing = 1; // 1 for right, -1 for left
 
       this.torch = new Torch(TORCH);
-      this.power = new PowerSystem();
-      this.health = null;
+      this.power = new PowerSystem(POWER);
       this.oxygen = null;
 
       this.bubbles = [];
 
-      this.coins = usingConfigObject ? (xOrConfig.STARTING_COINS ?? 0) : 0;
+      this.scrap = usingConfigObject ? (xOrConfig.STARTING_SCRAP ?? 0) : 0;
       this.missiles = 0;
       this.upgrades = { power: 1, torch: 1, sonar: 1 };
 
@@ -84,13 +83,15 @@ export class Player extends Hitbox{
          right: false,
          up: false,
          down: false,
+         sneak: false,
       };
       this.actionIntent = {
          toggleTorch: false,
          emitSonar: false,
          launchMissile: false,
-         toggleShop: false,
+         toggleWorkshop: false,
          togglePause: false,
+         toggleControls: false,
       };
    
    }

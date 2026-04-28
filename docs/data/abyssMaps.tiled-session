@@ -1,0 +1,186 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+        ".",
+        "rooms"
+    ],
+    "fileStates": {
+        "rooms/crabCaverns.json": {
+            "expandedObjectLayers": [
+                3,
+                7,
+                6,
+                2
+            ],
+            "scale": 1.7359,
+            "selectedLayer": 4,
+            "viewCenter": {
+                "x": 800.1612996140329,
+                "y": 640.0138256812028
+            }
+        },
+        "rooms/deepCaverns.json": {
+            "scale": 1.8498,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 209.48210617364037,
+                "y": 130.55465455724942
+            }
+        },
+        "rooms/demoStart.json": {
+            "scale": 0.9462,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 1279.8562671739592,
+                "y": 713.3798351299936
+            }
+        },
+        "rooms/endlessAbyss.json": {
+            "expandedObjectLayers": [
+                10,
+                6,
+                4
+            ],
+            "scale": 0.47,
+            "selectedLayer": 8,
+            "viewCenter": {
+                "x": 1110.6382978723404,
+                "y": 1119.148936170213
+            }
+        },
+        "rooms/jellyfishAtrium.json": {
+            "expandedObjectLayers": [
+                3,
+                2,
+                4
+            ],
+            "scale": 0.3473,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 794.7019867549668,
+                "y": 1226.6052404261445
+            }
+        },
+        "rooms/jellyfishAtrium.json.tmj": {
+            "expandedObjectLayers": [
+                3,
+                2
+            ],
+            "scale": 0.3118,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 857.9217447081461,
+                "y": 1294.0987812700446
+            }
+        },
+        "rooms/jellyfishAtrium.json.tmx": {
+            "expandedObjectLayers": [
+                3,
+                2
+            ],
+            "scale": 0.5569,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 771.2336146525411,
+                "y": 2690.7882923325556
+            }
+        },
+        "rooms/spikeMaze.json": {
+            "expandedObjectLayers": [
+                3,
+                5,
+                2,
+                9,
+                4
+            ],
+            "scale": 2.0473,
+            "selectedLayer": 2,
+            "viewCenter": {
+                "x": 639.8671420895814,
+                "y": 719.9726469007962
+            }
+        },
+        "rooms/startArea.json": {
+            "expandedObjectLayers": [
+                10,
+                5
+            ],
+            "scale": 0.5785,
+            "selectedLayer": 5,
+            "viewCenter": {
+                "x": 698.3578219533276,
+                "y": 821.0890233362143
+            }
+        },
+        "rooms/theDrop.json": {
+            "scale": 0.35,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 80,
+                "y": 1080
+            }
+        },
+        "rooms/theSurface.json": {
+            "expandedObjectLayers": [
+                2,
+                4
+            ],
+            "scale": 0.2931,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 719.8908222449677,
+                "y": 1600.1364721937905
+            }
+        },
+        "rooms/tunnel.json": {
+            "expandedObjectLayers": [
+                4
+            ],
+            "scale": 0.986,
+            "selectedLayer": 7,
+            "viewCenter": {
+                "x": 639.9594320486815,
+                "y": 63.89452332657197
+            }
+        },
+        "tilesets/Atlantis/atlantis-tileset-1.tsx": {
+            "scaleInDock": 1
+        },
+        "tilesets/Atlantis/atlantis-tileset-2.tsx": {
+            "scaleInDock": 1
+        },
+        "tilesets/Atlantis/atlantis-tileset-3.tsx": {
+            "scaleInDock": 1
+        },
+        "tilesets/prototype-tileset/prototype-tileset.tsx": {
+            "scaleInDock": 1
+        }
+    },
+    "last.externalTilesetPath": "/Users/archiebrown/2026-group-1/docs/data/tilesets/Atlantis",
+    "map.height": 150,
+    "map.lastUsedFormat": "json",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 70,
+    "openFiles": [
+    ],
+    "project": "abyssMaps.tiled-project",
+    "property.type": "string",
+    "recentFiles": [
+        "rooms/endlessAbyss.json",
+        "rooms/jellyfishAtrium.json",
+        "rooms/spikeMaze.json",
+        "rooms/theSurface.json",
+        "rooms/crabCaverns.json",
+        "rooms/startArea.json",
+        "rooms/theDrop.json",
+        "rooms/tunnel.json",
+        "rooms/demoStart.json",
+        "rooms/deepCaverns.json"
+    ],
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)"
+}

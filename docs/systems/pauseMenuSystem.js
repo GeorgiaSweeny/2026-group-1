@@ -19,30 +19,19 @@ RULES:
 // PAUSE MENU SYSTEM
 //======================================
 
-import { CONTROLS } from '../config.js';
-
-// Converts a raw binding value to a short human-readable label.
-function keyLabel(binding) {
-  if (binding === ' ') return 'Space';
-  if (typeof binding === 'string') return binding.toUpperCase();
-  const names = {
-    27: 'ESC', 37: '←', 38: '↑', 39: '→', 40: '↓',
-    65: 'A', 66: 'B', 68: 'D', 83: 'S', 87: 'W',
-  };
-  return names[binding] ?? `#${binding}`;
-}
+import { CONTROLS, keyLabel } from '../config.js';
 
 export function createPauseMenuSystem({
-  onDifficultyChange,
   onResolutionChange,
   onControlModeChange,
+  onVolumeChange,
   initialControlMode = 'wasd',
 } = {}) {
   let paused = false;
   let currentPage = "main"; // 'main' | 'settings' | 'debug'
 
   // Difficulty: 'normal' | 'hard'
-  let difficulty = "normal";
+  let difficulty = "easy";
 
   // Settings (UI only — values stored but not wired to audio etc.)
   let volume = 80; // 0–100
@@ -88,12 +77,12 @@ export function createPauseMenuSystem({
     text(label, x + w / 2, y + h / 2);
   }
 
-  function drawToggle(label, value, x, y) {
+  function drawToggle(label, value, x, y, labelX = x) {
     textAlign(LEFT, CENTER);
     textSize(14);
     fill(200);
     noStroke();
-    text(label, x, y);
+    text(label, labelX, y);
 
     const toggleX = x + 160;
     const toggleW = 48;
@@ -196,12 +185,12 @@ export function createPauseMenuSystem({
     drawSlider("Volume", volume, 0, 100, leftX, baseY + 50);
 
     // Toggles (UI only)
-    drawToggle("Show FPS", showFPS, leftX, baseY + 110);
-    drawToggle("Screen Shake", screenShake, leftX, baseY + 150);
+    drawToggle("Show FPS", showFPS, leftX + 30, baseY + 110, leftX);
+    drawToggle("Screen Shake", screenShake, leftX + 30, baseY + 150, leftX);
 
     // Control mode toggle
     const controlLabel = `Movement: ${controlMode === 'wasd' ? 'WASD' : 'Arrow Keys'}`;
-    drawToggle(controlLabel, controlMode === 'arrows', leftX, baseY + 190);
+    drawToggle(controlLabel, controlMode === 'arrows', leftX + 30, baseY + 190, leftX);
 
     // Binding reference — shows all keys for the active mode
     const map = CONTROLS.MODES[controlMode] ?? CONTROLS.MODES[CONTROLS.DEFAULT_MODE];
@@ -211,11 +200,11 @@ export function createPauseMenuSystem({
     fill(140);
     noStroke();
     text(
-      `Move: ${moveStr}   Torch: ${keyLabel(map.TOGGLE_TORCH)}   Sonar: ${keyLabel(map.SONAR)}   Fire: ${keyLabel(map.FIRE_MISSILE)}`,
+      `Move: ${moveStr}   Torch: ${keyLabel(map.TOGGLE_TORCH)}   Sonar: ${keyLabel(map.SONAR)}   Fire: ${keyLabel(map.LAUNCH_MISSILE)}`,
       leftX, baseY + 207,
     );
     text(
-      `Pause: ${keyLabel(map.TOGGLE_PAUSE)}   Shop: ${keyLabel(map.TOGGLE_SHOP)}`,
+      `Workshop: ${keyLabel(map.TOGGLE_WORKSHOP)}   Pause: ${keyLabel(map.TOGGLE_PAUSE)}   Fullscreen: ${keyLabel(map.TOGGLE_FULLSCREEN)}`,
       leftX, baseY + 221,
     );
 
@@ -257,8 +246,8 @@ export function createPauseMenuSystem({
     noStroke();
     text("DEBUG", cx, baseY);
 
-    // Dev Resolution toggle
-    drawToggle("Dev Resolution (640x360)", devResolution, leftX, baseY + 60);
+    // Dev Resolution toggle — x offset pushes switch right of the long label
+    drawToggle("Dev Resolution (640x360)", devResolution, leftX + 40, baseY + 60, leftX);
 
     // Info text
     textAlign(LEFT, TOP);
@@ -301,14 +290,13 @@ export function createPauseMenuSystem({
       } else if (isOver(cx - BUTTON_W / 2, settingsY, BUTTON_W, BUTTON_H)) {
         currentPage = "settings";
       } else if (isOver(cx - BUTTON_W / 2, diffY, BUTTON_W, BUTTON_H)) {
-        difficulty = difficulty === "normal" ? "hard" : "normal";
-        onDifficultyChange?.(difficulty);
+        difficulty = difficulty === "easy" ? "hard" : "easy";
       }
     } else if (currentPage === "settings") {
       const baseY = height / 2 - 100;
       const leftX = cx - 120;
 
-      const togglesX = leftX + 160;
+      const togglesX = leftX + 190; // leftX + 30 (draw offset) + 160 (toggleX offset in drawToggle)
 
       // Show FPS toggle hit area
       if (isOver(togglesX, baseY + 110 - 12, 48, 24)) {
@@ -348,7 +336,7 @@ export function createPauseMenuSystem({
       const leftX = cx - 120;
 
       // Dev Resolution toggle hit area
-      const toggleX = leftX + 160;
+      const toggleX = leftX + 200; // leftX + 40 (draw offset) + 160 (toggleX offset in drawToggle)
       if (isOver(toggleX, baseY + 60 - 12, 48, 24)) {
         devResolution = !devResolution;
         onResolutionChange?.(devResolution);
@@ -381,6 +369,7 @@ export function createPauseMenuSystem({
     const leftX = cx - 120;
     const pct = constrain((mouseX - leftX) / SLIDER_W, 0, 1);
     volume = pct * 100;
+    onVolumeChange?.(volume);
   }
 
   function handleMouseReleased() {

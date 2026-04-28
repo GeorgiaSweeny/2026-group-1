@@ -13,15 +13,19 @@ DESCRIPTION:
 import { Hitbox } from '../systems/hitboxSystem.js';
 
 export class Crab extends Hitbox {
-  constructor(x, y, w = 20, h = 14, patrolDistance = 64, speed = 0.8) {
-    //Note: Hitbox expects top-left corner, x/y from roomSystem are already center-based
+  constructor(x, y, w = 20, h = 14, patrolDistance = 64, speed = 100, patrolAxis = 'horizontal', direction = 'down') {
     super(x - w / 2, y - h / 2, w, h);
 
-    this.spawnX = x;
+    // this.spawnX = x;
+    // this.spawnY = y;
+    this.spawnX = this.position.x;
+    this.spawnY = this.position.y;
     this.patrolDistance = patrolDistance;
     this.speed = speed;
-    this.direction = 1;   // 1 = right, -1 = left
+    this.direction = 1; 
     this.facing = 1;
+    this.patrolAxis = patrolAxis ?? 'horizontal';
+    this.spriteDirection = direction ?? 'down';
 
     //for isColliding
     this.nextPos = createVector(this.position.x, this.position.y);
