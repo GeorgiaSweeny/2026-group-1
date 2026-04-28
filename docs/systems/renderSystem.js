@@ -981,7 +981,58 @@ export function createRenderSystem({
          textAlign(CENTER, TOP);
          textSize(10);
          text(item.label, cx, labelY);
+
+         // Key hint badge to the right of label
+         const keyHints = { SONAR: 'E', TORCH: 'F', MISSILES: 'SPACE' };
+         const keyLabel = keyHints[item.label];
+         if (keyLabel) {
+            const badgeW = item.label === 'MISSILES' ? 46 : 22;
+            const badgeH = 16;
+            const badgeX = cx + 22;
+            const badgeY = labelY - 1;
+            // Small rounded badge
+            fill(10, 30, 45, 200);
+            stroke(100, 200, 210, 120);
+            strokeWeight(1);
+            rect(badgeX, badgeY, badgeW, badgeH, 3);
+            noStroke();
+            fill(174, 205, 211);
+            textAlign(CENTER, CENTER);
+            textSize(8);
+            text(keyLabel, badgeX + badgeW / 2, badgeY + badgeH / 2);
+         }
       }
+      pop();
+   }
+
+   function drawPauseHint() {
+      // ESC key hint — top right corner, above the upgrade bars
+      const hintX = width - 80;
+      const hintY = height - 120;
+      const badgeW = 30;
+      const badgeH = 18;
+
+      push();
+      // Background pill
+      noStroke();
+      fill(10, 30, 45, 200);
+      rect(hintX - badgeW / 2, hintY, badgeW, badgeH, 3);
+      stroke(100, 200, 210, 120);
+      strokeWeight(1);
+      rect(hintX - badgeW / 2, hintY, badgeW, badgeH, 3);
+
+      // ESC label
+      noStroke();
+      fill(174, 205, 211);
+      textAlign(CENTER, CENTER);
+      textSize(8);
+      text('ESC', hintX, hintY + badgeH / 2);
+
+      // PAUSE label below
+      fill(130, 170, 180);
+      textSize(9);
+      textAlign(CENTER, TOP);
+      text('PAUSE', hintX, hintY + badgeH + 2);
       pop();
    }
 
@@ -1081,6 +1132,7 @@ export function createRenderSystem({
       drawScrapCounter();
       drawWorkshopHint();
       drawUpgradeBars();
+      drawPauseHint();
    }
 
    function drawGameplayOverlay() {

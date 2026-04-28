@@ -992,14 +992,15 @@ function mousePressed() {
     const result = checkStoryDialogClick(mouseX, mouseY);
     if (result === 'dismiss') {
       storyDialogActive = false;
-      gameState = "PLAYING";
+      showControlsOverlay = true;  // show controls before gameplay starts
     }
     return;
   }
 
-  // Controls overlay click — dismisses the overlay
+  // Controls overlay click — dismisses and starts gameplay
   if (showControlsOverlay) {
     showControlsOverlay = false;
+    gameState = "PLAYING";
     return;
   }
 
