@@ -85,7 +85,7 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
     sonar: {
       level: player?.upgrades?.sonar ?? 1,
       cost: INITIAL_UPGRADE_COSTS.sonar,
-      description: "Increase sonar range"
+      description: "Faster ping cooldown & tiles stay visible longer"
     },
     torch: {
       level: player?.upgrades?.torch ?? 1,

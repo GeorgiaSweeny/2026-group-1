@@ -15,7 +15,7 @@ RESPONSIBILITIES:
 
 DEPENDENCIES:
 - Player entity with sonarIntent, sonarPulses[], power
-- Room platforms (getPlatforms callback) — Wall objects with getCornerX/Y(), getWidth/Height()
+- Room platforms (getPlatforms callback) - Wall objects with getCornerX/Y(), getWidth/Height()
 - Config: SONAR constants (speed, rays, fade, cost, cooldown)
 
 USAGE:
@@ -50,7 +50,7 @@ engine.register(sonarSystem);
 ========================================
 */
 
-import { SONAR } from '../config.js';
+import { SONAR, TIME } from '../config.js';
 
 const RAY_COUNT = 360;
 const BASE_RAY_SPEED = 2;
@@ -58,7 +58,12 @@ const RAY_DECAY = 2;
 const BASE_RAY_LIFETIME = 255;
 
 const REVEAL_BONUS = 70;
-const REVEAL_FADE_PER_MS = 2;
+// Base fade per second; reduced by sonar upgrades so tiles persist longer at higher levels
+const REVEAL_FADE_BASE = 255;       // alpha units faded per second at level 1
+const REVEAL_FADE_PER_LEVEL = 28;  // extra alpha units retained per level (slower fade)
+
+// Cooldown: base in ms, reduced by sonar level
+const BASE_COOLDOWN_MS = 4500;      // 4.5 seconds at level 1
 
 function getNormalisedWalls(getWallsFinal) {
   const input = getWallsFinal?.() || [];
@@ -74,18 +79,18 @@ function getNormalisedObjects(getObjectsFinal) {
 
 function readWallRect(wall) {
   if (!wall || typeof wall !== 'object') return null;
-  
+
   const usesHitbox = typeof wall?.getCornerX === 'function';
   const w = usesHitbox ? wall.getWidth() : wall?.w ?? 0;
   const h = usesHitbox ? wall.getHeight() : wall?.h ?? 0;
-  
+
   if (!w || !h) return null;
-  
+
   const x = usesHitbox ? wall.getCornerX() : (wall.x ?? 0) - w / 2;
   const y = usesHitbox ? wall.getCornerY() : (wall.y ?? 0) - h / 2;
-  
+
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-  
+
   return { x, y, w, h };
 }
 
@@ -105,29 +110,32 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
   const hazardAlpha = new WeakMap();
   const collectableAlpha = new WeakMap();
   const enemyAlpha = new WeakMap();
-  let cooldownTimer = 0;
+  let cooldownTimerMs = 0;  // real milliseconds in sonar system time
   let prevCollectableSet = new Set();
 
   return {
     update() {
-      if (cooldownTimer > 0) {
-        cooldownTimer = Math.max(0, cooldownTimer - 0.01);
+      const sonarLevel = player?.upgrades?.sonar ?? 1;
+      const effectiveCooldownMs = BASE_COOLDOWN_MS / Math.sqrt(sonarLevel);
+
+      if (cooldownTimerMs > 0) {
+        cooldownTimerMs = Math.max(0, cooldownTimerMs - TIME.fixedDeltaTime * 1000);
       }
-  
+
       if (player?.actionIntent?.emitSonar) {
-        if (cooldownTimer <= 0) {
+        if (cooldownTimerMs <= 0) {
           const px = typeof player.getX === 'function' ? player.getX() : player.x;
           const py = typeof player.getY === 'function' ? player.getY() : player.y;
-          
+
           if (Number.isFinite(px) && Number.isFinite(py)) {
             const sonarLevel = player?.upgrades?.sonar ?? 1;
-          const rangeBonus = Math.max(0, sonarLevel - 1) * (SONAR.RANGE_BONUS_PER_LEVEL ?? 50);
-          const effectiveRange = (SONAR.BASE_RANGE ?? 250) + rangeBonus;
-          // Scale ray speed so pulse travels the effective range
-          // range ≈ raySpeed * (RAY_LIFETIME / RAY_DECAY)
-          const raySpeed = effectiveRange * RAY_DECAY / BASE_RAY_LIFETIME;
-          pulses.push(new Pulse(px, py, raySpeed));
-            cooldownTimer = SONAR.COOLDOWN_MS ?? 0;
+            const rangeBonus = Math.max(0, sonarLevel - 1) * (SONAR.RANGE_BONUS_PER_LEVEL ?? 50);
+            const effectiveRange = (SONAR.BASE_RANGE ?? 250) + rangeBonus;
+            // Scale ray speed so pulse travels the effective range
+            // range ≈ raySpeed * (RAY_LIFETIME / RAY_DECAY)
+            const raySpeed = effectiveRange * RAY_DECAY / BASE_RAY_LIFETIME;
+            pulses.push(new Pulse(px, py, raySpeed));
+            cooldownTimerMs = effectiveCooldownMs;
             soundSystem?.play('sonarPing', 0.8);
           }
         }
@@ -152,16 +160,17 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
       const hazardData = [];
       const collectableData = [];
       const enemyData = [];
-      
+
       for (const wall of inputWalls) {
         const rect = readWallRect(wall);
         if (rect) {
-          wallData.push({ wall, rect });  
+          wallData.push({ wall, rect });
         }
-        
+
         const currentAlpha = wallAlpha.get(wall);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS));
+          const fadePerSecond = Math.max(30, REVEAL_FADE_BASE - (sonarLevel - 1) * REVEAL_FADE_PER_LEVEL);
+          const nextAlpha = Math.max(0, currentAlpha - (fadePerSecond * TIME.fixedDeltaTime));
           if (nextAlpha <= 0) {
             wallAlpha.delete(wall);
           } else {
@@ -178,7 +187,8 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
         const currentAlpha = hazardAlpha.get(hazard);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS));
+          const fadePerSecond = Math.max(30, REVEAL_FADE_BASE - (sonarLevel - 1) * REVEAL_FADE_PER_LEVEL);
+          const nextAlpha = Math.max(0, currentAlpha - (fadePerSecond * TIME.fixedDeltaTime));
           if (nextAlpha <= 0) {
             hazardAlpha.delete(hazard);
           } else {
@@ -195,7 +205,8 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
         const currentAlpha = collectableAlpha.get(collectable);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - (REVEAL_FADE_PER_MS));
+          const fadePerSecond = Math.max(30, REVEAL_FADE_BASE - (sonarLevel - 1) * REVEAL_FADE_PER_LEVEL);
+          const nextAlpha = Math.max(0, currentAlpha - (fadePerSecond * TIME.fixedDeltaTime));
           if (nextAlpha <= 0) {
             collectableAlpha.delete(collectable);
           } else {
@@ -212,7 +223,8 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
 
         const currentAlpha = enemyAlpha.get(enemy);
         if (currentAlpha != null) {
-          const nextAlpha = Math.max(0, currentAlpha - REVEAL_FADE_PER_MS);
+          const fadePerSecond = Math.max(30, REVEAL_FADE_BASE - (sonarLevel - 1) * REVEAL_FADE_PER_LEVEL);
+          const nextAlpha = Math.max(0, currentAlpha - (fadePerSecond * TIME.fixedDeltaTime));
           if (nextAlpha <= 0) {
             enemyAlpha.delete(enemy);
           } else {
@@ -236,17 +248,16 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
     },
 
     getCooldownPercent() {
-      if (cooldownTimer <= 0) {
+      if (cooldownTimerMs <= 0) {
         return 0;
       }
-      print(cooldownTimer);
-      return cooldownTimer / (SONAR.COOLDOWN_MS);
+      return cooldownTimerMs / effectiveCooldownMs;
     },
 
     getRevealedWalls() {
       const inputWalls = getNormalisedWalls(getWalls);
       const reveals = [];
-      
+
       for (const wall of inputWalls) {
         const alpha = wallAlpha.get(wall);
         if (!alpha) {
@@ -399,7 +410,7 @@ class Pulse {
       }
 
       if (collided) {
-        p.life = 0; 
+        p.life = 0;
       } else {
         p.pos.x = nextX;
         p.pos.y = nextY;
