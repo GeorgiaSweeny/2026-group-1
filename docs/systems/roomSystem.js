@@ -92,6 +92,17 @@ function parseCollisionTileLayer(layer, tileWidth, tileHeight) {
   return result;
 }
 
+const VISUAL_FLIP_MASK = 0x1FFFFFFF;
+
+function copyWallsIntoTerrain(terrain, walls) {
+  const combined = new Array(terrain.data.length);
+  for (let i = 0; i < terrain.data.length; i++) {
+    const wallGid = (walls.data[i] >>> 0) & VISUAL_FLIP_MASK;
+    combined[i] = wallGid !== 0 ? wallGid : terrain.data[i];
+  }
+  return { data: combined, width: terrain.width, height: terrain.height };
+}
+
 function getTilesetForGid(tilesets, gid) {
   if (!Number.isFinite(gid) || gid <= 0 || !Array.isArray(tilesets)) return null;
   let best = null;
@@ -154,6 +165,7 @@ function normalizeTiledRoom(roomKey, mapData) {
     foreground: [],
     enemies: [],
     glowObjects: [],
+    visualLayers: { terrain: null, walls: null, combined: null },
   };
 
   for (const layer of mapData?.layers ?? []) {
@@ -161,6 +173,24 @@ function normalizeTiledRoom(roomKey, mapData) {
 
     if (layer?.type === 'tilelayer' && (layerName === 'collision' || layerName === 'boundary')) {
       normalized.platforms.push(...parseCollisionTileLayer(layer, tileWidth, tileHeight));
+      continue;
+    }
+
+    if (layer?.type === 'tilelayer' && layerName === 'terrain') {
+      normalized.visualLayers.terrain = {
+        data: [...(layer.data ?? [])],
+        width: layer.width ?? 0,
+        height: layer.height ?? 0,
+      };
+      continue;
+    }
+
+    if (layer?.type === 'tilelayer' && layerName === 'walls') {
+      normalized.visualLayers.walls = {
+        data: [...(layer.data ?? [])],
+        width: layer.width ?? 0,
+        height: layer.height ?? 0,
+      };
       continue;
     }
 
@@ -288,6 +318,13 @@ function normalizeTiledRoom(roomKey, mapData) {
     }
   }
 
+  if (normalized.visualLayers.terrain && normalized.visualLayers.walls) {
+    normalized.visualLayers.combined = copyWallsIntoTerrain(
+      normalized.visualLayers.terrain,
+      normalized.visualLayers.walls
+    );
+  }
+
   if (!normalized.playerStart) {
     const defaultSpawn = normalized.spawnPoints.find((spawn) => spawn.spawnId.toLowerCase() === 'default')
       ?? normalized.spawnPoints[0];
@@ -405,6 +442,7 @@ export function createRoomSystem({
   let tileWidth = CANVAS.TILE_SIZE;
   let tileHeight = CANVAS.TILE_SIZE;
   let exitCoolDownSeconds = 0;
+  let visualLayers = null;
 
   function loadRoom(roomKey, { spawnId = null } = {}) {
     const roomSource = roomData[roomKey];
@@ -430,6 +468,7 @@ export function createRoomSystem({
     tilesets = [...(normalized.tilesets ?? [])];
     tileWidth = normalized.tileWidth ?? CANVAS.TILE_SIZE;
     tileHeight = normalized.tileHeight ?? CANVAS.TILE_SIZE;
+    visualLayers = normalized.visualLayers ?? null;
 
     const explicitSpawn = spawnId
       ? spawnPoints.find((spawn) => String(spawn.spawnId).toLowerCase() === String(spawnId).toLowerCase())
@@ -613,6 +652,10 @@ export function createRoomSystem({
 
     getPlatformColor() {
       return currentConfig?.platformColor ?? null;
+    },
+
+    getVisualLayers() {
+      return visualLayers;
     }
   };
 }

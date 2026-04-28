@@ -776,6 +776,8 @@ function setup() {
       scaleY: GAMEPLAY_OVERLAY.SCALE_Y,
       opacity: GAMEPLAY_OVERLAY.OPACITY,
     }),
+    getVisualLayers: () => roomSystem.getVisualLayers(),
+    getTorchOn: () => player?.torch?.isOn ?? false,
   });
 
   pauseMenuSystem = createPauseMenuSystem({

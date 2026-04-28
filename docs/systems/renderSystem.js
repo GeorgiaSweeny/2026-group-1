@@ -86,6 +86,8 @@ export function createRenderSystem({
    getPowerCellSprite,
    getScrapSprite,
    getSkyBand,
+   getVisualLayers,
+   getTorchOn,
 }) {
 
 //======================================
@@ -189,6 +191,57 @@ export function createRenderSystem({
       return true;
    }
 
+   function drawTileGidAt(gid, x, y, tileW, tileH) {
+      const tilesets = getTilesets?.() ?? [];
+      const tileset = getTilesetForGid(gid, tilesets);
+      if (!tileset) return;
+
+      const localTileId = gid - Number(tileset.firstgid);
+      const collectionPath = tileset?.tileImagesById?.[localTileId]?.resolvedImagePath;
+      if (collectionPath) {
+         const collectionTileImage = assets?.[`tileset:${collectionPath}`];
+         if (collectionTileImage) image(collectionTileImage, x, y, tileW, tileH);
+         return;
+      }
+
+      const imagePath = tileset.resolvedImagePath ?? tilesetSourceToImagePath(tileset.source);
+      const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
+      if (!tilesetImage || !(tilesetImage.width > 0)) return;
+
+      const columns = Number(tileset.columns) || Math.max(1, Math.floor(tilesetImage.width / tileW));
+      const srcX = (localTileId % columns) * tileW;
+      const srcY = Math.floor(localTileId / columns) * tileH;
+      image(tilesetImage, x, y, tileW, tileH, srcX, srcY, tileW, tileH);
+   }
+
+   function drawVisualTileLayer(layerData) {
+      if (!layerData) return;
+      const { data, width, height } = layerData;
+      if (!data || !width || !height) return;
+      const tileSize = getTileSize?.() ?? {};
+      const tileW = tileSize.tileWidth ?? 16;
+      const tileH = tileSize.tileHeight ?? 16;
+      for (let ty = 0; ty < height; ty++) {
+         for (let tx = 0; tx < width; tx++) {
+            const gid = data[ty * width + tx];
+            if (!gid) continue;
+            drawTileGidAt(gid, tx * tileW, ty * tileH, tileW, tileH);
+         }
+      }
+   }
+
+   function drawVisualLayers() {
+      const layers = getVisualLayers?.() ?? null;
+      if (!layers) return;
+      const torchOn = getTorchOn?.() ?? false;
+      if (torchOn) {
+         drawVisualTileLayer(layers.combined ?? layers.terrain);
+      } else {
+         drawVisualTileLayer(layers.terrain);
+         drawVisualTileLayer(layers.walls);
+      }
+   }
+
    function getCollectableType(item) {
       const explicitType = String(item?.collectableType ?? '').toLowerCase();
       if (explicitType) return explicitType;
@@ -265,17 +318,18 @@ export function createRenderSystem({
    function drawPlatforms() {
       const platforms = getPlatforms?.() ?? [];
       const platformColor = getPlatformColor?.() ?? '#5a6e82ff';
+      const hasVisualLayers = !!(getVisualLayers?.()?.terrain);
 
       noStroke();
       fill(platformColor);
 
      // todo: move the fill logic inside the loop and support per-platform colors via properties, with the default as the global platform color.
-     
+
       for (const p of platforms) {
          if (p.isDestroyed) continue;
-         if (drawSpriteFromTileset(p)) continue;
-         // Fallback: no sprite atlas tile available — draw solid rect so platforms
-         // are never invisible (collision-layer walls with no atlas tile still visible).
+         // When visual tile layers handle rendering, skip sprite drawing —
+         // only keep the solid-rect fallback as a safety net underneath.
+         if (!hasVisualLayers && drawSpriteFromTileset(p)) continue;
          fill(platformColor);
          rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
       }
@@ -1564,6 +1618,7 @@ function renderInterpolate(oldState, newState, alpha){
             drawSkyBand(skyBand);
             // Comment out prototype visuals from render
             drawPlatforms();
+            drawVisualLayers();
             drawHazards();
             drawEnemies(alpha);
             drawCollectables();

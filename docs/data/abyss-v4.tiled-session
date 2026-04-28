@@ -1,5 +1,5 @@
 {
-    "activeFile": "rooms/demoStart.json",
+    "activeFile": "rooms/jellyfishAtrium.json",
     "expandedProjectPaths": [
         "tilesets",
         "rooms",
@@ -19,11 +19,11 @@
             }
         },
         "rooms/demoStart.json": {
-            "scale": 1.4538,
-            "selectedLayer": 3,
+            "scale": 0.6297,
+            "selectedLayer": 2,
             "viewCenter": {
-                "x": 1280.093547943321,
-                "y": 720.1815930664466
+                "x": 538.3515959980944,
+                "y": 890.9004287756073
             }
         },
         "rooms/endlessAbyss.json": {
@@ -35,11 +35,11 @@
             }
         },
         "rooms/jellyfishAtrium.json": {
-            "scale": 0.2976,
+            "scale": 0.473,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 799.7311827956989,
-                "y": 1280.2419354838712
+                "x": 653.2769556025369,
+                "y": 1057.0824524312895
             }
         },
         "rooms/spikeMaze.json": {
@@ -51,11 +51,11 @@
             }
         },
         "rooms/theDrop.json": {
-            "scale": 0.38,
-            "selectedLayer": 2,
+            "scale": 0.6884,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 78.94736842105249,
-                "y": 1078.947368421053
+                "x": 361.70830912260305,
+                "y": 418.3614177803603
             }
         },
         "rooms/tunnel.json": {
@@ -98,13 +98,13 @@
     "project": "abyss-v4.tiled-project",
     "recentFiles": [
         "rooms/cave.tsx",
-        "rooms/jellyfishAtrium.json",
-        "rooms/spikeMaze.json",
-        "rooms/crabCaverns.json",
-        "rooms/endlessAbyss.json",
-        "rooms/theDrop.json",
+        "rooms/demoStart.json",
         "rooms/tunnel.json",
-        "rooms/demoStart.json"
+        "rooms/theDrop.json",
+        "rooms/endlessAbyss.json",
+        "rooms/crabCaverns.json",
+        "rooms/spikeMaze.json",
+        "rooms/jellyfishAtrium.json"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
