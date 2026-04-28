@@ -35,6 +35,8 @@ export { PowerSystem };
 export function createPowerSystem(entity, { getDifficulty = () => "easy", config = POWER } = {}) {
    if (!entity.power) {
       entity.power = new PowerSystem(config);
+      // Start with a full bar — bar at 100%, drains toward 60% baseline
+      entity.power.current = entity.power.maxPower;
    }
    const power = entity.power;
 

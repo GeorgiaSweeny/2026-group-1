@@ -1501,18 +1501,26 @@ export function createRenderSystem({
       // Display fill % so player sees the bar move as power increases above baseline
       const powerFillRatio = Math.max(0, Math.min(1, player.power.getPercent()));
       const powerFillPct = Math.round(powerFillRatio * 100);
+      const isPowerEmpty = typeof player.power.isEmpty === 'function' && player.power.isEmpty();
 
-      // Hard colour steps: green above 40%, amber 40–15%, red below 15%
+      // Hard colour steps: green above 40%, amber 40–15%, red below 15%, grey when empty
       let powerStrokeColor;
-      if (powerFillRatio > 0.40) {
+      let powerLabel;
+      if (isPowerEmpty) {
+         powerStrokeColor = color(100, 100, 110, 240);
+         powerLabel = 'EMPTY';
+      } else if (powerFillRatio > 0.40) {
          powerStrokeColor = color(80, 230, 120, 240);
+         powerLabel = powerFillPct + '%';
       } else if (powerFillRatio > 0.15) {
          powerStrokeColor = color(255, 160, 40, 240);
+         powerLabel = powerFillPct + '%';
       } else {
          powerStrokeColor = color(220, 60, 60, 240);
+         powerLabel = powerFillPct + '%';
       }
 
-      if (powerFillRatio <= 0.15) {
+      if (powerFillRatio <= 0.15 && !isPowerEmpty) {
          const pulse = Math.abs(Math.sin(millis() * 0.004));
 
          // Red glow — transparent at centre (text area), peaks at ring band, fades beyond
@@ -1538,7 +1546,7 @@ export function createRenderSystem({
          y: powerDialY,
          size: powerDialSize,
          fillRatio: powerFillRatio,
-         centerLabel: `${powerFillPct}%`,
+         centerLabel: powerLabel,
          ringColor: powerStrokeColor,
          labelColor: color(234, 246, 248),
       });

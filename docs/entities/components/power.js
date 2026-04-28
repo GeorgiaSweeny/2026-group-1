@@ -29,7 +29,7 @@ export class PowerSystem {
       this.maxPower = config.MAX_POWER;
       this.baseMaxPower = config.MAX_POWER;  // original cap, never changed after construction
       this.initialPower = config.CURRENT_POWER;
-      this.current = config.CURRENT_POWER;
+      this.current = config.CURRENT_POWER;  // raw initial value — bar display depends on baseline
       this.lowPowerThreshold = config.LOW_POWER_THRESHOLD;
       this.drainRate = config.DRAIN_RATE;
       this.upgradeBonusPerLevel = config.UPGRADE_MAX_POWER_BONUS ?? 20;
