@@ -665,6 +665,7 @@ function setup() {
   glowSystem = createGlowSystem(
     player,
     () => roomSystem.getGlowObjects(),
+    soundSystem,
   );
 
   lightingSystem = createLightingSystem(
@@ -672,6 +673,11 @@ function setup() {
     () => sonarSystem?.getSonarLights?.() ?? [],
     () => glowSystem.getGlowLights(),
     () => roomSystem?.getCurrentRoom?.() ?? null,
+    () => enemySystem?.getJellyfishLights?.() ?? [],
+    () =>
+      roomSystem
+        .getCollectables()
+        .filter((c) => !resourceManagementSystem?.isCollected(c)),
   );
 
   resourceManagementSystem = createResourceManagementSystem(
@@ -776,6 +782,8 @@ function setup() {
       scaleY: GAMEPLAY_OVERLAY.SCALE_Y,
       opacity: GAMEPLAY_OVERLAY.OPACITY,
     }),
+    getVisualLayers: () => roomSystem.getVisualLayers(),
+    getTorchOn: () => player?.torch?.isOn ?? false,
   });
 
   pauseMenuSystem = createPauseMenuSystem({
@@ -790,7 +798,7 @@ function setup() {
     initialControlMode: CONTROLS.DEFAULT_MODE,
   });
 
-  workshopSystem = createWorkshopSystem(player, CONTROLS.DEFAULT_MODE, () => assets[SCRAP_ICON_ASSET_KEY]);
+  workshopSystem = createWorkshopSystem(player, CONTROLS.DEFAULT_MODE, () => assets[SCRAP_ICON_ASSET_KEY], soundSystem);
 
   engine = new Engine();
   engine.register(inputSystem);
@@ -986,6 +994,7 @@ function mousePressed() {
 
   // Workshop overlay blocks all clicks
   if (workshopSystem?.isWorkshopOpen()) {
+    soundSystem?.play('buttonClick', 0.8);
     workshopSystem?.onMousePressed();
     return;
   }
@@ -1115,6 +1124,7 @@ function mousePressed() {
 
   // Forward clicks to pause menu while game is paused mid-play
   if (pauseMenuSystem?.isPaused()) {
+    soundSystem?.play('buttonClick', 0.8);
     pauseMenuSystem.onMousePressed();
     return;
   }

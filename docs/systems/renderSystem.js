@@ -12,7 +12,34 @@ DESCRIPTION:
 ========================================
 */
 
-import { DEBUG_COLOR, COMBAT, MISSILE, HUD_DIALS } from "../config.js";
+import { DEBUG_COLOR, COMBAT, MISSILE, HUD_DIALS, RENDER } from "../config.js";
+
+// Horizontal squash applied to body glow — gives the tall narrow oval shape
+const JELLY_BODY_ASPECT = 0.42;
+// Horizontal stretch applied to head glow — wider than tall to match dome shape
+const JELLY_HEAD_ASPECT = 1.5;
+
+// Jellyfish bioluminescent colour palette — magenta → pink → purple → lilac → blue
+const JELLY_PALETTE = [
+  [255,  60, 180],  // magenta
+  [255, 140, 210],  // pink
+  [200,  80, 255],  // purple
+  [200, 160, 255],  // lilac
+  [100, 120, 255],  // blue
+];
+function jellyColour(t) {
+  const n = JELLY_PALETTE.length;
+  const pos = (((t % 1) + 1) % 1) * n;
+  const i   = Math.floor(pos) % n;
+  const f   = pos - Math.floor(pos);
+  const prev = JELLY_PALETTE[i];
+  const next = JELLY_PALETTE[(i + 1) % n];
+  return [
+    Math.round(prev[0] + (next[0] - prev[0]) * f),
+    Math.round(prev[1] + (next[1] - prev[1]) * f),
+    Math.round(prev[2] + (next[2] - prev[2]) * f),
+  ];
+}
 
 //======================================
 // RENDER SYSTEM
@@ -60,6 +87,8 @@ export function createRenderSystem({
    getPowerCellSprite,
    getScrapSprite,
    getSkyBand,
+   getVisualLayers,
+   getTorchOn,
 }) {
 
 //======================================
@@ -163,6 +192,57 @@ export function createRenderSystem({
       return true;
    }
 
+   function drawTileGidAt(gid, x, y, tileW, tileH) {
+      const tilesets = getTilesets?.() ?? [];
+      const tileset = getTilesetForGid(gid, tilesets);
+      if (!tileset) return;
+
+      const localTileId = gid - Number(tileset.firstgid);
+      const collectionPath = tileset?.tileImagesById?.[localTileId]?.resolvedImagePath;
+      if (collectionPath) {
+         const collectionTileImage = assets?.[`tileset:${collectionPath}`];
+         if (collectionTileImage) image(collectionTileImage, x, y, tileW, tileH);
+         return;
+      }
+
+      const imagePath = tileset.resolvedImagePath ?? tilesetSourceToImagePath(tileset.source);
+      const tilesetImage = imagePath ? assets?.[`tileset:${imagePath}`] : null;
+      if (!tilesetImage || !(tilesetImage.width > 0)) return;
+
+      const columns = Number(tileset.columns) || Math.max(1, Math.floor(tilesetImage.width / tileW));
+      const srcX = (localTileId % columns) * tileW;
+      const srcY = Math.floor(localTileId / columns) * tileH;
+      image(tilesetImage, x, y, tileW, tileH, srcX, srcY, tileW, tileH);
+   }
+
+   function drawVisualTileLayer(layerData) {
+      if (!layerData) return;
+      const { data, width, height } = layerData;
+      if (!data || !width || !height) return;
+      const tileSize = getTileSize?.() ?? {};
+      const tileW = tileSize.tileWidth ?? 16;
+      const tileH = tileSize.tileHeight ?? 16;
+      for (let ty = 0; ty < height; ty++) {
+         for (let tx = 0; tx < width; tx++) {
+            const gid = data[ty * width + tx];
+            if (!gid) continue;
+            drawTileGidAt(gid, tx * tileW, ty * tileH, tileW, tileH);
+         }
+      }
+   }
+
+   function drawVisualLayers() {
+      const layers = getVisualLayers?.() ?? null;
+      if (!layers) return;
+      const torchOn = getTorchOn?.() ?? false;
+      if (torchOn) {
+         drawVisualTileLayer(layers.combined ?? layers.terrain);
+      } else {
+         drawVisualTileLayer(layers.terrain);
+         drawVisualTileLayer(layers.walls);
+      }
+   }
+
    function getCollectableType(item) {
       const explicitType = String(item?.collectableType ?? '').toLowerCase();
       if (explicitType) return explicitType;
@@ -235,23 +315,117 @@ export function createRenderSystem({
       }
    }
 
+   // White-then-red flash overlay matching the player hit response.
+   // For enemies pass isRect=false (ellipse), for walls pass isRect=true (rect).
+   function drawDamageFlash(entity, cx, cy, w, h, isRect = false) {
+      if (entity.damageFlashTime == null) return;
+      const elapsed = millis() - entity.damageFlashTime;
+      const duration = COMBAT.DAMAGE_FLASH_DURATION_MS;
+      if (elapsed >= duration) return;
+      const whitePhase = duration * 0.25;
+      noStroke();
+      if (elapsed < whitePhase) {
+         fill(255, 255, 255, 180);
+      } else {
+         const t = (elapsed - whitePhase) / (duration - whitePhase);
+         fill(255, 50, 50, 150 * (1 - t));
+      }
+      if (isRect) {
+         rectMode(CORNER);
+         rect(cx - w / 2, cy - h / 2, w, h);
+      } else {
+         ellipse(cx, cy, w * 1.4, h * 1.4);
+      }
+   }
+
    //===TERRAIN===//
    function drawPlatforms() {
       const platforms = getPlatforms?.() ?? [];
       const platformColor = getPlatformColor?.() ?? '#5a6e82ff';
+      const hasVisualLayers = !!(getVisualLayers?.()?.terrain);
 
       noStroke();
       fill(platformColor);
 
      // todo: move the fill logic inside the loop and support per-platform colors via properties, with the default as the global platform color.
-     
+
       for (const p of platforms) {
-         if (p.isDestroyed) continue;
-         if (drawSpriteFromTileset(p)) continue;
-         // Fallback: no sprite atlas tile available — draw solid rect so platforms
-         // are never invisible (collision-layer walls with no atlas tile still visible).
+         if (p.isDestroyed) {
+            if (p.isBreakable) {
+               const cx = p.getCornerX() + p.getWidth() / 2;
+               const cy = p.getCornerY() + p.getHeight() / 2;
+               drawDamageFlash(p, cx, cy, p.getWidth(), p.getHeight(), true);
+            }
+            continue;
+         }
+         // When visual tile layers handle rendering, skip sprite drawing —
+         // only keep the solid-rect fallback as a safety net underneath.
+         if (!hasVisualLayers && drawSpriteFromTileset(p)) continue;
          fill(platformColor);
          rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
+         if (p.isBreakable) {
+            const cx = p.getCornerX() + p.getWidth() / 2;
+            const cy = p.getCornerY() + p.getHeight() / 2;
+            drawDamageFlash(p, cx, cy, p.getWidth(), p.getHeight(), true);
+         }
+      }
+   }
+
+   // Returns true when the tile at (col, row) in the terrain visual layer is solid.
+   function isTileOccupied(col, row) {
+      const terrain = getVisualLayers?.()?.terrain;
+      if (!terrain?.data) return false;
+      const { data, width, height } = terrain;
+      if (col < 0 || col >= width || row < 0 || row >= height) return false;
+      return data[row * width + col] !== 0;
+   }
+
+   // Returns the direction the spike tips should point ('up'|'down'|'left'|'right')
+   // by checking which side of the hazard (cx, cy, w, h) has solid terrain.
+   function detectSpikeDirection(cx, cy, w, h) {
+      const tileSize = getTileSize?.() ?? {};
+      const tW = tileSize.tileWidth  ?? 16;
+      const tH = tileSize.tileHeight ?? 16;
+      const col   = Math.floor(cx / tW);
+      const row   = Math.floor(cy / tH);
+      const above = isTileOccupied(col, Math.floor((cy - h / 2 - 1) / tH));
+      const below = isTileOccupied(col, Math.floor((cy + h / 2 + 1) / tH));
+      const left  = isTileOccupied(Math.floor((cx - w / 2 - 1) / tW), row);
+      const right = isTileOccupied(Math.floor((cx + w / 2 + 1) / tW), row);
+      if (above && !below) return 'down';
+      if (below && !above) return 'up';
+      if (left  && !right) return 'right';
+      if (right && !left)  return 'left';
+      return 'up';
+   }
+
+   // Draws 2 triangular spikes per tile along the hazard edge, tips pointing in
+   // direction ('up'|'down'|'left'|'right'). Box given as corner (x, y, w, h).
+   function drawSpikes(x, y, w, h, r, g, b, alpha, direction = 'up') {
+      const tileSize = getTileSize?.() ?? {};
+      const tileW = tileSize.tileWidth  ?? 16;
+      const tileH = tileSize.tileHeight ?? 16;
+      noStroke();
+      fill(r, g, b, alpha);
+
+      if (direction === 'up' || direction === 'down') {
+         const count  = Math.max(2, Math.round(w / tileW) * 2);
+         const spikeW = w / count;
+         const tip    = direction === 'down' ? y + h : y;
+         const base   = direction === 'down' ? y     : y + h;
+         for (let i = 0; i < count; i++) {
+            const left = x + i * spikeW;
+            triangle(left, base,  left + spikeW, base,  left + spikeW / 2, tip);
+         }
+      } else {
+         const count  = Math.max(2, Math.round(h / tileH) * 2);
+         const spikeH = h / count;
+         const tip    = direction === 'right' ? x + w : x;
+         const base   = direction === 'right' ? x     : x + w;
+         for (let i = 0; i < count; i++) {
+            const top = y + i * spikeH;
+            triangle(base, top,  base, top + spikeH,  tip, top + spikeH / 2);
+         }
       }
    }
 
@@ -259,6 +433,20 @@ export function createRenderSystem({
    function drawHazards() {
       const hazards = getHazards?.() ?? [];
       if (!hazards.length) return;
+
+      const torchOn = getTorchOn?.() ?? false;
+      if (torchOn) {
+         for (const hazard of hazards) {
+            if (hazard.visible === false) continue;
+            const dir = detectSpikeDirection(hazard.x, hazard.y, hazard.w, hazard.h);
+            drawSpikes(
+               hazard.x - hazard.w / 2, hazard.y - hazard.h / 2,
+               hazard.w, hazard.h,
+               120, 120, 130, 200, dir
+            );
+         }
+         return;
+      }
 
       noStroke();
       fill(220, 70, 70, 180);
@@ -395,10 +583,10 @@ export function createRenderSystem({
          if (dir === 'right') angle = -Math.PI / 2;
          if (dir === 'left') angle = Math.PI / 2;
 
+         const drawX = renderInterpolate(prevX, currX, alpha);
+         const drawY = renderInterpolate(prevY, currY, alpha);
          push();
-         translate(
-            renderInterpolate(prevX, currX, alpha),
-            renderInterpolate(prevY, currY, alpha));
+         translate(drawX, drawY);
          //scale(facing, 1);
 
          rotate(angle);
@@ -419,6 +607,7 @@ export function createRenderSystem({
          circle(4, -3, 2);
 
          pop();
+         drawDamageFlash(crab, drawX, drawY, crabW, crabH);
       }
 
       const jellies = getJellyfish?.() ?? [];
@@ -430,15 +619,42 @@ export function createRenderSystem({
          const jellyW = Number(jelly?.w ?? jelly?.width ?? 48) || 48;
          const jellyH = Number(jelly?.h ?? jelly?.height ?? 52) || 52;
 
+         // Subtle hue shift: slow sine cycles between blue-purple and violet
+         const colorCycle = Math.sin((jelly.time || 0) * 0.25);
+         const bodyR = 150 + Math.round(colorCycle * 30);  // 120–180
+         const bodyG = 100 - Math.round(colorCycle * 20);  // 80–120
+
+         // Trail — ghost echoes drawn oldest-first so newest sits closest to body
+         const trailArr = Array.isArray(jelly.trail) ? jelly.trail : [];
+         for (let t = trailArr.length - 1; t >= 0; t--) {
+            push();
+            translate(trailArr[t].x, trailArr[t].y);
+            scale(1.5, 1.5);
+            noStroke();
+            fill(bodyR, bodyG, 255, Math.round(35 * (1 - t / trailArr.length)));
+            ellipse(0, -jellyH / 4, jellyW * (1 - t * 0.06), jellyH / 2 * (1 - t * 0.06));
+            pop();
+         }
+
+         const jellyDrawX = renderInterpolate(prevX, currX, alpha);
+         const jellyDrawY = renderInterpolate(prevY, currY, alpha);
          push();
-         translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
+         translate(jellyDrawX, jellyDrawY);
 
          const pulse = Math.abs(Math.sin(jelly.pulsePhase || 0)) * 0.15 + 0.85;
          scale(1.5, pulse*1.5);
 
+         const glowPulse = Math.abs(Math.sin(jelly.pulsePhase || 0));
+         const jellyCtx = drawingContext;
+
+         // Body — colour-shifted fill and shadow
+         jellyCtx.shadowBlur = 18 + glowPulse * 12;
+         jellyCtx.shadowColor = `rgba(${bodyR}, ${bodyG - 10}, 255, 0.85)`;
          noStroke();
-         fill(150, 100, 255, 180);
+         fill(bodyR, bodyG, 255, 180);
          ellipse(0, -jellyH / 4, jellyW, jellyH / 2);
+         jellyCtx.shadowBlur = 0;
+
          fill(255);
          ellipse(-4, -jellyH / 4 - 2, 3, 3);
          ellipse(4, -jellyH / 4 - 2, 3, 3);
@@ -446,6 +662,9 @@ export function createRenderSystem({
          ellipse(-4, -jellyH / 4 - 2, 1.5, 1.5);
          ellipse(4, -jellyH / 4 - 2, 1.5, 1.5);
 
+         // Tentacle lines
+         jellyCtx.shadowBlur = 8 + glowPulse * 6;
+         jellyCtx.shadowColor = `rgba(${bodyR - 30}, ${bodyG - 20}, 255, 0.7)`;
          stroke(120, 80, 200, 150);
          strokeWeight(2);
          for (let i = -1; i <= 1; i++) {
@@ -454,11 +673,25 @@ export function createRenderSystem({
             line(xOff, 0, xOff + tentacleWave, jellyH / 2);
          }
 
+         // Glowing tip dots at the end of each tentacle
          noStroke();
-         fill(200, 150, 255, 100);
+         jellyCtx.shadowBlur = 12 + glowPulse * 10;
+         jellyCtx.shadowColor = `rgba(${bodyR + 40}, 180, 255, 0.95)`;
+         for (let i = -1; i <= 1; i++) {
+            const xOff = i * 5;
+            const tentacleWave = Math.sin((jelly.time || 0) + i) * 3;
+            fill(230, 180 + Math.round(colorCycle * 20), 255, 160 + Math.round(glowPulse * 70));
+            circle(xOff + tentacleWave, jellyH / 2, 2.5);
+         }
+         jellyCtx.shadowBlur = 0;
+
+         // Inner highlight — colour-shifted to match body
+         noStroke();
+         fill(bodyR + 50, bodyG + 50, 255, 100);
          ellipse(0, -jellyH / 4, jellyW * 0.6, jellyH * 0.3);
 
          pop();
+         drawDamageFlash(jelly, jellyDrawX, jellyDrawY, jellyW * 1.5, jellyH * 1.5);
       }
 
       const piranhas = getPiranhas?.() ?? [];
@@ -472,8 +705,10 @@ export function createRenderSystem({
          const facing = Number.isFinite(piranha?.facing) && piranha.facing !== 0 ? piranha.facing : 1;
          const isChasing = piranha?.state === 'chase';
 
+         const piranhaDrawX = renderInterpolate(prevX, currX, alpha);
+         const piranhaDrawY = renderInterpolate(prevY, currY, alpha);
          push();
-         translate(renderInterpolate(prevX, currX, alpha), renderInterpolate(prevY, currY, alpha));
+         translate(piranhaDrawX, piranhaDrawY);
          scale(facing, 1);
 
          noStroke();
@@ -496,6 +731,7 @@ export function createRenderSystem({
          }
 
          pop();
+         drawDamageFlash(piranha, piranhaDrawX, piranhaDrawY, pW, pH);
       }
    }
 
@@ -618,7 +854,12 @@ export function createRenderSystem({
       ctx.globalCompositeOperation = 'destination-out';
 
       for (const light of lightSources) {
-         const { x, y, radius, intensity = 1, kind } = light;
+         const { x, y, radius, kind } = light;
+         let intensity = light.intensity ?? 1;
+         const isCollectableLight = kind === 'collectablePower' || kind === 'collectableScrap';
+         if (isCollectableLight) {
+            intensity = Math.max(intensity, 0.6);
+         }
 
          /* Fixed-position zone lighting for theSurface room.
             Stepped linear gradient in world space — zones stay put as the player climbs.
@@ -657,7 +898,14 @@ export function createRenderSystem({
 
          const screenX = (x - cam.x) * camScale;
          const screenY = (y - cam.y) * camScale;
-         const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         let scaledRadius;
+         if (kind === 'collectablePower') {
+            scaledRadius = radius * (1.4 + 0.4 * intensity) * camScale;
+         } else if (kind === 'collectableScrap') {
+            scaledRadius = radius * (1.2 + 0.3 * intensity) * camScale;
+         } else {
+            scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         }
          // prevents crash when using PLAYER.WIDTH in config
          if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius) || scaledRadius <= 0) continue;
 
@@ -680,6 +928,73 @@ export function createRenderSystem({
             gradient.addColorStop(0.94, 'rgba(255,255,255,0.05)');
             gradient.addColorStop(0.98, 'rgba(255,255,255,0.01)');
             gradient.addColorStop(1,    'rgba(0,0,0,0)');
+         } else if (kind === 'collectablePower') {
+            intensity = Math.max(intensity, 0.6);
+            // Mask shaping only: keep a clear carve without overdriving the whole pass.
+            const a = Math.max(0.78, Math.min(0.92, 0.84 + (intensity - 0.6) * 0.10));
+            gradient.addColorStop(0,    `rgba(255,255,255,${a.toFixed(3)})`);
+            gradient.addColorStop(0.12, `rgba(255,255,255,${Math.max(0.62, a * 0.82).toFixed(3)})`);
+            gradient.addColorStop(0.34, `rgba(255,255,255,${Math.max(0.44, a * 0.62).toFixed(3)})`);
+            gradient.addColorStop(0.60, `rgba(255,255,255,${Math.max(0.26, a * 0.40).toFixed(3)})`);
+            gradient.addColorStop(0.82, `rgba(255,255,255,${Math.max(0.10, a * 0.18).toFixed(3)})`);
+            gradient.addColorStop(1,    'rgba(0,0,0,0)');
+         } else if (kind === 'collectableScrap') {
+            intensity = Math.max(intensity, 0.6);
+            const a = Math.max(0.62, Math.min(0.78, 0.69 + (intensity - 0.6) * 0.10));
+            gradient.addColorStop(0,    `rgba(255,255,255,${a.toFixed(3)})`);
+            gradient.addColorStop(0.16, `rgba(255,255,255,${Math.max(0.44, a * 0.76).toFixed(3)})`);
+            gradient.addColorStop(0.40, `rgba(255,255,255,${Math.max(0.30, a * 0.56).toFixed(3)})`);
+            gradient.addColorStop(0.70, `rgba(255,255,255,${Math.max(0.18, a * 0.34).toFixed(3)})`);
+            gradient.addColorStop(1,    'rgba(0,0,0,0)');
+         } else if (kind === 'jellyfishHead') {
+            // Wide oval punch — horizontally stretched to match dome, wider than body oval
+            const p = light.glowPulse ?? 0;
+            const b1 = Math.min(1, 0.92 + p * 0.07);
+            const b2 = 0.52 + p * 0.08;
+            const b3 = 0.22 + p * 0.04;
+            const b4 = 0.07;
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.scale(JELLY_HEAD_ASPECT, 1.0);
+            const headGrad = ctx.createRadialGradient(0, 0, scaledRadius * 0.1, 0, 0, scaledRadius);
+            headGrad.addColorStop(0,    `rgba(255,255,255,${b1.toFixed(3)})`);
+            headGrad.addColorStop(0.06, `rgba(255,255,255,${b1.toFixed(3)})`);
+            headGrad.addColorStop(0.09, `rgba(255,255,255,${b2.toFixed(3)})`);
+            headGrad.addColorStop(0.24, `rgba(255,255,255,${b2.toFixed(3)})`);
+            headGrad.addColorStop(0.28, `rgba(255,255,255,${b3.toFixed(3)})`);
+            headGrad.addColorStop(0.55, `rgba(255,255,255,${b3.toFixed(3)})`);
+            headGrad.addColorStop(0.59, `rgba(255,255,255,${b4.toFixed(3)})`);
+            headGrad.addColorStop(0.88, `rgba(255,255,255,${b4.toFixed(3)})`);
+            headGrad.addColorStop(1,    'rgba(255,255,255,0)');
+            ctx.fillStyle = headGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            continue;
+         } else if (kind === 'jellyfishBody') {
+            // Tall narrow oval: transparent centre avoids stacking with head, very soft throughout
+            const p = light.glowPulse ?? 0;
+            const b1 = 0.16 + p * 0.04;  // peak: 0.16–0.20
+            const b2 = 0.08 + p * 0.02;  // mid:  0.08–0.10
+            const b3 = 0.03;              // outer: barely there
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.scale(light.aspect ?? JELLY_BODY_ASPECT, 1.0);
+            const ovalGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, scaledRadius);
+            ovalGrad.addColorStop(0,    'rgba(255,255,255,0)');                         // transparent — no contribution at core
+            ovalGrad.addColorStop(0.35, `rgba(255,255,255,${b1.toFixed(3)})`);         // fades in beyond head zone
+            ovalGrad.addColorStop(0.52, `rgba(255,255,255,${b1.toFixed(3)})`);         // hold
+            ovalGrad.addColorStop(0.60, `rgba(255,255,255,${b2.toFixed(3)})`);         // step down
+            ovalGrad.addColorStop(0.78, `rgba(255,255,255,${b2.toFixed(3)})`);         // hold
+            ovalGrad.addColorStop(0.86, `rgba(255,255,255,${b3.toFixed(3)})`);         // fade to edge
+            ovalGrad.addColorStop(1,    'rgba(255,255,255,0)');
+            ctx.fillStyle = ovalGrad;
+            ctx.beginPath();
+            ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            continue;
          } else if (kind === 'ambient') {
             gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
             gradient.addColorStop(0.15, 'rgba(255,255,255,0.45)');
@@ -715,21 +1030,114 @@ export function createRenderSystem({
       // Only the transparent (lit) areas pick up the colour; opaque dark areas are unaffected.
       ctx.globalCompositeOperation = 'source-over';
       for (const light of lightSources) {
-         if (light.kind !== 'glow') continue;
-         const { x, y, radius, intensity = 1 } = light;
+         const isHead = light.kind === 'jellyfishHead';
+         const isBody = light.kind === 'jellyfishBody';
+         const isCollectablePower = light.kind === 'collectablePower';
+         const isCollectableScrap = light.kind === 'collectableScrap';
+         if (light.kind !== 'glow' && !isHead && !isBody && !isCollectablePower && !isCollectableScrap) continue;
+         const { x, y, radius } = light;
+         let intensity = light.intensity ?? 1;
+         if (isCollectablePower || isCollectableScrap) {
+            intensity = Math.max(intensity, 0.6);
+         }
          const screenX = (x - cam.x) * camScale;
          const screenY = (y - cam.y) * camScale;
-         const scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         let scaledRadius = radius * (0.8 + 0.2 * intensity) * camScale;
+         if (isCollectablePower) {
+            scaledRadius = radius * (1.25 + 0.4 * intensity) * camScale;
+         } else if (isCollectableScrap) {
+            scaledRadius = radius * (1.15 + 0.3 * intensity) * camScale;
+         }
          if (!Number.isFinite(screenX) || !Number.isFinite(screenY) || !Number.isFinite(scaledRadius) || scaledRadius <= 0) continue;
 
          const tint = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, scaledRadius);
-         const peak = 0.4 * intensity;
-         // centre is near-white so suppress colour there; tint peaks in the mid-ring zone
-         tint.addColorStop(0,    'rgba(40, 230, 180, 0)');
-         tint.addColorStop(0.2,  `rgba(20, 220, 170, ${peak * 0.3})`);
-         tint.addColorStop(0.45, `rgba(10, 200, 160, ${peak})`);
-         tint.addColorStop(0.7,  `rgba(0,  170, 140, ${peak * 0.4})`);
-         tint.addColorStop(1,    'rgba(0, 0, 0, 0)');
+         if (isHead) {
+            // Wide oval tint — horizontally stretched, wider than body oval, matches dome shape
+            const p  = light.glowPulse ?? 0;
+            const ct = light.cycleT ?? 0;
+            const coreA = Math.min(1, 0.75 + p * 0.22);
+            const b2A   = 0.52 + p * 0.08;
+            const b3A   = 0.28 + p * 0.04;
+            const outA  = 0.10;
+            const [r0, g0, c0] = jellyColour(ct);
+            const [r1, g1, c1] = jellyColour(ct + 0.20);
+            const [r2, g2, c2] = jellyColour(ct + 0.40);
+            const [r3, g3, c3] = jellyColour(ct + 0.60);
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.scale(JELLY_HEAD_ASPECT, 1.0);
+            const headTint = ctx.createRadialGradient(0, 0, 0, 0, 0, scaledRadius);
+            headTint.addColorStop(0,    `rgba(255,255,255,${(coreA * 0.88).toFixed(3)})`);
+            headTint.addColorStop(0.04, `rgba(255,255,255,${(coreA * 0.88).toFixed(3)})`);
+            headTint.addColorStop(0.06, `rgba(${r0},${g0},${c0},${coreA.toFixed(3)})`);
+            headTint.addColorStop(0.20, `rgba(${r0},${g0},${c0},${(coreA*0.85).toFixed(3)})`);
+            headTint.addColorStop(0.24, `rgba(${r1},${g1},${c1},${b2A.toFixed(3)})`);
+            headTint.addColorStop(0.40, `rgba(${r1},${g1},${c1},${(b2A*0.70).toFixed(3)})`);
+            headTint.addColorStop(0.44, `rgba(${r2},${g2},${c2},${b3A.toFixed(3)})`);
+            headTint.addColorStop(0.62, `rgba(${r2},${g2},${c2},${(b3A*0.50).toFixed(3)})`);
+            headTint.addColorStop(0.66, `rgba(${r3},${g3},${c3},${outA.toFixed(3)})`);
+            headTint.addColorStop(0.90, `rgba(${r3},${g3},${c3},${(outA*0.25).toFixed(3)})`);
+            headTint.addColorStop(1,    'rgba(0,0,0,0)');
+            ctx.fillStyle = headTint;
+            ctx.beginPath();
+            ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            continue;
+         } else if (isBody) {
+            // Tall narrow oval tint: transparent centre, soft colour shift from mid outward
+            const p  = light.glowPulse ?? 0;
+            const ct = light.cycleT ?? 0;
+            const midA  = 0.22 + p * 0.05;  // 0.22–0.27
+            const outA  = 0.10 + p * 0.02;  // 0.10–0.12
+            const edgeA = 0.04;              // static
+            const [r0, g0, c0] = jellyColour(ct);
+            const [r1, g1, c1] = jellyColour(ct + 0.30);
+            const dr = Math.round(r1 * 0.55 + 70 * 0.45);
+            const dg = Math.round(g1 * 0.55 + 55 * 0.45);
+            const dc = Math.round(c1 * 0.55 + 140 * 0.45);
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.scale(light.aspect ?? JELLY_BODY_ASPECT, 1.0);
+            const ovalTint = ctx.createRadialGradient(0, 0, 0, 0, 0, scaledRadius);
+            ovalTint.addColorStop(0,    `rgba(${r0},${g0},${c0},0)`);                         // transparent — no overlap at core
+            ovalTint.addColorStop(0.35, `rgba(${r0},${g0},${c0},${midA.toFixed(3)})`);        // fades in
+            ovalTint.addColorStop(0.52, `rgba(${r0},${g0},${c0},${(midA*0.80).toFixed(3)})`);
+            ovalTint.addColorStop(0.56, `rgba(${r1},${g1},${c1},${outA.toFixed(3)})`);        // colour shifts outward
+            ovalTint.addColorStop(0.75, `rgba(${dr},${dg},${dc},${(outA*0.60).toFixed(3)})`); // desaturated
+            ovalTint.addColorStop(0.82, `rgba(${dr},${dg},${dc},${edgeA.toFixed(3)})`);
+            ovalTint.addColorStop(0.96, `rgba(${dr},${dg},${dc},0)`);
+            ovalTint.addColorStop(1,    'rgba(0,0,0,0)');
+            ctx.fillStyle = ovalTint;
+            ctx.beginPath();
+            ctx.arc(0, 0, scaledRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            continue;
+         } else if (isCollectablePower) {
+            intensity = Math.max(intensity, 0.6);
+            const a = 0.65 * Math.max(0.6, Math.min(1.2, intensity));
+            tint.addColorStop(0,    `rgba(215,248,255,${Math.max(0.40, a * 0.72).toFixed(3)})`);
+            tint.addColorStop(0.22, `rgba(120,225,255,${Math.max(0.44, a * 0.84).toFixed(3)})`);
+            tint.addColorStop(0.50, `rgba(60,182,250,${Math.max(0.34, a * 0.66).toFixed(3)})`);
+            tint.addColorStop(0.76, `rgba(28,128,216,${Math.max(0.22, a * 0.42).toFixed(3)})`);
+            tint.addColorStop(1,    'rgba(0,0,0,0)');
+         } else if (isCollectableScrap) {
+            intensity = Math.max(intensity, 0.6);
+            const a = 0.45 * Math.max(0.5, Math.min(1, intensity * 1.5));
+            tint.addColorStop(0,    `rgba(255,244,198,${Math.max(0.22, a * 0.62).toFixed(3)})`);
+            tint.addColorStop(0.30, `rgba(255,219,128,${Math.max(0.24, a * 0.70).toFixed(3)})`);
+            tint.addColorStop(0.64, `rgba(220,172,88,${Math.max(0.20, a * 0.54).toFixed(3)})`);
+            tint.addColorStop(1,    'rgba(0,0,0,0)');
+         } else {
+            // Existing cyan-green tint for glow interactable objects
+            const peak = 0.4 * intensity;
+            tint.addColorStop(0,    'rgba(40, 230, 180, 0)');
+            tint.addColorStop(0.2,  `rgba(20, 220, 170, ${peak * 0.3})`);
+            tint.addColorStop(0.45, `rgba(10, 200, 160, ${peak})`);
+            tint.addColorStop(0.7,  `rgba(0,  170, 140, ${peak * 0.4})`);
+            tint.addColorStop(1,    'rgba(0, 0, 0, 0)');
+         }
 
          ctx.fillStyle = tint;
          ctx.beginPath();
@@ -1185,12 +1593,10 @@ export function createRenderSystem({
       const reveals = getSonarHazardReveals?.() ?? [];
       if (!reveals.length) return;
 
-      rectMode(CORNER);
       for (const r of reveals) {
          const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
-         noStroke();
-         fill(220, 70, 70, alpha);
-         rect(r.x, r.y, r.w, r.h);
+         const dir = detectSpikeDirection(r.x + r.w / 2, r.y + r.h / 2, r.w, r.h);
+         drawSpikes(r.x, r.y, r.w, r.h, 220, 70, 70, alpha, dir);
       }
    }
 
@@ -1384,13 +1790,18 @@ function renderInterpolate(oldState, newState, alpha){
             drawSkyBand(skyBand);
             // Comment out prototype visuals from render
             drawPlatforms();
+            drawVisualLayers();
             drawHazards();
             drawEnemies(alpha);
             drawCollectables();
             drawInteractables();
-            drawTriggers();
-            drawEntities(); //- will need interpolation
-            drawSpawnPoints();
+            if (RENDER.SHOW_TRIGGER_AND_ENTITY_VISUALS) {
+               drawTriggers();
+               drawEntities(); //- will need interpolation
+            }
+            if (RENDER.SHOW_TRIGGER_AND_ENTITY_VISUALS) {
+               drawSpawnPoints();
+            }
             drawSonarWalls(); // COMMENT OUT TO REMOVE VISUALS WHEN TORCH ON
             drawBubbles();
             drawParticles();

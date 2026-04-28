@@ -69,7 +69,7 @@ TODO / LIMITATIONS:
 
 import { CONTROLS, keyLabel } from '../config.js';
 
-export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAULT_MODE, getScrapIcon = () => null) {
+export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAULT_MODE, getScrapIcon = () => null, soundSystem = null) {
   let workshopOpen = false;
   let controlMode = initialControlMode;
 
@@ -432,6 +432,7 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
     upgrade.level++;
     upgrade.cost = Math.ceil(upgrade.cost * 1.5); // Increase cost for next level
     
+    soundSystem?.play('upgrade', 0.6);
     console.log(`✓ Purchased ${upgradeName} upgrade! New level: ${upgrade.level}, Scrap left: ${player.scrap}`);
     return true;
   }
@@ -458,6 +459,7 @@ export function createWorkshopSystem(player, initialControlMode = CONTROLS.DEFAU
     // Update shop display
     item.quantity += quantity;
     
+    soundSystem?.play('upgrade', 0.6);
     console.log(`✓ Purchased ${quantity}x ${itemName}! Total owned: ${item.quantity}, Scrap left: ${player.scrap}`);
     return true;
   }

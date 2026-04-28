@@ -228,4 +228,59 @@ describe('LightingSystem', () => {
       expect(sources.some(s => s.kind === 'glow')).toBe(true);
     });
   });
+
+  describe('collectable lights', () => {
+    it('converts power and scrap collectables into light emitters', () => {
+      const player = makePlayer({ torch: { isOn: false } });
+      const collectables = [
+        { x: 220, y: 180, collectableType: 'power', visible: true },
+        { x: 340, y: 260, collectableType: 'scrap', visible: true },
+      ];
+      const ls = createLightingSystem(
+        player,
+        () => [],
+        () => [],
+        () => null,
+        () => [],
+        () => collectables,
+      );
+
+      const sources = ls.getLightSources();
+      const powerLight = sources.find((s) => s.type === 'collectablePower');
+      const scrapLight = sources.find((s) => s.type === 'collectableScrap');
+
+      expect(powerLight).toBeDefined();
+      expect(scrapLight).toBeDefined();
+      expect(powerLight).toEqual(expect.objectContaining({
+        x: 220,
+        y: 180,
+        type: 'collectablePower',
+      }));
+      expect(scrapLight).toEqual(expect.objectContaining({
+        x: 340,
+        y: 260,
+        type: 'collectableScrap',
+      }));
+    });
+
+    it('ignores hidden or unknown collectables', () => {
+      const player = makePlayer({ torch: { isOn: false } });
+      const collectables = [
+        { x: 10, y: 10, collectableType: 'power', visible: false },
+        { x: 20, y: 20, collectableType: 'unknown', visible: true },
+      ];
+      const ls = createLightingSystem(
+        player,
+        () => [],
+        () => [],
+        () => null,
+        () => [],
+        () => collectables,
+      );
+
+      const sources = ls.getLightSources();
+      expect(sources.some((s) => s.type === 'collectablePower')).toBe(false);
+      expect(sources.some((s) => s.type === 'collectableScrap')).toBe(false);
+    });
+  });
 });

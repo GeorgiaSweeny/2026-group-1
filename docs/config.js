@@ -32,6 +32,14 @@ export const GAME = {
 };
 
 //======================
+// RENDER CONFIG
+//======================
+export const RENDER = {
+  // Debug visuals from room object layers (does not affect gameplay logic/collisions).
+  SHOW_TRIGGER_AND_ENTITY_VISUALS: false,
+};
+
+//======================
 // GAME VERSIONS CONFIG
 //======================
 export const GAME_VERSIONS = {
@@ -232,6 +240,25 @@ export const LIGHTING = {
     RADIUS: PLAYER.WIDTH * 2.5, // looks best, doesnt make easy
     BRIGHTNESS: 0.2
   }
+};
+
+//======================
+// JELLYFISH BIOLUMINESCENT GLOW CONFIG
+//======================
+export const JELLYFISH_GLOW = {
+  HEAD_RADIUS: 18,         // tight dome glow radius (world px)
+  BODY_MIN_RADIUS: 25,     // contracted height radius (world px)
+  BODY_HEIGHT_RANGE: 18,   // max additional height when tentacles are fully extended
+  BODY_HALF_WIDTH: 17,     // horizontal half-extent — constant regardless of height
+  BODY_LERP: 0.08,         // smoothing rate — low value = sluggish water-drag feel
+  BASE_INTENSITY: 0.32,    // resting brightness
+  PULSE_SPEED: 1.2,        // Hz — matches GLOW tile pulse style
+  PULSE_VARIATION: 0.15,   // ± brightness swing
+  HEAD_CYCLE_S: 12.0,       // seconds for head to complete one colour cycle
+  BODY_CYCLE_S: 14.0,       // seconds for body (slower, feels heavier)
+  BODY_PHASE_OFFSET: 0.35, // body lags head by this palette fraction
+  FLICKER_SPEED: 13.7,     // fast, non-harmonic micro-shimmer on core
+  FLICKER_STRENGTH: 0.025,
 };
 
 //======================
