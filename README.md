@@ -6,7 +6,7 @@
 		</div>
 		<div align="center">
 		   <h2> THE ABYSS </h2> 
-			Can you escape the endless dark? <br/><br/>
+			Somewhere above the surface awaits <br/><br/>
 			[ADD PROMO IMAGE]
 		</div>
 		<div align="center">
@@ -33,12 +33,12 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 
 |Name|Email|Role|
 |:-|:-|:-|
-|Archie Brown|cq25988@bristol.ac.uk| Co-developer; Lead UI Developer |
-|Monal Gupta|ta25702@bristol.ac.uk| Co-developer; Report contributor; Video Production |
-|Ben Mounce|wv25183@bristol.ac.uk| Co-developer; Report contributor; Video Production |
-|Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer; System Architect; Code reviewer |
-|Nick Jankov|ve21144@bristol.ac.uk| Co-developer & Code Reviewer |
-|Jude Hsu|ca20853@bristol.ac.uk| Report contributor; Co-developer |
+|Archie Brown|cq25988@bristol.ac.uk| UI and Upgrade Systems, CameraSystem and transition effects, VFX |
+|Monal Gupta|ta25702@bristol.ac.uk| EnemySystem; ResourceManagmentSystem, Menus, Sound FX |
+|Ben Mounce|wv25183@bristol.ac.uk| SonarSystem, MissileSystem & visuals |
+|Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer; Systems Architect; Lighting Systems & effects; Code reviewer, GameWorld Design |
+|Nick Jankov|ve21144@bristol.ac.uk| HitboxSystem, Code Reviewer |
+|Jude Hsu|ca20853@bristol.ac.uk| Report contributor; Co-developer; PauseMenu |
 
 </br>
 
@@ -480,32 +480,32 @@ Overall, *The Abyss* already contains mechanics that could support sustainabilit
 <div align="center">
     <table>
         <tr>
-            <th>Contributor</th>
-            <th>Contribution Weighting</th>
+            <th>Team Member</th>
+            <th>Contributions</th>
         </tr>
         <tr>
             <td>Archie Brown</td>
-            <td align="center">1.0</td>
+            <td align="left"></td>
         </tr>
         <tr>
             <td>Monal Gupta</td>
-            <td align="center">1.0</td>
+            <td align="left"></td>
         </tr>
         <tr>
             <td>Ben Mounce</td>
-            <td align="center">1.0</td>
+            <td align="left"></td>
         </tr>
         <tr>
             <td>Georgia Sweeny</td>
-            <td align="center">1.0</td>
+            <td align="left"> Set-up and designed code architecture, Map design and creation (Tiled Editor), created roomSystem (parses map data for other systems, drives room loading) created lighting sfx (via darknessLayer) and related systems (torchSystem, LightingSystem, glowSystem, renderSystem), assisted with HUD and shop UI (mainly design), created guides for team, code reviews for PRs, video report</td>
         </tr>
         <tr>
             <td>Nick Jankov</td>
-            <td align="center">1.0</td>
+            <td align="left"></td>
         </tr>
         <tr>
             <td>Jude Hsu</td>
-            <td align="center">1.0</td>
+            <td align="left"></td>
         </tr>
     </table>
     <sub>Table 1: Team Contributions</sub>
