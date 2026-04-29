@@ -56,7 +56,7 @@ function capitalize(s) {
    return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
 }
 
-export function createLightingSystem(player = null, getSonarLights = () => [], getGlowLights = () => [], getCurrentRoom = () => null, getJellyfishLights = () => [], getCollectables = () => []) {
+export function createLightingSystem(player = null, getSonarLights = () => [], getGlowLights = () => [], getCurrentRoom = () => null, getJellyfishLights = () => [], getCollectables = () => [], getPiranhaLights = () => []) {
    return {
 
       //--- GET LIGHT SOURCES ---//
@@ -104,6 +104,12 @@ export function createLightingSystem(player = null, getSonarLights = () => [], g
          // Jellyfish bioluminescent lights
          const jellyfishLights = getJellyfishLights?.() ?? [];
          for (const light of jellyfishLights) {
+            lightSources.push(light);
+         }
+
+         // Piranha chase glow
+         const piranhaLights = getPiranhaLights?.() ?? [];
+         for (const light of piranhaLights) {
             lightSources.push(light);
          }
 

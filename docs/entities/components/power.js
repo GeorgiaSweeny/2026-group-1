@@ -69,12 +69,8 @@ export class PowerSystem {
       return this.current <= this.maxPower * threshold;
    }
 
-   // Returns fill ratio for the power bar UI.
-   // Baseline is 60% of maxPower (the "empty" starting point).
-   // Each upgrade pushes the baseline up, so the bar appears to move rightward in the UI.
+   // Returns fill ratio for the power bar UI (0 = empty, 1 = full).
    getPercent() {
-      const baseline = this.maxPower * 0.6;
-      const headroom = this.maxPower - baseline;
-      return Math.max(0, Math.min(1, (this.current - baseline) / headroom));
+      return Math.max(0, Math.min(1, this.current / this.maxPower));
    }
 }

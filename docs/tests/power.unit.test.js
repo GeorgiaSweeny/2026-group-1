@@ -201,28 +201,20 @@ describe('PowerSystem — isLow()', () => {
 //======================================
 
 describe('PowerSystem — getPercent()', () => {
-   // New behavior: baseline = 60% of maxPower (the "empty" starting point).
-   // Full bar (100 current) = 100% fill. At 60% of max = 0% fill.
+   // getPercent() = current / maxPower, clamped to [0, 1].
    it('returns 1 when current equals maxPower', () => {
       const power = makePower({ MAX_POWER: 100, CURRENT_POWER: 100 });
-      expect(power.getPercent()).toBe(1);  // (100-60)/(100-60) = 1
+      expect(power.getPercent()).toBe(1);  // 100/100 = 1
    });
 
-   it('returns 0 when current is at the 60% baseline', () => {
-      const power = makePower({ MAX_POWER: 100, CURRENT_POWER: 60 });
-      expect(power.getPercent()).toBe(0);  // (60-60)/(100-60) = 0
-   });
-
-   it('returns 0 when current drops below the 60% baseline', () => {
+   it('returns 0 when current is 0', () => {
       const power = makePower({ MAX_POWER: 100, CURRENT_POWER: 0 });
-      // Below baseline, clamped to 0
-      expect(power.getPercent()).toBe(0);
+      expect(power.getPercent()).toBe(0);  // 0/100 = 0
    });
 
    it('returns correct fractional value for mid-range power', () => {
-      // current=80, max=100: baseline=60, headroom=40, fill=(80-60)/40=0.5
-      const power = makePower({ MAX_POWER: 100, CURRENT_POWER: 80 });
-      expect(power.getPercent()).toBeCloseTo(0.5);
+      const power = makePower({ MAX_POWER: 100, CURRENT_POWER: 50 });
+      expect(power.getPercent()).toBeCloseTo(0.5);  // 50/100 = 0.5
    });
 
    it('never falls outside [0, 1] range after draining to zero', () => {
@@ -296,10 +288,9 @@ describe('PowerSystem — upgrade wiring', () => {
    });
 
    it('getPercent reflects maxPower change after setMaxPower', () => {
-      // After upgrade: current boosted to 120, max=120 → fill is 100% (bar at max)
+      // After upgrade: current boosted to 120, max=120 → 120/120 = 1.0
       const power = new PowerSystem({ MAX_POWER: 100, CURRENT_POWER: 100, DRAIN_RATE: 0.5, UPGRADE_MAX_POWER_BONUS: 20 });
       power.setMaxPower(2); // max=120, current boosted to 120
-      // baseline=72, headroom=48, (120-72)/48 = 1.0
       expect(power.getPercent()).toBeCloseTo(1.0, 2);
    });
 });
