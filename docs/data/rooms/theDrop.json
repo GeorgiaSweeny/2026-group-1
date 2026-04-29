@@ -844,11 +844,6 @@
                  "name":"",
                  "properties":[
                         {
-                         "name":"gameVersion",
-                         "type":"string",
-                         "value":"demo"
-                        }, 
-                        {
                          "name":"targetRoom",
                          "type":"string",
                          "value":"tunnel"
@@ -954,7 +949,7 @@
          "y":0
         }],
  "nextlayerid":13,
- "nextobjectid":49,
+ "nextobjectid":50,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

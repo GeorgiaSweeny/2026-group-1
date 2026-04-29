@@ -39,21 +39,6 @@ export const RENDER = {
   SHOW_TRIGGER_AND_ENTITY_VISUALS: false,
 };
 
-//======================
-// GAME VERSIONS CONFIG
-//======================
-export const GAME_VERSIONS = {
-  demo: {
-    startRoom: "demoStart",
-    rooms: ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "spikeMaze", "jellyfishAtrium", "theSurface"],
-    difficulty: "EASY",
-  },
-  full: {
-    startRoom: "demoStart",
-    rooms: ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "spikeMaze", "jellyfishAtrium", "theSurface"],
-  },
-};
-
 
 //======================
 // MAIN CANVAS CONFIG
@@ -277,6 +262,7 @@ export const GLOW = {
   KNOCKBACK_LIFT: 50,
   IFRAME_DURATION_MS: 800,
   DAMAGE_FLASH_DURATION_MS: 300,
+  CHARGE_RATE: 2,              // power units per second charged while on active glow object
 };
 
 //======================

@@ -342,7 +342,7 @@ export function createRenderSystem({
    function drawPlatforms() {
       const platforms = getPlatforms?.() ?? [];
       const platformColor = getPlatformColor?.() ?? '#5a6e82ff';
-      const hasVisualLayers = !!(getVisualLayers?.()?.terrain);
+      const hasWallsLayer = !!(getVisualLayers?.()?.walls);
 
       noStroke();
       fill(platformColor);
@@ -358,9 +358,17 @@ export function createRenderSystem({
             }
             continue;
          }
-         // When visual tile layers handle rendering, skip sprite drawing —
-         // only keep the solid-rect fallback as a safety net underneath.
-         if (!hasVisualLayers && drawSpriteFromTileset(p)) continue;
+         // Non-breakable collision rects are a fallback — skip when walls visual layer is loaded.
+         // Breakable walls always render so they remain visible until destroyed.
+         if (hasWallsLayer && !p.isBreakable) continue;
+         if (drawSpriteFromTileset(p)) {
+            if (p.isBreakable) {
+               const cx = p.getCornerX() + p.getWidth() / 2;
+               const cy = p.getCornerY() + p.getHeight() / 2;
+               drawDamageFlash(p, cx, cy, p.getWidth(), p.getHeight(), true);
+            }
+            continue;
+         }
          fill(platformColor);
          rect(p.getCornerX(), p.getCornerY(), p.getWidth(), p.getHeight());
          if (p.isBreakable) {
@@ -479,29 +487,58 @@ export function createRenderSystem({
          // Use custom power-cell sprite — hitbox stays 1 tile, image drawn larger
          if (collectableType === 'power' && powerCell) {
             const tileSize = Math.max(8, item.w);
-            const drawSize = tileSize * 2.5;
+            const drawSize = tileSize * 1.8;
+            const cy = item.y - tileSize * 0.3;
 
-            // Blue pulsing glow rings — fade in as player approaches within 200px
+            // Blue/cyan/aqua cycling glow rings
             const pdx = item.x - (player.position?.x ?? player.x ?? 0);
             const pdy = item.y - (player.position?.y ?? player.y ?? 0);
             const pdist = Math.sqrt(pdx * pdx + pdy * pdy);
             const proximity = Math.max(0, Math.min(1, (180 - pdist) / 120));
             if (proximity > 0) {
-               const pulse = 0.5 + 0.5 * Math.sin(millis() / 700);
-               const glowAlpha = (40 + pulse * 55) * proximity;
+               const pulse = 0.75 + 0.25 * Math.sin(millis() / 700);
+               const glowAlpha = pulse * proximity;
+
+               // Returns [r,g,b] for a given phase in the blue→cyan→aqua cycle
+               const cycleRGB = (phase) => {
+                  const c = ((phase % 1) + 1) % 1;
+                  if (c < 1/3) {
+                     const t = c * 3;
+                     return [Math.round(50 - 50*t), Math.round(130 + 80*t), 255];
+                  } else if (c < 2/3) {
+                     const t = (c - 1/3) * 3;
+                     return [0, Math.round(210 - 35*t), Math.round(255 - 40*t)];
+                  } else {
+                     const t = (c - 2/3) * 3;
+                     return [Math.round(50*t), Math.round(175 - 45*t), Math.round(215 + 40*t)];
+                  }
+               };
+
+               // Each ring starts at a different phase so they cycle through different hues
+               const base = (millis() / 3000) % 1;
+               const [r0, g0, b0] = cycleRGB(base);
+               const [r1, g1, b1] = cycleRGB(base + 0.20);
+               const [r2, g2, b2] = cycleRGB(base + 0.40);
+               const [r3, g3, b3] = cycleRGB(base + 0.60);
+
                noStroke();
-               fill(50, 140, 255, glowAlpha * 0.18);
-               ellipse(item.x, item.y, drawSize * 2.2, drawSize * 2.2);
-               fill(60, 155, 255, glowAlpha * 0.32);
-               ellipse(item.x, item.y, drawSize * 1.6, drawSize * 1.6);
-               fill(80, 175, 255, glowAlpha * 0.52);
-               ellipse(item.x, item.y, drawSize * 1.1, drawSize * 1.1);
-               fill(140, 210, 255, glowAlpha * 0.85);
-               ellipse(item.x, item.y, drawSize * 0.55, drawSize * 0.55);
+               const pCtx = drawingContext;
+               // Outer ring — hazy, diffuse like jellyfish head outer glow
+               pCtx.shadowBlur = 16 + pulse * 10;
+               pCtx.shadowColor = `rgba(${r0}, ${g0}, ${b0}, 0.45)`;
+               fill(r0, g0, b0, glowAlpha * 255 * 0.14);
+               ellipse(item.x, cy, drawSize * 2.0, drawSize * 2.0);
+               pCtx.shadowBlur = 0;
+               fill(r1, g1, b1, glowAlpha * 255 * 0.52);
+               ellipse(item.x, cy, drawSize * 1.5, drawSize * 1.5);
+               fill(r2, g2, b2, glowAlpha * 255 * 0.68);
+               ellipse(item.x, cy, drawSize * 1.0, drawSize * 1.0);
+               fill(r3, g3, b3, glowAlpha * 255 * 0.92);
+               ellipse(item.x, cy, drawSize * 0.5, drawSize * 0.5);
             }
 
             imageMode(CENTER);
-            image(powerCell, item.x, item.y, drawSize, drawSize);
+            image(powerCell, item.x, cy, drawSize, drawSize);
             imageMode(CORNER);
             continue;
          }
@@ -512,7 +549,7 @@ export function createRenderSystem({
             const drawSize = tileSize * 1.8;
             const cy = item.y - tileSize * 0.3;
 
-            // Gold shimmer glow rings — fade in as player approaches within 280px
+            // Gold shimmer glow rings — fade in as player approaches within 200px
             const sdx = item.x - (player.position?.x ?? player.x ?? 0);
             const sdy = item.y - (player.position?.y ?? player.y ?? 0);
             const sdist = Math.sqrt(sdx * sdx + sdy * sdy);
@@ -521,13 +558,18 @@ export function createRenderSystem({
                const scrapPulse = 0.75 + 0.25 * Math.sin(millis() / 700);
                const scrapAlpha = scrapPulse * sProximity;
                noStroke();
-               fill(255, 228, 170, scrapAlpha * 255 * 0.15);
+               const sCtx = drawingContext;
+               // Outer ring — hazy, diffuse like jellyfish head outer glow
+               sCtx.shadowBlur = 16 + scrapPulse * 8;
+               sCtx.shadowColor = `rgba(255, 228, 170, 0.45)`;
+               fill(255, 228, 170, scrapAlpha * 255 * 0.14);
                ellipse(item.x, cy, drawSize * 2.0, drawSize * 2.0);
-               fill(255, 235, 182, scrapAlpha * 255 * 0.28);
+               sCtx.shadowBlur = 0;
+               fill(255, 235, 182, scrapAlpha * 255 * 0.58);
                ellipse(item.x, cy, drawSize * 1.5, drawSize * 1.5);
-               fill(255, 242, 195, scrapAlpha * 255 * 0.46);
+               fill(255, 242, 195, scrapAlpha * 255 * 0.74);
                ellipse(item.x, cy, drawSize * 1.0, drawSize * 1.0);
-               fill(255, 250, 215, scrapAlpha * 255 * 0.75);
+               fill(255, 250, 215, scrapAlpha * 255 * 0.92);
                ellipse(item.x, cy, drawSize * 0.5, drawSize * 0.5);
             }
 
@@ -870,13 +912,19 @@ export function createRenderSystem({
       const walls = getRevealedWalls?.() ?? [];
       for (const wall of walls) {
          if (wall.alpha > 1) {
-            // Dark background rect
             noStroke();
-            fill(20, 25, 35, wall.alpha);
-            rect(wall.x, wall.y, wall.w, wall.h, 3);
-
-            // Rocky texture overlay
-            fill(40, 50, 65, wall.alpha);
+            if (wall.isBreakable) {
+               // Lighter grey background to distinguish from solid walls
+               fill(110, 130, 148, wall.alpha);
+               rect(wall.x, wall.y, wall.w, wall.h, 3);
+               fill(155, 172, 185, wall.alpha);
+            } else {
+               // Dark background rect
+               fill(20, 25, 35, wall.alpha);
+               rect(wall.x, wall.y, wall.w, wall.h, 3);
+               // Rocky texture overlay
+               fill(40, 50, 65, wall.alpha);
+            }
             const rockPoints = Array.isArray(wall.rockPoints) ? wall.rockPoints : null;
             if (rockPoints && rockPoints.length > 1) {
                beginShape();
@@ -1884,10 +1932,14 @@ export function createRenderSystem({
       if (!reveals.length) return;
 
       rectMode(CORNER);
+      noStroke();
       for (const r of reveals) {
          const alpha = Math.max(0, Math.min(255, r.alpha ?? 0));
-         noStroke();
-         fill(90, 110, 130, alpha);
+         if (r.isBreakable) {
+            fill(175, 190, 200, alpha);
+         } else {
+            fill(90, 110, 130, alpha);
+         }
          rect(r.x, r.y, r.w, r.h);
       }
    }
