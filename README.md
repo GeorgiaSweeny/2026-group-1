@@ -20,20 +20,8 @@
 ### Video DEMO v4 (2-3 mins long max)
 *(updated 05/03/26)*
 
-
 https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 
-
-
-
-
-
-
-
-
-
-
-<br/>
 <br/>
 
 
@@ -45,20 +33,16 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 
 |Name|Email|Role|
 |:-|:-|:-|
-|Archie Brown|cq25988@bristol.ac.uk||
-|Monal Gupta|ta25702@bristol.ac.uk||
-|Ben Mounce|wv25183@bristol.ac.uk||
-|Georgia Sweeny|dp25498@bristol.ac.uk| Code Reviewer</br>Game Engine / Systems Architecture</br>Game Data & Configuration Design: Input configuration, Tileset property definitions, Map metadata</br>Gameplay Systems Developer: torch, power, lighting systems|
-|Nick Jankov|ve21144@bristol.ac.uk||
-|Jude Hsu|ca20853@bristol.ac.uk||
+|Archie Brown|cq25988@bristol.ac.uk| Co-developer; Lead UI Developer |
+|Monal Gupta|ta25702@bristol.ac.uk| Co-developer; Report contributor; Video Production |
+|Ben Mounce|wv25183@bristol.ac.uk| Co-developer; Report contributor; Video Production |
+|Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer; System Architect; Code reviewer |
+|Nick Jankov|ve21144@bristol.ac.uk| Co-developer & Code Reviewer |
+|Jude Hsu|ca20853@bristol.ac.uk| Report contributor; Co-developer |
 
 </br>
 
-### Kanban Board & Organisation
 
-[GitHub Kanban](https://github.com/orgs/UoB-COMSM0166/projects/171/views/1) - Used track feature tracking & tickets
-
-[Notion Kanban Page](https://www.notion.so/2eef3902b1f0803590afe2a31c236dab?v=2eef3902b1f080509478000c3aa3a4a6&source=copy_link) - Used to manage general planning, organisation, share and document research (hub)
 
 ---
 </br>
@@ -67,57 +51,75 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 # Project Report
 
 ## 1. Introduction
-- 5% ~250 words 
-- Describe your game, what is based on, what makes it novel? (what's the "twist"?) 
-
-Our game is a tense, underwater exploration adventure where **players navigate their way out of abyss** using movement, resource management, and environmental interaction. The core **twist** is the 
-**echolocation-based sonar mechanic**, which allows players to temporarily reveal their surroundings in an **otherwise dark** and hazardous environment. This mechanic drives both **gameplay and atmosphere**,
+Our game is a tense, underwater exploration adventure where players navigate their way out of abyss using movement, resource management, and environmental interaction. The core twist is the 
+echolocation-based sonar mechanic, which allows players to temporarily reveal their surroundings in an otherwise dark and hazardous environment. This mechanic drives both gameplay and atmosphere,
 creating tension and encouraging strategic decision-making.
 
-The game draws inspiration from **Metroidvania-style** design, featuring interconnected rooms, gated areas unlocked through new abilities, and challenges that reward exploration and mastery. Unlike traditional
-underwater games, the use of **sonar as a primary navigation** and discovery tool sets it apart, providing a **fresh experience** where visibility is limited and deliberate planning is essential.
+The game draws inspiration from Metroidvania-style design, featuring interconnected rooms, gated areas unlocked through new abilities, and challenges that reward exploration and mastery. Unlike traditional
+underwater games, the use of sonar as a primary navigation and discovery tool sets it apart, providing a fresh experience where visibility is limited and deliberate planning is essential.
 
-Players must **manage resources** such as power, air, and health while exploring unknown areas. **Strategic** use of the **torch and sonar** is crucial, as these tools consume resources but are necessary for
-survival and progression. This combination of limited visibility, environmental hazards, and resource management emphasizes **careful exploration over fast-paced action**, creating an immersive and atmospheric
+Players must manage resources such as power, and health while exploring unknown areas. Strategic use of the torch and sonar is crucial, as these tools consume resources but are necessary for
+survival and progression. This combination of limited visibility, environmental hazards, and resource management emphasizes careful exploration over fast-paced action, creating an immersive and atmospheric
 gameplay loop.
 
-The game’s **novelty** lies in how the **sonar mechanic integrates with world design, enemies, and lighting**. It encourages players to think tactically, interact meaningfully with the environment, and engage with
-risk versus reward. By combining a familiar exploration framework with a unique visibility mechanic, the game provides a **distinctive experience** that is both challenging and rewarding, appealing to players
-seeking **depth, immersion, and discovery in an underwater setting**.
+The game’s novelty lies in how the sonar mechanic integrates with world design, enemies, and lighting. It encourages players to think tactically, interact meaningfully with the environment, and engage with
+risk versus reward. By combining a familiar exploration framework with a unique visibility mechanic, the game provides a distinctive experience** that is both challenging and rewarding, appealing to players
+seeking depth, immersion, and discovery in an underwater setting**.
 
 ## 2. Requirements 
-- 15% ~750 words
-- Early stages design. Ideation process. How did you decide as a team what to develop? Use case diagrams, user stories.
-
 ### 2.1 Early Stage Design & Ideation
-The game concept was developed collaboratively through group discussions and pitch proposals. Each team member suggested ideas and voted on their favourites, with two concepts centred on echolocation. 
-This mechanic became the foundation, naturally inspiring an underwater exploration theme and tension through limited visibility. The team agreed that the core differentiator would be a sonar-based mechanic,
-supported by darkness and resource management systems. Development was structured around Epics and user stories to align design with implementation.
+The game concept was developed collaboratively through group discussions and pitch proposals. During the early design phase, we used [Notion](https://www.notion.so/Software-Engineering-Project-2eef3902b1f080668320f5a1a2d17915)to document and refine ideas. Each team member proposed a concept [Figure 1: Game Ideas], and the team then voted on their preferred option [Figure 2: Poll Results for Game Ideas]. Two of the proposed concepts were centred on echolocation, which helped establish it as the foundation of the project. Through further discussion, the selected concept evolved into an underwater exploration game, where limited visibility creates tension and supports the overall atmosphere. The game’s core differentiator is its sonar-based mechanic, supported by darkness and resource management systems.
 
+``` jude: Please check that non-members can access the Notion link before submission.```
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <img 
+        src="project-docs/report_figures/Figure 1 - Game Ideas.png" 
+        alt="Figure 1" 
+        width="400"><br>
+      <sub>Figure 1: Game Ideas</sub>
+    </td>
+    <td align="center">
+      <img 
+        src="project-docs/report_figures/Figure 2 - Poll Results for Game Ideas.png" 
+        alt="Figure 2" 
+        width="400"><br>
+      <sub>Figure 2: Poll Results for Game Ideas</sub>
+    </td>
+  </tr>
+</table>
 
 ### 2.2 Paper Prototypes
-Paper prototyping allowed the team to experiment with core mechanics at low cost before coding. Informal playtesting and feedback identified the most engaging mechanics, with the echolocation system receiving
-particularly positive responses. Testers highlighted the tension from limited visibility and sonar use, validating the mechanic and setting.
+In the early stage of development, we created a paper prototype to visualise and test the flow of the game’s core mechanics. This stage allowed the team to explore the overall layout of the game and discuss key design elements such as enemies, player objectives, setting, and what would make the game engaging. Paper prototyping also provided a low-cost way to experiment with ideas before moving into implementation.
 
-Based on this feedback, the team adopted a Metroidvania-inspired structure emphasizing exploration, gradual mastery of abilities, environmental gating, and strategic resource management. 
-These elements complement the sonar mechanic by encouraging players to navigate carefully, conserve resources, and decide when to reveal their surroundings. This phase helped us refine the
-game's identity, confirming that the core appeal lies in controlled exploration, atmosphere, and tension.
+We later asked testers to play through the prototype and share feedback. Their responses helped identify the most engaging aspects of the design, with the echolocation mechanic receiving particularly positive reactions. Testers highlighted the tension created by limited visibility and sonar use, which helped validate both the core mechanic and the underwater setting.
 
-![Descriptive Alt Text](docs/paper-prototype/FlappyBird.gif)
-![Descriptive Alt Text](docs/paper-prototype/SubGame.gif)
+Based on this feedback, the team shaped the game around exploration, tension, and careful resource use. A Metroidvania-inspired structure was chosen to support these goals, allowing progression through interconnected spaces, restricted areas, and gradual access to new abilities. This worked well with the sonar mechanic, as players needed to decide when to reveal their surroundings and when to conserve resources. Overall, the paper prototyping stage helped clarify the game’s direction and confirmed that its main appeal lies in atmosphere, uncertainty, and controlled exploration.
 
----
-</br>
+<p align="center">
+  <img src="project-docs/workshops/paper-prototype/SubGame.gif" alt="Paper prototype demo" width="500" />
+</p>
 
 ### 2.3 Stakeholders - Onion Model
-![Stakeholders Onion Model](https://github.com/user-attachments/assets/b768743b-cfa2-456d-9c32-e7780289a064)
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/b768743b-cfa2-456d-9c32-e7780289a064"
+    alt="Stakeholders Onion Model" width="500" />
+</p>
 
----
-</br>
+### 2.4 Epics and User Stories
+We used epics and user stories to structure the game idea into a clearer and manageable development plan that the team could actually work with. At the start of the project, the overall concept was a bit too broad, so epics helped us organise the project into major areas of player experience and technical functionality, such as player movement, resource management, sonar and lighting, enemies, world progression, interface, and system architecture. 
 
-## 2.4 Epics and User Stories
+For each epic, we wrote features from the perspective of the player, and in some cases from the perspective of the developer. This forced us to think about why a feature mattered, not just what needed to be coded.
 
-### EPIC 1 – Core Player Interaction
+We also used acceptance criteria to define what "completed" looked like. This helped make features more concrete and reduced ambiguity during implementation. It also make it easier to determine what belonged in the MVP and what could be ranked as lower priority.
+
+The main thing we learned from this process was that epics and user stories were most useful when they stayed practical. They helped the team focus on player experience, communicate implementation priorities more clearly.
+
+For repo readibility, we listed two representative examples below. The full set of epics, user stories, and acceptance criteria can be found in the following link: [Full list](Epics_and_user_stories.md)
+
+#### EPIC 1 – Core Player Interaction
 **Description:** The player must move, explore, and interact with the underwater world intuitively.  
 **User Stories:**  
 - As a competitive player, I want responsive movement, so that I feel in control underwater.
@@ -127,7 +129,7 @@ game's identity, confirming that the core appeal lies in controlled exploration,
   
 **Acceptance Criteria:** Movement and physics are frame-rate independent; input is separated from logic; drag and capped fall speed applied consistently.
 
-### EPIC 2 – Resource & Survival Systems
+#### EPIC 2 – Resource & Survival Systems
 **Description:** Players manage limited resources to create tension and strategic decision-making.  
 **User Stories:**  
 - As a player, I want power to drain over time, so that exploration feels risky.
@@ -136,175 +138,74 @@ game's identity, confirming that the core appeal lies in controlled exploration,
   
 **Acceptance Criteria:** Resources drain continuously and predictably; Game Over triggers if any resource reaches zero; UI displays all resources clearly.
 
-### EPIC 3 – Sonar & Lighting Identity Mechanic
-**Description:** The sonar system defines the game’s identity and atmosphere.  
-**User Stories:**  
-- As a player, I want to activate sonar, so that hidden areas are temporarily revealed.  
-- As a player, I want revealed areas to fade over time, so that tension is maintained.  
-- As a player, I want the torch to provide limited visibility, so that I can navigate carefully.
-  
-**Acceptance Criteria:** Sonar pulse reveals environment temporarily; lighting and rendering are modular; enemy reactions vary by type.
+In addition to the inital concept proposals, the lead developer documented discussion points from the ideation stage and produced sevearal early room sketches and map layouts. These drawings helped the team make abstract ideas more concrete, compare possible structures, and visualise how exploration and progression might work in practice. Selectd examples of the maps are included below.
 
-### EPIC 4 – Enemies & Challenge
-**Description:** Enemies create risk and strategic gameplay in each room.  
-**User Stories:**  
-- As a player, I want enemies to patrol, so that the world feels alive.  
-- As a player, I want enemies to react to sonar, torch, or proximity, so that encounters feel meaningful.  
-- As a casual player, I want enemy behaviour to be readable, so that I can anticipate threats.
-  
-**Acceptance Criteria:** Room-specific enemies with defined states; collisions reduce health; reactions vary by enemy type.
-
-### EPIC 5 – World Structure & Progression
-**Description:** The world supports exploration and progression in a Metroidvania style.  
-**User Stories:**  
-- As a player, I want interconnected rooms, so that exploration feels cohesive.
-- As a player, I want gated paths, so that new abilities unlock new areas.
-- As a player, I want the camera to follow me, so that I am immersed in large rooms.
-  
-**Acceptance Criteria:** 3–5 interconnected rooms; abilities unlock new areas; camera clamps to room bounds; reaching final exit triggers win state.
-
-### EPIC 6 – Interface & Game States
-**Description:** Players navigate menus and understand game states clearly.  
-**User Stories:**  
-- As a player, I want a start menu, so that I can begin the game intentionally.
-- As a player, I want a settings menu, so that I can adjust preferences.
-- As a player, I want in-game UI for resources, so that I can manage power, air, and health.
-- As a non-English speaker, I want the UI to use symbols, so that I can understand it without reading.
-  
-**Acceptance Criteria:** Menus pause gameplay; UI shows all resources; Game Over and Win states trigger correctly.
-
-### EPIC 7 – Technical Architecture & Maintainability
-**Description:** The system remains modular and extensible for collaborative development.  
-**User Stories:**  
-- As a developer, I want systems to have single responsibilities, so that debugging is easier.
-- As a future developer, I want to add new systems without rewriting core logic, so that development remains scalable.
-- As a JavaScript developer, I want logic separated from rendering, so that advanced features like layered lighting are easier to implement.
-  
-**Acceptance Criteria:** Modular systems (Input, Physics, Resource, Lighting, Enemy); central engine update order; lighting separated from rendering; deltaTime used for all time-based behaviour; room and camera systems manage world scale independently.
-
----
-</br>
-
-### 2.5 Use Case Diagram
-
-```mermaid
-
-graph TD
-    %% Actors
-    Player["Player"]:::actor
-    Enemy["Enemy AI"]:::actor
-
-    %% Menu / UI Layer
-    Menu["Menu System (Start, Settings)"]:::system
-    UI["In-Game UI (Resource Display, Settings Icon)"]:::system
-    Player --> Menu
-    Player --> UI
-    Menu --> UI
-    Menu -->|Pauses game while open| Movement
-    Menu -->|Pauses game while open| Torch
-    Menu -->|Pauses game while open| Sonar
-    Menu -->|Pauses game while open| Enemy_AI
-
-    %% Gameplay Systems
-    Movement["Player Movement System"]:::system
-    Physics["Underwater Physics (drag, reduced gravity, capped fall)"]:::system
-    Torch["Activate Torch"]:::system
-    Sonar["Activate Sonar"]:::system
-    Resource["Manage Power, Air, Health"]:::system
-    Lighting["Lighting & Visibility"]:::system
-    Room["Room Navigation & Transitions"]:::system
-    Camera["Camera Tracking"]:::system
-    Enemy_AI["Enemy Behavior (Room-local)"]:::system
-    GameOver["Game Over"]:::critical
-    Win["Reach Final Room Exit → Win"]:::critical
-
-    %% Player interactions
-    Player --> Movement
-    Player --> Torch
-    Player --> Sonar
-    Player --> Resource
-    Player --> Room
-
-    %% Physics integration
-    Movement --> Physics
-    Physics --> Camera
-    Torch --> Lighting
-    Sonar --> Lighting
-    Resource --> Torch
-    Resource --> Sonar
-    Resource --> Room
-    Resource --> UI
-
-    %% Enemy reactions (room-local)
-    Room --> Enemy_AI
-    Enemy --> Enemy_AI
-    Enemy_AI -->|React to Player Proximity| Movement
-    Enemy_AI -->|React to Sonar Pulse| Sonar
-    Enemy_AI -->|React to Torch Light| Torch
-
-    %% Enemy damages player
-    Enemy_AI -->|Damage on Contact| Resource
-
-    %% Resource drain → Game Over
-    Resource -->|Power 0| GameOver
-    Resource -->|Air 0| GameOver
-    Resource -->|Health 0| GameOver
-
-    %% Win condition
-    Room -->|Reach exit of final room| Win
-
-    %% Styling
-    classDef actor fill:#f9f,stroke:#333,stroke-width:1.5px
-    classDef system fill:#bbf,stroke:#333,stroke-width:1px
-    classDef critical fill:#f99,stroke:#900,stroke-width:2px,font-weight:bold
-
-
-```
-
----
-</br>
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="project-docs/map-design-photos/room sketches 1.jpg" alt="Figure 5" width="400"><br>
+      <sub>Figure 3: Game Map Sketch by Georgia Sweeny</sub>
+    </td>
+    <td align="center">
+      <img src="project-docs/map-design-photos/room sketches 2.jpg" alt="Figure 6" width="200"><br>
+      <sub>Figure 4: Game Map Sketch by Georgia Sweeny</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img 
+        src="project-docs/map-design-photos/game world sketch v1.jpg" 
+        alt="Figure 3" 
+        width="300"><br>
+      <sub>Figure 5: Initial Game World Sketch by Georgia Sweeny</sub>
+    </td>
+    <td align="center">
+      <img 
+        src="project-docs/map-design-photos/demo world map.png" 
+        alt="Figure 4" 
+        width="300"><br>
+      <sub>Figure 6: Demo World Map by Georgia Sweeny</sub>
+    </td>
+  </tr>
+</table>
 
 ### 2.6 Prioritised Feature Breakdown
-A risk-managed development approach prioritising core mechanics and technical feasibility over feature breadth.
-Based on user stories derived from our game Epics
+To keep the development manageable and technically feasible, this project followed a risk-managed development approach prioritisation strategy. Core mechanics were given priority over feature breadth so that the team members could first deliver a stable and playable MVP. The breakdown below is based on our user stories derived from our game Epics.
 
-| **Priority**            | **Systems / Features**                                                   | **Estimated Implementation Time** |
-| ----------------------- | ------------------------------------------------------------------------ | --------------------------------- |
-| **HIGH (MVP)**          | Player controls (intents: movement, sonar ping, torch toggle)            | 1-2 days (mostly done)            |
-|                         | Physics (underwater movement, drag, collisions, hitboxes)                | 4–5 days                          |
-|                         | Minimal gameplay UI (power meter, sonar cooldown, pause)                 | 1–2 days                          |
-|                         | Resource management (power drain + torch drain, replen)                  | 2–3 days (mostly done)            |
-|                         | Lighting system (darkness overlay + visibility masking)                  | 3–5 days                          |
-|                         | Echolocation / Sonar system (pulse, circular reveal, fade-out, cooldown) | 3–5 days (PoC exists)             |
-|                         | Core Metroidvania structure (3–5 rooms, 1 gate, basic traversal)         | 4–6 days                          |
-| **MEDIUM (Core Depth)** | Room system (room objects, transitions, bounds)                          | 3–5 days                          |
-|                         | Camera system (follow player, clamp to room)                             | 2–3 days                          |
-|                         | Torch visual enhancement (improved lighting radius)                      | 1–3 days                          |
-|                         | Enemy system (basic patrol / contact damage)                             | 3–5 days                          |
-|                         | Enemy awareness to sonar (alert state within pulse radius)               | 4–7 days                          |
-|                         | Exploration ability (double jump unlock, etc.)                           | 2–4 days                          |
-|                         | Simple upgrade system (increase sonar range or power capacity)           | 3–5 days                          |
-| **LOW (Stretch)**       | Save system (checkpoint-based)                                           | 2–4 days                          |
-|                         | Achievement system (internal milestone tracking)                         | 1–2 days                          |
-|                         | Advanced enemy AI (hunt behaviour, multi-state logic)                    | 4–8 days                          |
-|                         | Sonar-reactive mini-boss encounter                                       | 5–10 days                         |
-|                         | Environmental physics extensions (currents, pressure zones)              | 3–6 days                          |
-|                         | Public player database / leaderboard                                     | 7–14+ days                        |
+| **Priority**            | **Systems / Features**                                                   |
+| ----------------------- | ------------------------------------------------------------------------ | 
+| **HIGH (MVP)**          | Player controls (intents: movement, sonar ping, torch toggle)            |
+|                         | Physics (underwater movement, drag, collisions, hitboxes)                |
+|                         | Minimal gameplay UI (power meter, sonar cooldown, pause)                 | 
+|                         | Resource management (power drain + torch drain, replen)                  |
+|                         | Lighting system (darkness overlay + visibility masking)                  | 
+|                         | Echolocation / Sonar system (pulse, circular reveal, fade-out, cooldown) | 
+|                         | Core Metroidvania structure (3–5 rooms, 1 gate, basic traversal)         | 
+| **MEDIUM (Core Depth)** | Room system (room objects, transitions, bounds)                          | 
+|                         | Camera system (follow player, clamp to room)                             | 
+|                         | Torch visual enhancement (improved lighting radius)                      | 
+|                         | Enemy system (basic patrol / contact damage)                             | 
+|                         | Enemy awareness to sonar (alert state within pulse radius)               | 
+|                         | Exploration ability (double jump unlock, etc.)                           | 
+|                         | Simple upgrade system (increase sonar range or power capacity)           | 
+| **LOW (Stretch)**       | Save system (checkpoint-based)                                           | 
+|                         | Achievement system (internal milestone tracking)                         | 
+|                         | Advanced enemy AI (hunt behaviour, multi-state logic)                    | 
+|                         | Sonar-reactive mini-boss encounter                                       | 
+|                         | Environmental physics extensions (currents, pressure zones)              | 
+|                         | Public player database / leaderboard                                     | 
 
 ---
-</br>
-
 ## 3. Design
 
-- 15% ~750 words 
-- System architecture. Class diagrams, behavioural diagrams.
+This section explains the final system architecture of the game and how it evolved during development. At the start of the project, we used the p5.js online editor to prototype individual features, and we initially expected the design to be described using more traditional object-oriented modelling. However, as the prototype grew, maintaining shared game state across separate features became increasingly difficult.
 
----
-</br>
-  
+Instead of placing most behaviour inside a few large classes, the project developed into a more modular, system-oriented structure where game data, input, logic, rendering, and world state are separated into distinct responsibilities. The final design is therefore not strongly inheritance-based. The diagrams in this section explain the implemented architecture, focusing on shared state, system responsibilities, and runtime behaviour.
+
+We also created a code architecture guide ([CODE_ARCHITECTURE_GUIDE.md](CODE_ARCHITECTURE_GUIDE.md)) to help team members understand the overall structure of the codebase and become familiar with the responsibilities of each system.
+
 ### 3.1 System Architecture
-
-The project is built using a **modular, state-driven architecture** that separates **logic, rendering, input, and game world state.** Each system has a clear responsibility and communicates only via defined interfaces, which simplifies debugging, allows independent testing, and reduces unintended side-effects when new features are added.
+The project is built using a **modular, state-driven architecture** that separates **logic, rendering, input, and game world state.** Each system has a clear responsibility and operates on shared state in a controlled order. This simplifies our debugging work, allows independent testing, and reduces unintended side-effects when new features are added.
 
 This **high-level architecture snapshot** illustrates the responsibilities of each system:
 
@@ -324,176 +225,34 @@ Engine             → orchestrates
 ```
 
 **Key separation of concerns:**
-
-- **LightingSystem** decides what is visible - **RenderSystem** decides how it is drawn.
+- **LightingSystem** decides what is visible 
+- **RenderSystem** decides how it is drawn.
 - **CameraSystem** determines which portion of the world is in view.
 - **RoomSystem** manages which data is active for the current room.
 
-This separation ensures the game remains predictable, testable, and modular, while supporting incremental development of complex systems like sonar without destabilising rendering.
+This separation helps keep the game predictable, testable, and modular. It also supports incremental development of complex systems like sonar without destabilising rendering.
 
----
-</br>
+### 3.2 Structural Architecture Diagram
 
-### 3.2 Behavioural Flow
-The **Engine + Systems + Input Bridge + Render Flow** diagram shows the **per-frame execution order:**
+The structural architecture diagram below shows how the main runtime components are organised. Instead of focusing on inheritance relationships, it shows how the game loop, shared data, update systems, and render systems are separated and connected during execution.
 
-```jsx
-        ┌──────────────────────┐
-        │        p5.js         │
-        │   (runtime / DOM)    │
-        └───────────┬──────────┘
-                    │ keyPressed() / keyIsDown()
-                    ▼
-        ┌────────────────────-──┐
-        │     Input Bridge      │  ← Lives in sketch.js
-        │ (global p5 callbacks) │
-        └───────────┬──────-────┘
-                    │ forwards events
-                    ▼
-        ┌─────────────────────-─┐
-        │     Input System      │
-        │  - update(deltaTime)  │
-        │  - onKeyPressed()     │
-        │  - sets player.intent │
-        └───────────┬────────-──┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Player System    │
-        │  - reads intent...   │
-        │  - apply movement    │
-        │  - jump logic        │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌────────────────────-──┐
-        │    Physics System     │
-        │  - apply gravity      │
-        │  - resolve collisions │
-        │  - clamp to room      │
-        └───────────┬─────────-─┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Resource System  │
-        │  - drain power       │
-        │  - handle pickups    │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌────────────────────---──┐
-        │     Sonar System        │
-        │  - drain power          |
-        │  - expand pulse         │
-        │  - reveal environment   │
-        │  - alert nearby enemies │
-        └───────────┬─────────---─┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Enemy System     │
-        │  - update AI         │
-        │  - move enemies      │
-        │  - respond to sonar  │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌──────────────────────┐
-        │     Torch System     │
-        │  - drain power       │
-        │  - flicker timing    │
-        │  - active state      │
-        │  - exposes light     │
-        └───────────┬──────────┘
-                    │
-                    ▼
-        ┌────────────────────--──┐
-        │   Lighting System      │
-        │  - collects lights     │
-        │  - calculates radius   │
-        │  - prepares light      │
-        │    data for render     │
-        │  (prepare light mask)  │
-        └───────────┬────────--──┘
-                    │
-                    ▼
-        ┌────────────────────--──┐
-        │     Room System        │
-        │  - manage room state   │
-        │  - handle transitions  │
-        │  - expose active room  │
-        └───────────┬───────-───-┘
-                    │
-                    ▼
-        ┌──────────────────---────┐
-        │    Camera System        │
-        │  - follow player        │
-        │  - clamp to active room │
-        │  - compute offsets      │
-        └───────────┬────────---──┘
-                    │
-                    ▼
-        ┌───────────────────-───┐
-        │     Render System     │
-        │  - draw background    │
-        │  - draw platforms     │
-        │  - draw player        │
-        │  - draw enemies       │
-        │  - draw darknessLayer │
-        │  - apply lights       │
-        │  - draw UI            │
-        └───────────┬───────-───┘
-                    │
-                    ▼
-        ┌────────────────────-──┐
-        │        Canvas         │
-        │    (visual output)    │
-        └───────────────────-───┘
-```
-
-**This flow demonstrates:**
-
-- **How input is captured and translated into player intent.**
-- The **ordered system updates** ensuring consistent behaviour, including movement, collisions, power/resource changes, sonar pulses, lighting calculations, and camera movement.
-- **Render separation**, which keeps frame-dependent visual output isolated from game logic.
-
-### The architecture supports:
-
-- **Incremental development** — new systems like sonar or advanced enemy AI can be added without refactoring existing modules.
-
-- **Modularity** — each system has a single responsibility, reducing coupling and making debugging easier.
-
-- **Frame-rate independence** — all movement, power drain, and pulse timings use deltaTime, ensuring consistent behaviour across devices.
-
-- **World management** — RoomSystem + CameraSystem ensures large immersive levels where the viewport follows the player without breaking modularity.
-
-- **Lighting and visibility** — LightingSystem and RenderSystem separation allows sonar and torch light to reveal the environment correctly while keeping draw code clean.
-
-The diagrams collectively **visualise the structure and runtime behaviour**, showing both **static responsibilities** and **dynamic per-frame interactions**. This provides clarity for team collaboration, future feature integration, and assessment of the game’s technical design.
-
-### 3.3 Class diagram
-
-As mentioned above, the structure of this project separates the container, the shared data/state, and the logic into different files. A traditional UML class diagram is useful for showing the static structure of software, such as classes, inheritance, and relationships. However, that kind of diagram does not represent this project particularly well, because the project is organised more around systems, shared state, and execution flow than around object-oriented inheritance.
-
-For that reason, this diagram is intended less as a traditional “who inherits from what” class diagram, and more as a structural overview of how data flows through the game and how different systems interact during execution.
-
-This diagram is divided into four parts:
+The diagram is divided into four parts:
 
 1. **Core loop and inputs**
 
-   This part shows how the game is driven at the highest level. It begins with p5.js event functions such as `keyPressed` and `draw`, which feed into `sketch.js`, the main orchestrator. `sketch.js` then triggers the engine, which runs the update sequence each frame.
+    This part shows the entry points of the game. p5.js event functions such as `keyPressed` and `draw` are handled by `sketch.js`, which acts as the main orchestrator and calls the engine during each frame.
 
 2. **Data / entities**
 
-   This section represents the shared game state that the systems read from and modify. It includes the player object, room state, and global game state. Rather than owning behaviour directly, these elements mainly store the data that the systems operate on.
+    This part shows the shared state used by the systems, including the player object, room data, and global game state. These objects mainly store information such as position, velocity, power, room layout, and current game status.
 
 3. **Update phase / logic**
 
-   This part shows the ordered sequence of gameplay systems executed by the engine during each update cycle. Each system performs a specific responsibility, such as handling input, applying movement, resolving physics, updating resources, managing torch and sonar behaviour, processing room transitions, and updating the camera. Together, these systems implement the game logic by reading and mutating the shared state.
+    This part shows the order in which gameplay systems update the shared state. The engine runs systems such as input, player movement, physics, resources, torch, sonar, room transitions, and camera updates in sequence.
 
 4. **Render phase**
 
-   This section shows how the current game state is turned into what the player sees on screen. Rendering-related systems use the updated data to calculate lighting, draw the world, and display menu or overlay screens such as pause and win states.
+    This part shows how the updated state is converted into screen output. Lighting and render systems use the current player, room, sonar, and camera data to draw the visible game world and overlay screens.
 
 ```mermaid
 
@@ -568,8 +327,33 @@ flowchart TD
 
 ```
 
----
-## Week 7 - User & Heuristic Evaluation
+### 3.3 Runtime Behavioural Flow: Sonar Activation
+
+The structural architecture diagram shows how the main systems are connected. This behavioural flow shows how those systems cooperate during one core gameplay action: activating sonar.
+
+<p align="center">
+  <img src="project-docs/report_figures/F7-Runtime behaviour flow.png" alt="Runtime behaviour flow" width="400" />
+  <br>
+    <sub>Figure 7: Runtime Behavioural Flow for Sonar Activation</sub>
+</p>
+
+This flow shows that sonar is not drawn directly from player input. The input first becomes an intent, then the relevant systems update resources, visibility, enemy behaviour, and rendering in sequence. This keeps the core mechanic modular and prevents rendering logic from being mixed with gameplay logic.
+
+
+### 4. Implementation (DL: 26 Apr 2026)
+
+- 15% ~750 words
+
+- Describe implementation of your game, in particular highlighting the TWO areas of *technical challenge* in developing your game. 
+
+### 5. Evaluation (DL: 27 Apr 2026)
+
+- 15% ~750 words
+- One qualitative evaluation (of your choice) 
+- One quantitative evaluation (of your choice) 
+- Description of how code was tested. 
+
+## User & Heuristic Evaluation
 
 One participant was recruited from an adjacent group. Two observers recorded critical moments while the participant played through the prototype, verbalising their thoughts. Two tasks were set:
 - Navigate from the starting room to the next area using the sonar mechanic
@@ -608,63 +392,148 @@ fewer or no pickups.
 
 ---
 
-### Implementation
+### 6. Process
 
-Before tackling the core mechanics for our game, we established the foundational architecture using an Object-Oriented approach. All physical entities in the game inherit from the base hitbox class, ensuring a standardisation method for position tracking and collision detection. The initial physics implementation was difficult, especially maintaining the consistent movement speed across varying frame rates. To resolve this, we implemented a fixed timestep loop, which detached the game logic from the rendering framerates. This ensured smooth and predictable movements from both the player and the dynamic objects.
+Our team worked through a process of collaborative planning, exploratory prototyping, and later integration into a shared codebase. In the early stage, we used Notion to collect game ideas, record discussion points, and organise epics, user stories, and acceptance criteria. This helped us turn a broad underwater exploration concept into a more manageable development plan.
 
-### Challenge 1 - Sonar Pulse Mechanic
+#### First sprint: exploratory prototyping
+After agreeing on the main theme, we began with a two-week exploratory sprint. Team members selected feature areas from the user stories and built early prototypes using the p5.js online editor. These prototypes were then shared on Notion so that the rest of the team could review the design, compare different approaches, and decide which ideas were suitable for the MVP. This allowed us to test early versions of sonar, lighting, movement, UI, and room-navigation mechanics before committing to a single implementation.
 
-Given the dark nature of our underwater setting, the sonar pulse was a critical mechanic used for the navigation of the player to reveal terrain and hazards throughout the map. Implementing this presented significant performance and rendering challenges, as our primary design goal was to implement this without mutating the shared game state of our room and entities. Instead of a simple expanding radius, we built a custom ray-casting engine. When triggered, the system spawns a pulse consisting of 360 individual particles. These particles are each assigned a velocity vector pointing out at 1-degree intervals. Every frame, these particles step outward and check for point vs bounding box collisions against normalised wall and hazard data.
+<p align="center">
+    <img src="project-docs/report_figures/F8-1-Feature Tests.png" alt="Feature tests" width="400" />
+    <img src="project-docs/report_figures/F8-2-Feature Tests.png" alt="Feature tests" width="400" />
+    <br>
+    <sub>Figure 8: Feature Test Examples</sub>
+</p>
 
-Another significant challenge faced was managing the temporary visual of the revealed state of the environment without directly modifying the physical walls or hazards. To solve this challenge, we utilised JavaScript WeakMap structure using the wallAlpha and hazardAlpha to reveal and fade the objects revealed by the sonar.
+This approach worked well during the early creative stage because it encouraged low-risk experimentation. Team members could test ideas independently without immediately affecting the shared codebase, and the feature tests provided visual evidence that made discussions more concrete. However, the limitation of this approach became clearer during implementation. Since prototypes were built separately, they often used different assumptions about game state or object structure. As a result, they could not simply be copied into the final game and required additional integration work.
 
-When the sonar particle collides with an entity, the particle is destroyed, and the entity is used as a key in the WeakMap to store the alpha transparency value. The value slowly degrades over time using the update() loop. The rendering pipeline then polls getRevealedWalls(), which draws an added glow only for the items that exist in WeakMap. This method completely decoupled our visual pulse from the core game physics, preventing complex bugs. For instance, if a missile destroys a wall, the WeakMap automatically drops the reference, seamlessly updating the environment without crashing the sonar system.
+After the first sprint, we identified the tasks needed to move from separate prototypes toward a runnable MVP. Team members selected tasks based on their interests and added their names to the relevant task cards as shown in Figure 9. Alongside Notion, we used the GitHub Kanban board as shown in Figure 10 to track feature development, progress, and outstanding issues.
 
-### Challenge 2
+<p align="center">
+    <img src="project-docs/report_figures/F9-1 Task Assignment.png" alt="Task assignment" width="400" />
+    <img src="project-docs/report_figures/F9-2 Task Assignment.png" alt="Task assignment" width="400" />
+    <br>
+    <sub>Figure 9: Task Assignment Examples</sub>
+</p>
 
-- 15% ~400 words left
+<p align="center">
+    <img src="project-docs/report_figures/F10-Kanban.png" alt="GitHub Kanban board" width="600" />
+    <br>
+    <sub>Figure 10: GitHub Kanban Board</sub>
+</p>
 
-- Describe implementation of your game, in particular highlighting the TWO areas of *technical challenge* in developing your game.
+Although this gave the team a clearer task structure, it was difficult to follow perfectly in practice. Many features depended on unfinished work from other areas. For example, sonar, lighting, and camera movement all needed access to shared game state. AI coding support also changed the workflow. Team members could quickly generate draft implementations of others' features instead of waiting for another task to be completed. This helped individuals make progress, but it also created overlap between tasks and made isolated development harder than expected.
 
----
+#### First sprint retrospective
+The main outcome of the first sprint was that the team had generated useful feature ideas, but the workflow was still too fragmented for implementation. The lesson we learnt was that prototypes were valuable for exploration, but they needed to be followed by clearer integration planning, shared architecture decisions, and better visibility over dependencies between tasks.
 
-### Evaluation
+To respond to this, we moved toward shared ownership and peer review for some overlapping areas. For example, UI-related work involved more than one co-developer, and pull requests were reviewed by more than one person where possible. This reduced the risk of isolated decisions and gave the team more opportunities to check code quality. However, shared ownership also had limitations: when responsibilities were not clearly divided, it could become harder to know who had the final decision on a feature or whether a task was fully complete.
 
-- 15% ~750 words
+Team members also had different communication styles and worked at different stages of the project. This made regular coordination important. When communication was less consistent, it became harder to know which features were ready, which parts of the codebase had changed, and how different systems were expected to connect.
 
-- One qualitative evaluation (of your choice) 
+#### Second sprint: integration and MVP focus
+The second sprint therefore focused more strongly on integration. Instead of creating further isolated prototypes, the team worked on combining the strongest ideas into a single playable version. We also prioritised the MVP more strictly, separating essential features from stretch goals and paying closer attention to how different systems interacted.
 
-- One quantitative evaluation (of your choice) 
+#### Second sprint retrospective
+Overall, the team’s process evolved from open-ended exploration into a more structured development workflow. The early prototyping stage helped us discover the strongest mechanics, while the later integration stage helped us turn those mechanics into a playable game. The main lesson was that creative experimentation is useful at the start of a project, but it needs to be followed by clear ownership, integration planning, code review, and regular communication.
 
-- Description of how code was tested. 
+### 7. Sustainability
 
-### Process 
+This section considers how sustainability would apply if *The Abyss* became a large-scale, widely played game in the future. In that scenario, sustainability would not only mean reducing the environmental footprint of the software, but also considering the technical, social, individual, economic, and environmental effects created by long-term use. This follows the idea that sustainability is a cross-cutting concern. It affects software requirements, architecture, implementation, deployment, and the wider behaviour encouraged by the system.
 
-- 15% ~750 words
+#### Technical sustainability
 
-- Teamwork. How did you work together, what tools and methods did you use? Did you define team roles? Reflection on how you worked together. Be honest, we want to hear about what didn't work as well as what did work, and importantly how your team adapted throughout the project.
+Technical sustainability would be important if the game continued to grow after the project. The current modular architecture supports this because input, player movement, gameplay features, and rendering are separated into different modules. This would make the game easier to maintain and extend if new rooms, mechanics, or accessibility options were added later.
 
-### Sustainability
+A future version should also avoid letting the codebase become too complex to maintain. Code review, documentation, performance checks, and clear system boundaries would reduce the risk of the game becoming difficult to change as it scales. This supports technical sustainability because future developers would be able to add features without rewriting the whole codebase.
 
-- 10% ~750 words
+#### Social, individual, and economic sustainability
 
-- Evidence of the impact of your game across the environment
+If the game succeeded massively in the future, social and individual sustainability would become more important. A future version should therefore be accessible to people with different abilities, devices, and experience levels. For example, it should consider remappable controls, readable UI, colour-contrast checks for players with visual impairments, and support for lower-spec hardware to reduce pressure on players to upgrade devices unnecessarily. These choices would make the game more inclusive.
 
-### Conclusion
+Economic sustainability would also matter if the game became commercial. The game should use a fair pricing model that helps maintain player trust while still supporting future development and maintenance.
+
+#### Direct environmental sustainability
+
+If the game succeeded massively in the future, it would also have a direct environmental footprint. This would come from player devices, downloads, network traffic, hosting, analytics, and the tools used to develop and update the game. To reduce this impact, developers should keep the game lightweight and efficient. For example, images and audio files could be compressed, unnecessary background processing could be avoided, and CPU, storage, and network use should be monitored as the game scales.
+
+If online features such as cloud saves or multiplayer were added, the server infrastructure should scale with actual player demand instead of running more resources than needed. Hosting choices should also consider data-centre efficiency and the availability of renewable energy.
+
+#### Enabling and behavioural effects
+
+The game could also encourage players to reflect on sustainability through its design. *The Abyss* already uses limited power, darkness, and careful exploration as core mechanics. A future version could connect these mechanics more clearly to environmental issues such as resource scarcity, fragile underwater ecosystems, or water pollution. This should be done through gameplay rather than only through text. For example, overusing light or sonar could drain resources or disturb sensitive coral areas, while careful exploration could be rewarded. Instead of simply telling players that resources are limited, the game would allow them to experience the consequences of over-consumption and potential environmental risk.
+
+Overall, *The Abyss* already contains mechanics that could support sustainability awareness by allowing players to engage with sustainability ideas through gameplay rather than direct instruction. If the game succeeded massively in the future, sustainability would need to be considered across all major dimentions including technical, social, individual, economic, and environmental effects, and the behaviour encouraged by the game.
+
+
+### 8. Conclusion 
 
 - 10% ~500 words
 
 - Reflect on the project as a whole. Lessons learnt. Reflect on challenges. Future work, describe both immediate next steps for your current game and also what you would potentially do if you had chance to develop a sequel.
 
-### Contribution Statement
+### 9. Contribution Statement
 
 - Provide a table of everyone's contribution, which *may* be used to weight individual grades. We expect that the contribution will be split evenly across team-members in most cases. Please let us know as soon as possible if there are any issues with teamwork as soon as they are apparent and we will do our best to help your team work harmoniously together.
 
-### AI Statement
-~250 words
+<div align="center">
+    <table>
+        <tr>
+            <th>Contributor</th>
+            <th>Contribution Weighting</th>
+        </tr>
+        <tr>
+            <td>Archie Brown</td>
+            <td align="center">1.0</td>
+        </tr>
+        <tr>
+            <td>Monal Gupta</td>
+            <td align="center">1.0</td>
+        </tr>
+        <tr>
+            <td>Ben Mounce</td>
+            <td align="center">1.0</td>
+        </tr>
+        <tr>
+            <td>Georgia Sweeny</td>
+            <td align="center">1.0</td>
+        </tr>
+        <tr>
+            <td>Nick Jankov</td>
+            <td align="center">1.0</td>
+        </tr>
+        <tr>
+            <td>Jude Hsu</td>
+            <td align="center">1.0</td>
+        </tr>
+    </table>
+    <sub>Table 1: Team Contributions</sub>
+</div>
 
-- summarise your teams use of AI so we know where to give you credit for work done.
-- eg. to make game visuals, help writing code (help to debug, explictily writng any code with AI, to review code etc.) 
+### 10. AI Statement
+
+AI tools were used throughout the project as development support rather than as a replacement for team decision-making. Team members used AI to explore gameplay ideas, draft code, debug errors and improve documentation. We also continued to use conventional search engines and technical documentation when researching gameplay logic, p5.js behaviour, Tiled map editing, and possible implementation approaches.
+
+However, AI-generated code could not be accepted unconditionally. Suggested solutions often needed to be adapted to the actual structure of our game, especially where several systems shared state, such as sonar and rendering. Team members also had to become familiar with the game architecture before AI support was useful. When AI could not successfully fix a bug, we still had to trace the issue ourselves, understand how the relevant systems interacted, and decide whether to revise or rewrite the suggested code.
+
+Some parts of the project were also largely manual design work rather than code generation. For example, the game maps were created using Tiled and exported as `.json` files for the game to load. Although AI could suggest possible map layouts or design ideas, the actual maps still had to be built, checked, and adjusted manually so that room structure, collision boundaries, and gameplay flow worked correctly.
+
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="project-docs/map-design-photos/crab caverns map.png" alt="Crab caverns map" width="400" /><br>
+      <sub>Figure 11: Crab Caverns Map Created in Tiled</sub>
+    </td>
+    <td align="center">
+      <img src="project-docs/map-design-photos/spike maze map v2.png" alt="Spike maze map" width="400" /><br>
+      <sub>Figure 12: Spike Maze Map Created in Tiled</sub>
+    </td>
+  </tr>
+</table>
+
+Overall, AI helped us move faster, but moving further still required professional software engineering skills, including architectural understanding, debugging, code review, testing, and design judgement. As AI makes code generation easier, critical thinking becomes more important than ever. In the end, final responsibility for the project remained with the developers.
+
 
 ### Additional Marks
 
