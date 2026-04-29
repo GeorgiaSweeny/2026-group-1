@@ -111,8 +111,8 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
   const collectableAlpha = new WeakMap();
   const enemyAlpha = new WeakMap();
   let cooldownTimerMs = 0;  // real milliseconds in sonar system time
-  let effectiveCooldownMs = BASE_COOLDOWN_MS;
   let prevCollectableSet = new Set();
+  let effectiveCooldownMs = BASE_COOLDOWN_MS;  // persists across frames, updated each update()
 
   return {
     update() {

@@ -89,10 +89,11 @@ let glowSystem;
 let lastEnsuredRoom = null;
 //let gameState = "MENU";
 let gameState = "MAIN_PAGE";
-let showControlsOverlay = false;   // toggled by H key
+let showControlsOverlay = false;   // toggled by C key
 let storyDialogActive = false;     // story dialog shown on game start
 let hasSeenIntro = false;          // true after player passes STORY_PAGE → CONTROLS flow
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
+let controlsReturnState = null;   // non-null when controls page opened from settings/overlay
 let gameVersion = "full"; // "demo" | "full"
 let sessionVersion = "full";   // locked-in version for the current session
 let sessionDifficulty = null;  // locked-in difficulty for the current session ("EASY"|"HARD")
@@ -538,7 +539,7 @@ function preload() {
 
   assets[GAMEPLAY_OVERLAY_ASSET_KEY] = loadImage(
     GAMEPLAY_OVERLAY_PATH,
-    undefined,
+    () => {},
     () => {
       assets[GAMEPLAY_OVERLAY_ASSET_KEY] = null;
       console.warn(
@@ -549,7 +550,7 @@ function preload() {
 
   assets[SCRAP_ICON_ASSET_KEY] = loadImage(
     SCRAP_ICON_PATH,
-    undefined,
+    () => {},
     () => {
       assets[SCRAP_ICON_ASSET_KEY] = null;
       console.warn(`[sketch] Scrap icon not found at ${SCRAP_ICON_PATH}`);
@@ -558,7 +559,7 @@ function preload() {
 
   assets[POWER_CELL_ASSET_KEY] = loadImage(
     POWER_CELL_PATH,
-    undefined,
+    () => {},
     () => {
       assets[POWER_CELL_ASSET_KEY] = null;
       console.warn(`[sketch] Power cell sprite not found at ${POWER_CELL_PATH}`);
@@ -567,7 +568,7 @@ function preload() {
 
   assets[SCRAP_SPRITE_ASSET_KEY] = loadImage(
     SCRAP_SPRITE_PATH,
-    undefined,
+    () => {},
     () => {
       assets[SCRAP_SPRITE_ASSET_KEY] = null;
       console.warn(`[sketch] Scrap sprite not found at ${SCRAP_SPRITE_PATH}`);
@@ -653,6 +654,8 @@ function setup() {
     () => enemySystem?.getEnemies() ?? [],
   );
 
+  particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
+
   missileSystem = createMissileSystem(
     player,
     () => enemySystem?.getEnemies() ?? [],
@@ -660,8 +663,6 @@ function setup() {
     soundSystem,
     particleSystem,
   );
-
-  particleSystem = createParticleSystem(player, () => roomSystem.getCollisionData?.());
 
   glowSystem = createGlowSystem(
     player,
@@ -679,6 +680,7 @@ function setup() {
       roomSystem
         .getCollectables()
         .filter((c) => !resourceManagementSystem?.isCollected(c)),
+    () => enemySystem?.getPiranhaLights?.() ?? [],
   );
 
   resourceManagementSystem = createResourceManagementSystem(
@@ -796,6 +798,11 @@ function setup() {
     onVolumeChange: (v) => {
       soundSystem.setMasterVolume(v);
     },
+    onOpenControls: () => {
+      controlsReturnState = gameState;
+      pauseMenuSystem?.togglePause();
+      gameState = "CONTROLS";
+    },
     initialControlMode: CONTROLS.DEFAULT_MODE,
   });
 
@@ -841,6 +848,11 @@ function draw() {
     soundSystem?.stop('movement');
   }
 
+  // Check power depletion before any state routing so game over renders on the SAME frame
+  if (isGameplayState && player.power?.isEmpty()) {
+    gameState = GAME_OVER_STATE;
+  }
+
   if (gameState === "MAIN_PAGE") {
     mainPageSystem.draw(mainPageBg);
     return;
@@ -852,9 +864,9 @@ function draw() {
   }
 
   if (gameState === "CONTROLS") {
-  controlsPageSystem.draw(menuBg);
-  return;
-}
+    controlsPageSystem.draw(menuBg, controlsReturnState !== null);
+    return;
+  }
 
   if (gameState === "MENU") {
     menuSystem.draw(menuBg);
@@ -917,6 +929,7 @@ function draw() {
       engine.update();
       accumulator -= TIME.fixedDeltaTime;
     }
+    // Check power depletion BEFORE rendering so game over appears immediately
     if (player.power?.isEmpty()) {
       gameState = GAME_OVER_STATE;
     }
@@ -981,11 +994,6 @@ function keyPressed() {
     player.actionIntent.toggleControls = false;
   }
 
-  if (player?.actionIntent?.accept) {
-    if (workshopSystem?.isWorkshopOpen()) workshopSystem.toggleWorkshop();
-    player.actionIntent.accept = false;
-  }
-
   // Only process other actions if not paused
   if (pauseMenuSystem?.isPaused()) return;
 }
@@ -1010,10 +1018,12 @@ function mousePressed() {
     return;
   }
 
-  // Controls overlay click — dismisses and starts gameplay
+  // Controls overlay — only the BACK button dismisses it
   if (showControlsOverlay) {
-    showControlsOverlay = false;
-    gameState = "PLAYING";
+    if (controlsPageSystem.checkClick(true) === "BACK") {
+      soundSystem?.play('buttonClick', 0.8);
+      showControlsOverlay = false;
+    }
     return;
   }
 
@@ -1036,10 +1046,18 @@ function mousePressed() {
   }
 
   if (gameState === "CONTROLS") {
-    const selection = controlsPageSystem.checkClick(mouseX, mouseY);
+    const standalone = controlsReturnState !== null;
+    const selection = controlsPageSystem.checkClick(standalone);
     if (selection === "BACK") {
       soundSystem?.play('buttonClick', 0.8);
-      gameState = "STORY_PAGE";
+      if (standalone) {
+        const returnTo = controlsReturnState;
+        controlsReturnState = null;
+        pauseMenuSystem.openSettingsMenu(returnTo === "SETTINGS");
+        gameState = returnTo;
+      } else {
+        gameState = "STORY_PAGE";
+      }
     } else if (selection === "NEXT") {
       soundSystem?.play('buttonClick', 0.8);
       hasSeenIntro = true;
@@ -1321,22 +1339,14 @@ function checkStoryDialogClick(mX, mY) {
 
 //======================================
 // CONTROLS OVERLAY
-// Toggled by H key — shows control bindings on top of gameplay
+// Toggled by C key — shows control bindings on top of gameplay
 //======================================
 function drawControlsOverlay() {
-  // Semi-transparent backdrop
   fill(0, 0, 0, 160);
   noStroke();
   rect(0, 0, width, height);
 
-  // Draw the controls page system on top
-  controlsPageSystem.draw(null);
-
-  // Close hint at bottom
-  fill(255, 255, 255, 180);
-  textAlign(CENTER, CENTER);
-  textSize(16);
-  text("Press H or click to close", width / 2, height - 30);
+  controlsPageSystem.draw(null, true);
 }
 
 function windowResized() {
