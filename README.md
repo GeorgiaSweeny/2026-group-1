@@ -385,11 +385,11 @@ The structural architecture diagram shows how the main systems are connected. Th
 This flow shows that sonar is not drawn directly from player input. The input first becomes an intent, then the relevant systems update resources, visibility, enemy behaviour, and rendering in sequence. This keeps the core mechanic modular and prevents rendering logic from being mixed with gameplay logic.
 
 
-### 4. Implementation
+## 4. Implementation
 
 Before tackling the core mechanics of our game, we established a foundational architecture using an Object-Oriented approach. All physical entities inherit from a base Hitbox class, ensuring a standardised method for position tracking and collision detection. Initial physics implementation proved difficult, particularly maintaining consistent movement speeds across varying frame rates. To resolve this, we implemented a fixed timestep loop (TIME.fixedDeltaTime), which detached the game logic from the rendering framerate. This ensured smooth and predictable movement for both the player and dynamic objects.
 
-# Challenges
+### Challenges
 Technical Challenge 1: The Sonar Pulse Mechanic
 Given the dark nature of our underwater setting, the sonar pulse is a critical navigation mechanic used to reveal terrain, enemies, and hazards. Implementing this presented significant performance and architectural challenges. Our primary design goal was to achieve this without mutating the shared game state of our room and entities, ensuring the rendering pipeline remained decoupled from the physics engine.
 
@@ -410,7 +410,7 @@ Furthermore, the system was designed to be highly scalable to accommodate player
 [Figure 3]
 Screenshot of the game showcasing the additive glow of the sonar, revealing a dark environment.
 
-# Technical Challenge 2: Resource Economy and State Synchronisation
+### Technical Challenge 2: Resource Economy and State Synchronisation
 
 The second major technical hurdle was designing a scalable resource and hazard economy. This required parsing raw map data into actionable game logic and synchronising player state across multiple decoupled systems (the physics loop, the resource manager, and the UI workshop) without creating race conditions or tightly coupled spaghetti code.
 
