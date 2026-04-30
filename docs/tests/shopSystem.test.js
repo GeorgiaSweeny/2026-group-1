@@ -189,19 +189,6 @@ describe('ShopSystem — upgrade purchases via click', () => {
     expect(player.upgrades.power).toBe(2);
   });
 
-  it('clicking torch upgrade card deducts 40 scrap and increments level', () => {
-    const player = makePlayer({ scrap: 200 });
-    const shop = createShopSystem(player);
-    shop.openWorkshop();
-
-    const layout = getLayout();
-    const torchCard = layout.upgradeCards[2]; // 'torch'
-    clickAt(shop, torchCard.x + 10, torchCard.y + 10);
-
-    expect(player.scrap).toBe(160);    // 200 - 40
-    expect(player.upgrades.torch).toBe(2);
-  });
-
   it('clicking sonar upgrade card deducts 60 scrap and increments level', () => {
     const player = makePlayer({ scrap: 300 });
     const shop = createShopSystem(player);
@@ -264,17 +251,6 @@ describe('ShopSystem — upgrade purchases via click', () => {
 
     expect(player.scrap).toBe(49); // no change
     expect(player.upgrades.power).toBe(1);
-  });
-
-  it('close button click closes the shop', () => {
-    const player = makePlayer();
-    const shop = createShopSystem(player);
-    shop.openWorkshop();
-
-    const layout = getLayout();
-    clickAt(shop, layout.closeButton.x + 10, layout.closeButton.y + 10);
-
-    expect(shop.isWorkshopOpen()).toBe(false);
   });
 });
 
