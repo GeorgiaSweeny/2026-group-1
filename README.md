@@ -551,34 +551,33 @@ The second sprint therefore focused more strongly on integration. Instead of cre
 #### Second sprint retrospective
 Overall, the team’s process evolved from open-ended exploration into a more structured development workflow. The early prototyping stage helped us discover the strongest mechanics, while the later integration stage helped us turn those mechanics into a playable game. The main lesson was that creative experimentation is useful at the start of a project, but it needs to be followed by clear ownership, integration planning, code review, and regular communication.
 
-### 7. Sustainability
+## 7. Sustainability
 
-This section considers how sustainability would apply if *The Abyss* became a large-scale, widely played game in the future. In that scenario, sustainability would not only mean reducing the environmental footprint of the software, but also considering the technical, social, individual, economic, and environmental effects created by long-term use. This follows the idea that sustainability is a cross-cutting concern. It affects software requirements, architecture, implementation, deployment, and the wider behaviour encouraged by the system.
+As software developers we acknowledge that the software development process is deeply integrated into many industries and as a result has a large effect on the environment. It is our responsibility to mitigate the environmental impacts of our project by following a sustainable workflow. To aid in this we have followed the sustainability awareness framework (SusAF) closely to identify any large impacts our game has and to reduce the impact caused by them during the development process. We have taken 3 main sections from the SusAF – environmental, technical and individual that align the most with our project. 
 
-#### Technical sustainability
+#### 7.1 Environmental 
 
-Technical sustainability would be important if the game continued to grow after the project. The current modular architecture supports this because input, player movement, gameplay features, and rendering are separated into different modules. This would make the game easier to maintain and extend if new rooms, mechanics, or accessibility options were added later.
+It was important for us to look at our overall project from an environmental perspective, as developers we use a wide variety of tools that although increase the speed and efficiency of coding can lead to some negative long term environmental consequences which we would like to mitigate where possible. 
 
-A future version should also avoid letting the codebase become too complex to maintain. Code review, documentation, performance checks, and clear system boundaries would reduce the risk of the game becoming difficult to change as it scales. This supports technical sustainability because future developers would be able to add features without rewriting the whole codebase.
+AI is an example of a resource intensive tool and has been used in this project as it is useful for development. AI however has come under scrutiny due to its large land, water and energy usage. This has been mitigated by using AI sparingly in our project only when necessary to fix difficult problems with our code. General coding work was not done with AI and some sprites were drawn by hand to avoid AI overuse. 
 
-#### Social, individual, and economic sustainability
+We were commited in this project to keeping the codebase clean with any legacy code removed and old inefficient systems being replaced. This reduces the runtime requirements of the game and reduces long term energy usage leading to environmental benefits. It also benefits users with less powerful computers and allows them to play the game with minimal lag. In addition, the large amount of object data required for the maps, enemies and player were extracted from compact json files reducing overall project file size. 
 
-If the game succeeded massively in the future, social and individual sustainability would become more important. A future version should therefore be accessible to people with different abilities, devices, and experience levels. For example, it should consider remappable controls, readable UI, colour-contrast checks for players with visual impairments, and support for lower-spec hardware to reduce pressure on players to upgrade devices unnecessarily. These choices would make the game more inclusive.
+#### 7.2 Technical 
 
-Economic sustainability would also matter if the game became commercial. The game should use a fair pricing model that helps maintain player trust while still supporting future development and maintenance.
+From a programmer's perspective creating readable and maintainable code is important in the development process and we have taken steps throught the project to implement maintainability in our codebase. 
 
-#### Direct environmental sustainability
+To aid in maintainability for both our group members and any potential contributors we adhered to a model controller structure with a game engine class for controller registration. This allows other developers to develop their own controllers which can then be easily registered with the game engine. Controllers can then interact easily with data carrying classes such as the player or enemies. Rendering is kept separate from game logic and is stored in its own file allowing for easier testing of controllers and models and implementation of new graphics easily if desired.  
 
-If the game succeeded massively in the future, it would also have a direct environmental footprint. This would come from player devices, downloads, network traffic, hosting, analytics, and the tools used to develop and update the game. To reduce this impact, developers should keep the game lightweight and efficient. For example, images and audio files could be compressed, unnecessary background processing could be avoided, and CPU, storage, and network use should be monitored as the game scales.
+Additionally, we have included a comprehensive set of test scripts in our code base. To ensure that new commits are functional, we have included a pre commit bash script that runs through each test when a pull request is submitted. This helps ensure our system is stable and any potential bugs are caught that a reviewer might miss. 
 
-If online features such as cloud saves or multiplayer were added, the server infrastructure should scale with actual player demand instead of running more resources than needed. Hosting choices should also consider data-centre efficiency and the availability of renewable energy.
+#### 7.3 Individual 
 
-#### Enabling and behavioural effects
+Since we are developing a game that is intended to be played by multiple people, we saw it fit to examine our game on an individual basis. We did so by analysing the effects our game has on the individual considering usage and user experience. 
 
-The game could also encourage players to reflect on sustainability through its design. *The Abyss* already uses limited power, darkness, and careful exploration as core mechanics. A future version could connect these mechanics more clearly to environmental issues such as resource scarcity, fragile underwater ecosystems, or water pollution. This should be done through gameplay rather than only through text. For example, overusing light or sonar could drain resources or disturb sensitive coral areas, while careful exploration could be rewarded. Instead of simply telling players that resources are limited, the game would allow them to experience the consequences of over-consumption and potential environmental risk.
+When developing the controls system for the game we decided to include the ability for the movement controls to be switched from arrows keys to wasd through the settings menu. This allowed the game to be played with one hand as the torch, sonar, menu, missile and shop keys are on the same side of the keyboard as wasd. This addition allows people with disabilities or injuries affecting their arms to more easily play the game increasing overall user trust. 
 
-Overall, *The Abyss* already contains mechanics that could support sustainability awareness by allowing players to engage with sustainability ideas through gameplay rather than direct instruction. If the game succeeded massively in the future, sustainability would need to be considered across all major dimentions including technical, social, individual, economic, and environmental effects, and the behaviour encouraged by the game.
-
+We decided during development to have pre-determined room layouts which are not random. This reduces overall replayability but mitigates the addictive quality of randomly generated games and improves user wellbeing in the long run. Additionally, no user data is stored in the code, if the player dies or reloads the game then they are sent back to the start with no upgrades. There was concern that this would cause user frustration if the game was difficult, so we modified the game to have a lenient power limit and plentiful pickups to reduce user stress and create a more pleasant experience. 
 
 ### 8. Conclusion 
 
