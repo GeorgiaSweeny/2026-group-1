@@ -5,11 +5,11 @@
 		   COMSM0166 - Group 1 (2026) <br/></h1>
 		</div>
 		<div align="center">
-			<img width="4314" height="1449" alt="633366E9-8455-45F0-8D67-0C95AD609FA3_1_201_a" src="https://github.com/user-attachments/assets/644a519f-0c25-4b48-93d2-f74f054544b2" />
+			<a href="https://uob-comsm0166.github.io/2026-group-1/"><img width="4314" height="1449" alt="633366E9-8455-45F0-8D67-0C95AD609FA3_1_201_a" src="https://github.com/user-attachments/assets/644a519f-0c25-4b48-93d2-f74f054544b2" /></a>
 			<h3>Somewhere above the surface awaits </h3>
 		</div>
 		<div align="center">
- 			<h2 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/">Click to play The Abyss</a></h2>
+ 			<h2 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/">CLICK HERE TO PLAY</a></h2>
 		</div>
 	</body>
 </html>
