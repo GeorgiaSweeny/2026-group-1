@@ -5,17 +5,29 @@
 		   COMSM0166 - Group 1 (2026) <br/></h1>
 		</div>
 		<div align="center">
-		   <h2> THE ABYSS </h2> 
-			Somewhere above the surface awaits <br/><br/>
-			[ADD PROMO IMAGE]
+			<img width="4314" height="1449" alt="633366E9-8455-45F0-8D67-0C95AD609FA3_1_201_a" src="https://github.com/user-attachments/assets/644a519f-0c25-4b48-93d2-f74f054544b2" />
+			<h3>Somewhere above the surface awaits </h3>
 		</div>
 		<div align="center">
- 			<h3 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/">Play Current Version - V4</a></h3>
+ 			<h2 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/">Click to play The Abyss</a></h2>
 		</div>
 	</body>
 </html>
-
-
+	
+## Table of Contents
+0. [Our Team](#our-team)
+1. [Introduction](#1-introduction)
+2. [Requirements](#2-requirements)
+3. [Design](#3-design)
+4. [Implementation](#4-implementation)
+5. [Evaluation](#5-evaluation)
+6. [Process](#6-process)
+7. [Sustainability](#7-sustainability)
+8. [Conclusion](#8-conclusion)
+9. [Contribution Statement](#9-contribution-statement)
+10. [AI Statement](#10-ai-statement)
+11. [References](#11-references)
+    
 
 ### Video DEMO v4 (2-3 mins long max)
 *(updated 05/03/26)*
@@ -25,7 +37,7 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 <br/>
 
 
-# Our Team - Group 1
+# Our Team
 
 ![Group1](/project-docs/images/Group1.jpeg)
 
@@ -385,13 +397,13 @@ The structural architecture diagram shows how the main systems are connected. Th
 This flow shows that sonar is not drawn directly from player input. The input first becomes an intent, then the relevant systems update resources, visibility, enemy behaviour, and rendering in sequence. This keeps the core mechanic modular and prevents rendering logic from being mixed with gameplay logic.
 
 
-### 4. Implementation (DL: 26 Apr 2026)
+### 4. Implementation
 
 - 15% ~750 words
 
 - Describe implementation of your game, in particular highlighting the TWO areas of *technical challenge* in developing your game. 
 
-### 5. Evaluation (DL: 27 Apr 2026)
+### 5. Evaluation
 
 - 15% ~750 words
 - One qualitative evaluation (of your choice) 
@@ -577,6 +589,8 @@ AI image generators were used to generate the main menu image and sprites for th
 </table>
 
 Overall, AI helped us move faster, but moving further still required professional software engineering skills, including architectural understanding, debugging, code review, testing, and design judgement. As AI makes code generation easier, critical thinking becomes more important than ever. In the end, final responsibility for the project remained with the developers.
+
+### 11. References
 
 
 ### Additional Marks
