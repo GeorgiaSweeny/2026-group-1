@@ -394,7 +394,7 @@ Before tackling the core mechanics of our game, we established a foundational ar
 ### Technical Challenge 1: The Sonar Pulse Mechanic
 
 <p align="center">
-    <img src="project-docs/report_figures/SonarPulse.gif" alt="Code snippet 1" width="400" />
+    <img src="project-docs/report_figures/SonarPulse.gif" alt="Code snippet 1" width="600" />
     <br>
     <sub>Figure 8: Sonar Pulse in-game mechanic </sub>
 </p>
@@ -414,7 +414,7 @@ A major technical hurdle was managing the temporary visual "revealed" state of t
 This approach completely decouples the visual pulse from the core game physics and inherently prevents memory leaks; if a wall is destroyed by a player's missile, the WeakMap automatically collects the unused reference without crashing the sonar system.
 
 <p align="center">
-    <img src="project-docs/report_figures/Figure 10 WeakMap.png" alt="Code snippet 2" width="400" />
+    <img src="project-docs/report_figures/Figure 10 WeakMap.png" alt="Code snippet 2" width="600" />
     <br>
     <sub>Figure 10: Code snippet demonstrating WeakMap state management and garbage collection logic</sub>
 </p>
@@ -424,7 +424,7 @@ Furthermore, the system was designed to be highly scalable to accommodate player
 ### Technical Challenge 2: Resource Economy and State Synchronisation
 
 <p align="center">
-    <img src="project-docs/report_figures/Figure 11 Workshop.png" alt="Workshop in-game" width="400" />
+    <img src="project-docs/report_figures/Figure 11 Workshop.png" alt="Workshop in-game" width="600" />
     <br>
     <sub>Figure 11: In-game Workshop feature</sub>
 </p>
