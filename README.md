@@ -393,7 +393,7 @@ Before tackling the core mechanics of our game, we established a foundational ar
 
 ###Technical Challenge 1: The Sonar Pulse Mechanic
 
-![Sonar Pulse Mechanic](./assets/SonarPulse.gif)
+![Sonar Pulse Mechanic](./project-docs/report_figures/SonarPulse.gif)
 
 Given the dark nature of our underwater setting, the sonar pulse is a critical navigation mechanic used to reveal terrain, enemies, and hazards. Implementing this presented significant performance and architectural challenges. Our primary design goal was to achieve this without mutating the shared game state of our room and entities, ensuring the rendering pipeline remained decoupled from the physics engine.
 
