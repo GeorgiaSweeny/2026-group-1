@@ -29,10 +29,15 @@
 11. [References](#11-references)
     
 
-### Video DEMO v4 (2-3 mins long max)
-*(updated 05/03/26)*
+### DEMO VIDEO
+*(updated 30/04/26)*
+Click to watch or follow [link](https://youtu.be/CvOZ20M2DBA)
 
-https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
+[![Game Demo Video](https://github.com/user-attachments/assets/0b38d86c-16b2-4c90-8de3-32f6d42aa145)](https://youtu.be/CvOZ20M2DBA)
+
+
+
+
 
 <br/>
 
