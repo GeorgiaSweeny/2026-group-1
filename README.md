@@ -1,18 +1,12 @@
-<html>
-	<body style="text-align: center;">
-		<div align="center">
-		   <h1> University  of  Bristol <br/>
-		   COMSM0166 - Group 1 (2026) <br/></h1>
-		</div>
-		<div align="center">
-			<a href="https://uob-comsm0166.github.io/2026-group-1/"><img width="4314" height="1449" alt="633366E9-8455-45F0-8D67-0C95AD609FA3_1_201_a" src="https://github.com/user-attachments/assets/644a519f-0c25-4b48-93d2-f74f054544b2" /></a>
-			<h3>Somewhere above the surface awaits </h3>
-		</div>
-		<div align="center">
- 			<h2 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/">CLICK HERE TO PLAY</a></h2>
-		</div>
-	</body>
-</html>
+# The Abyss
+
+**University of Bristol — COMSM0166 - Group 1 (2026)**
+
+[![Play The Abyss](https://github.com/user-attachments/assets/644a519f-0c25-4b48-93d2-f74f054544b2)](https://uob-comsm0166.github.io/2026-group-1/)
+
+*Somewhere above the surface awaits*
+
+**[CLICK HERE TO PLAY](https://uob-comsm0166.github.io/2026-group-1/)**
 	
 ## Table of Contents
 0. [Our Team](#our-team)
@@ -83,9 +77,8 @@ Overall, the game combines traditional Metroidvania design principles with a son
 
 ## 2. Requirements 
 ### 2.1 Early Stage Design & Ideation
-We were inspired by classic flash games from our childhood like; Club Penguin's Aqua Grabber, Motherload as well as modern titles, Hollow Knight and Subnautica. The game concept was developed collaboratively through group discussions and pitch proposals. During the early design phase, we used [Notion](https://www.notion.so/Software-Engineering-Project-2eef3902b1f080668320f5a1a2d17915)to document and refine ideas. Each team member proposed a concept [Figure 1: Game Ideas], and the team then voted on their preferred option [Figure 2: Poll Results for Game Ideas]. Two of the proposed concepts were centred on echolocation, which helped establish it as the foundation of the project. Through further discussion, the selected concept evolved into an underwater exploration game, where limited visibility creates tension and supports the overall atmosphere. The game’s core differentiator is its sonar-based mechanic, supported by darkness and resource management systems.
+We were inspired by classic flash games from our childhood like; Club Penguin's Aqua Grabber, Motherload as well as modern titles, Hollow Knight and Subnautica. The game concept was developed collaboratively through group discussions and pitch proposals. During the early design phase, we used [Notion](https://www.notion.so/Software-Engineering-Project-2eef3902b1f080668320f5a1a2d17915) to document and refine ideas. Each team member proposed a concept [Figure 1: Game Ideas], and the team then voted on their preferred option [Figure 2: Poll Results for Game Ideas]. Two of the proposed concepts were centred on echolocation, which helped establish it as the foundation of the project. Through further discussion, the selected concept evolved into an underwater exploration game, where limited visibility creates tension and supports the overall atmosphere. The game’s core differentiator is its sonar-based mechanic, supported by darkness and resource management systems.
 
-``` jude: Please check that non-members can access the Notion link before submission.```
 
 <table align="center">
   <tr>
@@ -113,15 +106,11 @@ We later asked testers to play through the prototype and share feedback. Their r
 
 Based on this feedback, the team shaped the game around exploration, tension, and careful resource use. A Metroidvania-inspired structure was chosen to support these goals, allowing progression through interconnected spaces, restricted areas, and gradual access to new abilities. This worked well with the sonar mechanic, as players needed to decide when to reveal their surroundings and when to conserve resources. Overall, the paper prototyping stage helped clarify the game’s direction and confirmed that its main appeal lies in atmosphere, uncertainty, and controlled exploration.
 
-<p align="center">
-  <img src="project-docs/workshops/paper-prototype/SubGame.gif" alt="Paper prototype demo" width="500" />
-</p>
+![Paper prototype demo](project-docs/workshops/paper-prototype/SubGame.gif)
 
 ### 2.3 Stakeholders - Onion Model
-<p align="center">
-    <img src="https://github.com/user-attachments/assets/b768743b-cfa2-456d-9c32-e7780289a064"
-    alt="Stakeholders Onion Model" width="500" />
-</p>
+
+![Stakeholders Onion Model](https://github.com/user-attachments/assets/b768743b-cfa2-456d-9c32-e7780289a064)
 
 ### 2.4 Epics and User Stories
 We used epics and user stories to structure the game concept into a clear and manageable development plan. At the start of the project, the overall design was too broad, so epics were used to organise development into key areas of player experience and technical functionality. These included player movement, resource management, sonar and lighting systems, enemies, world progression, interface design, and system architecture.
@@ -260,7 +249,7 @@ To keep the development manageable and technically feasible, this project follow
 ---
 ## 3. Design
 
-This section explains the final system architecture of the game and how it evolved during development. At the start of the project, we used the p5.js online editor to prototype individual features, and we initially expected the design to be described using more traditional object-oriented modelling. However, as the prototype grew, maintaining shared game state across separate features became increasingly difficult.
+This section explains the final system architecture of the game and how it evolved during development. At the start of the project, we used the p5.js online editor <sup>[13]</sup> to prototype individual features, and we initially expected the design to be described using more traditional object-oriented modelling. However, as the prototype grew, maintaining shared game state across separate features became increasingly difficult.
 
 Instead of placing most behaviour inside a few large classes, the project developed into a more modular, system-oriented structure where game data, input, logic, rendering, and world state are separated into distinct responsibilities. The final design is therefore not strongly inheritance-based. The diagrams in this section explain the implemented architecture, focusing on shared state, system responsibilities, and runtime behaviour.
 
@@ -393,11 +382,9 @@ flowchart TD
 
 The structural architecture diagram shows how the main systems are connected. This behavioural flow shows how those systems cooperate during one core gameplay action: activating sonar.
 
-<p align="center">
-  <img src="project-docs/report_figures/F7-Runtime behaviour flow.png" alt="Runtime behaviour flow" width="400" />
-  <br>
-    <sub>Figure 7: Runtime Behavioural Flow for Sonar Activation</sub>
-</p>
+![Runtime behaviour flow](project-docs/report_figures/F7-Runtime behaviour flow.png)
+
+*Figure 7: Runtime Behavioural Flow for Sonar Activation*
 
 This flow shows that sonar is not drawn directly from player input. The input first becomes an intent, then the relevant systems update resources, visibility, enemy behaviour, and rendering in sequence. This keeps the core mechanic modular and prevents rendering logic from being mixed with gameplay logic.
 
@@ -406,7 +393,7 @@ This flow shows that sonar is not drawn directly from player input. The input fi
 
 Before tackling the core mechanics of our game, we established a foundational architecture using an Object-Oriented approach. All physical entities inherit from a base Hitbox class, ensuring a standardised method for position tracking and collision detection. Initial physics implementation proved difficult, particularly maintaining consistent movement speeds across varying frame rates. To resolve this, we implemented a fixed timestep loop (TIME.fixedDeltaTime), which detached the game logic from the rendering framerate. This ensured smooth and predictable movement for both the player and dynamic objects.
 
-## Challenges
+### Challenges
 
 ### Technical Challenge 1: The Sonar Pulse Mechanic
 
@@ -448,13 +435,11 @@ Furthermore, the system was designed to be highly scalable to accommodate player
 
 The second major technical hurdle was designing a scalable resource and hazard economy. This required parsing raw map data into actionable game logic and synchronising player state across multiple decoupled systems (the physics loop, the resource manager, and the UI workshop) without creating race conditions or tightly coupled spaghetti code.
 
-The first step was dynamically resolving items loaded from the roomSystem. Our maps are built using Tiled (JSON), meaning objects are imported with generic Global Tile IDs (GIDs). Rather than hardcoding specific IDs into the game loop, we wrote a dynamic resolveCollectableType algorithm. This function cross-references the item's GID against the imported tileset's firstgid ranges, converting raw map data into contextual gameplay tags (e.g., "scrap" or "power") at runtime.
+The first step was dynamically resolving items loaded from the roomSystem. Our maps are built using Tiled <sup>[9]</sup> (JSON), meaning objects are imported with generic Global Tile IDs (GIDs). Rather than hardcoding specific IDs into the game loop, we wrote a dynamic resolveCollectableType algorithm. This function cross-references the item's GID against the imported tileset's firstgid ranges, converting raw map data into contextual gameplay tags (e.g., "scrap" or "power") at runtime.
 
-<p align="center">
-    <img src="project-docs/report_figures/Figure 12 processCollectables.png" alt="Code snippet 3" width="400" />
-    <br>
-    <sub>Figure 12: Code snippet of resolveCollectableType converting Tiled GIDs into game logic</sub>
-</p>
+![Code snippet of resolveCollectableType converting Tiled GIDs into game logic](project-docs/report_figures/Figure 12 processCollectables.png)
+
+*Figure 12: Code snippet of resolveCollectableType converting Tiled GIDs into game logic*
 
 Managing the physical collection of these items presented a memory management challenge. Initially, processing collisions against arrays of collectables could result in a single item being "collected" multiple times in a single frame before the engine destroyed it. To solve this, we implemented a JavaScript Set (collectedEntities). Because sets guarantee uniqueness and offer O(1) lookup times, we can instantly verify if an item has already been collected. Furthermore, this decoupled the rendering logic from the physical map data; rather than deleting the item from memory, the renderer simply filters out any entity present in the Set. When a player dies or resets the level, calling collectedEntities.clear() instantly "respawns" all items.
 
@@ -478,10 +463,20 @@ The culmination of this resource loop is the workshopSystem, a frontend UI overl
 
 ### 5. Evaluation
 
-- 15% ~750 words
-- One qualitative evaluation (of your choice) 
-- One quantitative evaluation (of your choice) 
-- Description of how code was tested. 
+We evaluated the game using a **think-aloud protocol**, an empirical method in which users narrate their thoughts, decisions, and reactions in real time while performing specific tasks with software. This method generates rich qualitative insight into the user experience and is particularly effective for identifying navigational confusion, missing feedback, and design assumptions that are invisible to the development team.
+
+One participant was recruited from an adjacent project group. Two observers took notes independently. Participants were briefed beforehand: there were no correct answers, and criticism of the design was welcomed explicitly. They were asked to think aloud continuously and were prompted with *"what are you thinking?"* if they went silent. Two tasks were set:
+
+- **Task 1:** Navigate from the starting room to the next area using the sonar mechanic.
+- **Task 2:** Survive for as long as possible while managing the power resource.
+
+**Findings.** Three key observations emerged from the think-aloud sessions.
+
+The **core tension is working as intended.** Players instinctively avoided unlit areas without being told to — the limited torch radius created genuine curiosity and caution. This confirmed that the atmospheric design premise was landing. The sonar pulse was used purposefully rather than spammed; players fired it, waited for the reveal, then moved deliberately.
+
+The **absence of narrative direction was the most raised issue.** Participants reported uncertainty about what they were working toward. Without a stated objective, exploration felt aimless rather than purposeful. One participant noted that even a minimal story setup — a distress signal, a missing crew — would give the sonar mechanic a reason to exist beyond pure puzzle-solving.
+
+**Enemy encounters created no strategic tension.** Players navigated around enemies without engagement. Participants suggested that enemies visibly reacting to sonar — speeding up, entering an alert state, or changing direction — would make encounters feel deliberate rather than accidental.
 
 ## User & Heuristic Evaluation
 
@@ -524,38 +519,52 @@ fewer or no pickups.
 
 ### 6. Process
 
-Our team worked through a process of collaborative planning, exploratory prototyping, and later integration into a shared codebase. In the early stage, we used Notion to collect game ideas, record discussion points, and organise epics, user stories, and acceptance criteria. This helped us turn a broad underwater exploration concept into a more manageable development plan.
+[](https://github.com/UoB-COMSM0166/2026-group-1#6-process)
+#### Agile Development 
+Our team worked through a process of collaborative planning, exploratory prototyping, and later integration into a shared codebase. We chose an Agile approach over a plan-driven model (waterfall) due to the exploratory requirements. In the early stage, we used Notion to collect game ideas, record discussion points, and organise epics, user stories, and acceptance criteria. An example of why we chose this model was responding to feedback and allowing os to reprioritise after each sprint rather than locking in a design that didn't work.
 
 #### First sprint: exploratory prototyping
+
+[](https://github.com/UoB-COMSM0166/2026-group-1#first-sprint-exploratory-prototyping)
+
 After agreeing on the main theme, we began with a two-week exploratory sprint. Team members selected feature areas from the user stories and built early prototypes using the p5.js online editor. These prototypes were then shared on Notion so that the rest of the team could review the design, compare different approaches, and decide which ideas were suitable for the MVP. This allowed us to test early versions of sonar, lighting, movement, UI, and room-navigation mechanics before committing to a single implementation.
 
-<p align="center">
-    <img src="project-docs/report_figures/F8-1-Feature Tests.png" alt="Feature tests" width="400" />
-    <img src="project-docs/report_figures/F8-2-Feature Tests.png" alt="Feature tests" width="400" />
-    <br>
-    <sub>Figure 8: Feature Test Examples</sub>
-</p>
+[![Feature tests](https://github.com/UoB-COMSM0166/2026-group-1/raw/main/project-docs/report_figures/F8-1-Feature%20Tests.png)](https://github.com/UoB-COMSM0166/2026-group-1/blob/main/project-docs/report_figures/F8-1-Feature%20Tests.png) [![Feature tests](https://github.com/UoB-COMSM0166/2026-group-1/raw/main/project-docs/report_figures/F8-2-Feature%20Tests.png)](https://github.com/UoB-COMSM0166/2026-group-1/blob/main/project-docs/report_figures/F8-2-Feature%20Tests.png)  
+Figure 8: Feature Test Examples
 
-This approach worked well during the early creative stage because it encouraged low-risk experimentation. Team members could test ideas independently without immediately affecting the shared codebase, and the feature tests provided visual evidence that made discussions more concrete. However, the limitation of this approach became clearer during implementation. Since prototypes were built separately, they often used different assumptions about game state or object structure. As a result, they could not simply be copied into the final game and required additional integration work.
+#### Agile Methodology 
+We adopted scrum roles with regular ceremonies to ensure our collaborative workflows had a shared direction and we could 
 
-After the first sprint, we identified the tasks needed to move from separate prototypes toward a runnable MVP. Team members selected tasks based on their interests and added their names to the relevant task cards as shown in Figure 9. Alongside Notion, we used the GitHub Kanban board as shown in Figure 10 to track feature development, progress, and outstanding issues.
+| Scrum Role           | Who               | Responsibilities                                                      |
+| -------------------- | ----------------- | --------------------------------------------------------------------- |
+| **Scrum Master**     | Shared / rotating | ran reviews, unblocked the team by setting priorities during standups |
+| **Development Team** | All members       | Built features, wrote tests, reviewed code                            |
+| **Product Owner**    | Georgia Sweeny    | Team set priorities collaboratively in sprint reviews                 |
 
-<p align="center">
-    <img src="project-docs/report_figures/F9-1 Task Assignment.png" alt="Task assignment" width="400" />
-    <img src="project-docs/report_figures/F9-2 Task Assignment.png" alt="Task assignment" width="400" />
-    <br>
-    <sub>Figure 9: Task Assignment Examples</sub>
-</p>
+Team members could test ideas independently without immediately affecting the shared codebase, and the feature tests provided visual evidence that made discussions more concrete. During iterative development we prioritised working software over comprehensive documentation, by separating modules into a microservice architecture this allowed our group to develop features independently  while responding to change over following a concrete plan. 
 
-<p align="center">
-    <img src="project-docs/report_figures/F10-Kanban.png" alt="GitHub Kanban board" width="600" />
-    <br>
-    <sub>Figure 10: GitHub Kanban Board</sub>
-</p>
+| Ceremony            | Frequency                     | What We Did                                                  |
+| ------------------- | ----------------------------- | ------------------------------------------------------------ |
+| **Sprint Planning** | Start of each sprint (weekly) | Pick epics from backlog, break into stories, estimate effort |
+| **Daily Standup**   | Daily (informal)              | Whatsapp Group chat — what did yesterday, today, blockers    |
+| **Sprint Review**   | End of sprint                 | Demonstrate completed features to the team                   |
+| **Retrospective**   | End of sprint                 | What went well, what didn't, process improvements            |
+
+After the first sprint, we identified the tasks needed to move from separate prototypes toward a runnable MVP. Team members selected tasks based on their interests and added their names to the relevant task cards as shown in Figure 9. Alongside Notion, we used the GitHub <sup>[7]</sup> Kanban board as shown in Figure 10 to track feature development, progress, and outstanding issues.
+
+[![Task assignment](https://github.com/UoB-COMSM0166/2026-group-1/raw/main/project-docs/report_figures/F9-1%20Task%20Assignment.png)](https://github.com/UoB-COMSM0166/2026-group-1/blob/main/project-docs/report_figures/F9-1%20Task%20Assignment.png) [![Task assignment](https://github.com/UoB-COMSM0166/2026-group-1/raw/main/project-docs/report_figures/F9-2%20Task%20Assignment.png)](https://github.com/UoB-COMSM0166/2026-group-1/blob/main/project-docs/report_figures/F9-2%20Task%20Assignment.png)  
+Figure 9: Task Assignment Examples
+
+[![GitHub Kanban board](https://github.com/UoB-COMSM0166/2026-group-1/raw/main/project-docs/report_figures/F10-Kanban.png)](https://github.com/UoB-COMSM0166/2026-group-1/blob/main/project-docs/report_figures/F10-Kanban.png)  
+Figure 10: GitHub Kanban Board
 
 Although this gave the team a clearer task structure, it was difficult to follow perfectly in practice. Many features depended on unfinished work from other areas. For example, sonar, lighting, and camera movement all needed access to shared game state. AI coding support also changed the workflow. Team members could quickly generate draft implementations of others' features instead of waiting for another task to be completed. This helped individuals make progress, but it also created overlap between tasks and made isolated development harder than expected.
 
+
 #### First sprint retrospective
+
+[](https://github.com/UoB-COMSM0166/2026-group-1#first-sprint-retrospective)
+
 The main outcome of the first sprint was that the team had generated useful feature ideas, but the workflow was still too fragmented for implementation. The lesson we learnt was that prototypes were valuable for exploration, but they needed to be followed by clearer integration planning, shared architecture decisions, and better visibility over dependencies between tasks.
 
 To respond to this, we moved toward shared ownership and peer review for some overlapping areas. For example, UI-related work involved more than one co-developer, and pull requests were reviewed by more than one person where possible. This reduced the risk of isolated decisions and gave the team more opportunities to check code quality. However, shared ownership also had limitations: when responsibilities were not clearly divided, it could become harder to know who had the final decision on a feature or whether a task was fully complete.
@@ -563,9 +572,15 @@ To respond to this, we moved toward shared ownership and peer review for some ov
 Team members also had different communication styles and worked at different stages of the project. This made regular coordination important. When communication was less consistent, it became harder to know which features were ready, which parts of the codebase had changed, and how different systems were expected to connect.
 
 #### Second sprint: integration and MVP focus
+
+[](https://github.com/UoB-COMSM0166/2026-group-1#second-sprint-integration-and-mvp-focus)
+
 The second sprint therefore focused more strongly on integration. Instead of creating further isolated prototypes, the team worked on combining the strongest ideas into a single playable version. We also prioritised the MVP more strictly, separating essential features from stretch goals and paying closer attention to how different systems interacted.
 
 #### Second sprint retrospective
+
+[](https://github.com/UoB-COMSM0166/2026-group-1#second-sprint-retrospective)
+
 Overall, the team’s process evolved from open-ended exploration into a more structured development workflow. The early prototyping stage helped us discover the strongest mechanics, while the later integration stage helped us turn those mechanics into a playable game. The main lesson was that creative experimentation is useful at the start of a project, but it needs to be followed by clear ownership, integration planning, code review, and regular communication.
 
 ## 7. Sustainability
@@ -586,7 +601,173 @@ From a programmer's perspective creating readable and maintainable code is impor
 
 To aid in maintainability for both our group members and any potential contributors we adhered to a model controller structure with a game engine class for controller registration. This allows other developers to develop their own controllers which can then be easily registered with the game engine. Controllers can then interact easily with data carrying classes such as the player or enemies. Rendering is kept separate from game logic and is stored in its own file allowing for easier testing of controllers and models and implementation of new graphics easily if desired.  
 
-Additionally, we have included a comprehensive set of test scripts in our code base. To ensure that new commits are functional, we have included a pre commit bash script that runs through each test when a pull request is submitted. This helps ensure our system is stable and any potential bugs are caught that a reviewer might miss. 
+#### CI/CD Pipeline
+
+The project uses GitHub Actions <sup>[3]</sup> for continuous integration and deployment. By automating integration and deployment, we significantly reduced mean time to recovery (MTTR) when bugs were found, forcing developers to only commit working code and ensuring quality commit standards. The goal is a always-deployable main branch — changes are small, frequently integrated, and validated automatically. The pipeline ran on every push to main and on all pull requests, providing automated validation before changes reach the main branch, enforcing the "always deployable" principle.
+
+| Trigger | Action |
+|---------|--------|
+| Push to any branch | CI pipeline runs (test + build) |
+| Pull request to main | CI pipeline runs + status checks enforced |
+| Merge to main | CI passes + GitHub Pages auto-deploys |
+
+**Workflow File:** `.github/workflows/ci.yml`
+
+```yaml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs          # game code lives in docs/
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test -- --coverage
+        env:
+          NODE_OPTIONS: --experimental-vm-modules
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-coverage
+          path: docs/coverage/
+
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify build
+        run: |
+          if [ -f "sketch.js" ]; then
+            echo "Game files present"
+          fi
+```
+
+#### Key Design Decisions
+
+**1. npm vs pnpm**
+
+The project uses npm rather than pnpm. `package-lock.json` is committed so all developers and the CI runner use identical dependency versions, eliminating "works on my machine" issues.
+
+**2. Jest with ES Modules**
+The game uses native ES Modules (`"type": "module"` in `package.json`). Jest <sup>[2]</sup> requires the `--experimental-vm-modules` flag to support this. Configuration lives in `docs/jest.config.js`:
+
+```javascript
+export default {
+  testEnvironment: 'node',
+  testMatch: ['**/tests/**/*.test.js'],
+  transform: {},
+};
+```
+
+**3. Test Location**
+Tests live in `docs/tests/` alongside the game code in `docs/systems/`, `docs/entities/`, etc. Each system has a corresponding `*.test.js` file (e.g. `torchSystem.test.js`). The pattern follows the arrange-act-assert structure described in `TESTING_FRAMEWORK_GUIDE.md`.
+
+**4. Coverage Reporting**
+
+`--coverage` flag generates a coverage report uploaded as a GitHub Actions artifact. Current coverage across 26 test files:
+
+- 22 test suites run (4 skipped)
+- 428 tests passing, 13 skipped
+- Best covered: `torchSystem.js` (100%), `physicsSystem.js` (96.55% lines)
+
+**5. Branch Protection**
+
+Once the CI workflow was merged, branch protection was enabled on main:
+
+- Pull requests required before merging
+- `test` job must pass before merging
+- Direct pushes to main blocked for non-admin users
+
+#### Testing Strategy
+
+Unit tests cover individual game systems in isolation using mocked dependencies, following an Arrange-Act-Assert (AAA) framework for the unit tests <sup>[1]</sup>. Arrange sets up the test data, Act exercises the code under test, Assert verifies the result. Short, focused tests using AAA are easier to debug when they fail. Tests are separated into the following:
+
+- **Unit:** Tests a single component in isolation (e.g. TorchSystem alone)
+- **Integration:** Tests how two or more components work together (e.g. room transitions + minimap)
+- **System:** Tests the entire application end-to-end (e.g. playing the game from start to win)
+
+```javascript
+describe("TorchSystem", () => {
+  it("should default torchOn to false on game initialisation", () => {
+    // Arrange — set up mock data
+    const mockWorld = { playerIntent: { torchOn: false } };
+    const torchSystem = new TorchSystem(mockWorld);
+
+    // Act — take the action being tested
+
+    // Assert — verify the outcome
+    expect(mockWorld.playerIntent.torchOn).toBe(false);
+  });
+});
+```
+
+Contract tests verify that systems interact correctly:
+
+- `miniMapSystem.contract.test.js` — ensures minimap math matches render output
+- `miniMapSystem.transition.test.js` — room-to-room transitions maintain minimap state
+
+**Current test coverage by system:**
+
+| System | Line Coverage |
+|--------|---------------|
+| torchSystem.js | 100% |
+| physicsSystem.js | 96.55% |
+| playerSystem.js | 94.73% |
+| inputSystem.js | 96.42% |
+| renderSystem.js | 27.74% |
+| sonarSystem.js | 47.14% |
+| roomSystem.js | 44.70% |
+| miniMapSystem.js | 1.03% |
+
+#### Lessons Learned
+
+**What worked:**
+
+- Branch protection + required PR reviews caught integration issues before they hit main
+- Small test files with clear names made it easy to identify which system was broken
+- `--passWithNoTests` avoided false negatives early in the project when test count was low
+
+**What didn't work:**
+
+- Tests were written after feature implementation rather than during — coverage is uneven
+- `miniMapSystem.js` has 1% coverage despite being a core feature — low-priority tests lagged behind rapid feature development
+- `config.js` exports changed without updating dependent tests
 
 #### 7.3 Individual 
 
@@ -598,9 +779,11 @@ We decided during development to have pre-determined room layouts which are not 
 
 ### 8. Conclusion 
 
-- 10% ~500 words
+The Abyss represents a successful implementation of a Metroidvania-style game with a unique sonar-based navigation mechanic. Throughout the development process, the team learned valuable lessons about modular architecture, system integration, and collaborative development.
 
-- Reflect on the project as a whole. Lessons learnt. Reflect on challenges. Future work, describe both immediate next steps for your current game and also what you would potentially do if you had chance to develop a sequel.
+Key achievements include the implementation of the sonar pulse mechanic using ray-casting and WeakMap structures for memory-efficient visibility management, a robust resource economy system with dynamic item resolution, and a comprehensive testing strategy with CI/CD integration.
+
+Future work could include additional enemy types, more complex boss encounters, expanded map areas, and potential sequel development with new abilities and story elements.
 
 ### 9. Contribution Statement
 
@@ -667,13 +850,37 @@ Overall, AI helped us move faster, but moving further still required professiona
 
 ### 11. References
 
+[1] Meszaros, G. (2007). *xUnit Test Patterns: Refactoring Test Code*. Addison-Wesley. - Reference for Arrange-Act-Assert testing pattern.
 
-### Additional Marks
+[2] Facebook. (2024). *Jest*. Meta Platforms, Inc. https://jestjs.io - JavaScript Testing Framework documentation.
 
-You can delete this section in your own repo, it's just here for information. in addition to the marks above, we will be marking you on the following two points:
+[3] GitHub. (2024). *GitHub Actions Documentation*. Microsoft. https://docs.github.com/en/actions - CI/CD workflow configuration.
 
-- **Quality** of report writing, presentation, use of figures and visual material (5% of report grade) 
-  - Please write in a clear concise manner suitable for an interested layperson. Write as if this repo was publicly available.
-- **Documentation** of code (5% of report grade)
-  - Organise your code so that it could easily be picked up by another team in the future and developed further.
-  - Is your repo clearly organised? Is code well commented throughout?
+[4] Fowler, M. (2018). *Continuous Integration*. Martin Fowler. https://martinfowler.com/articles/continuousIntegration.html - Principles of continuous integration.
+
+[5] Gamma, E., Helm, R., Johnson, R., & Vlissides, J. (1995). *Design Patterns: Elements of Reusable Object-Oriented Software*. Addison-Wesley. - Classic reference for software architecture patterns including Model-View-Controller.
+
+[6] Beck, K. (2003). *Test Driven Development: By Example*. Addison-Wesley. - TDD methodology and best practices.
+
+[7] University of Bristol. (2026). *Software Engineering Project*. GitHub. https://github.com/UoB-COMSM0166
+
+[8] University of Bristol. (2026). *Software Engineering Project Presentation*. Google Slides. https://docs.google.com/presentation/d/1Yym_DlJcCC_CdJaNWzn9PfQ_UIAho3SQTWI6UoNrTN4/edit?usp=sharing
+
+[9] Tiled. (2024). *Tiled Map Editor*. https://www.mapeditor.org/
+
+[10] 2026-group-1. (2024). *Project Code Structure & Style Guide*. GitHub. https://github.com/UoB-COMSM0166/2026-group-1/blob/496a6811c6db81a47fa46beab3b390756c9f7b2c/docs/georgia/platformer_dev_2.3/SINGLE%20FILE%20VERSION/sketch.js
+
+[11] 2026-group-1. (2024). *Prototypes & Feature Tests*. GitHub. https://github.com/UoB-COMSM0166/2026-group-1/blob/main/docs/Jude/sketch.js
+
+[12] Reddit. (2024). *OOP Game Coding Discussion*. r/gamedev. https://www.reddit.com/r/gamedev/comments/1hp3jk/oop_game_coding_should_i_create_a_class_to_every/
+
+[13] Bagel. (2024). *p5.js Sketch*. Editor.p5js.org. https://editor.p5js.org/bagel.got.eaten/sketches/6cDBCBNv2
+
+[14] Flappy Bird. (2014). *Flappy Bird Game*. https://flappybird.io
+
+[15] ACM. (2004). *Metroidvania Game Design*. Digital Games. https://dl.acm.org/doi/pdf/10.1145/1077246.1077253#page=7
+
+[16] UK Government. (2024). *GOV.UK*. http://gov.uk
+
+[17] Photobucket. (2024). *Dithering Graphics Example*. https://i57.photobucket.com/albums/g209/phototekcub/ditherreduxgif.gif
+
