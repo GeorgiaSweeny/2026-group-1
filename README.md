@@ -431,7 +431,11 @@ Figure 13: Code snippet demonstrating O(1) Set lookups for collection processing
 
 Handling environmental hazards required an entirely different collision paradigm. Unlike discrete collectables (which trigger once), hazards require both immediate and continuous effects. Within processHazards(), we programmed a state-machine approach. When a player initially overlaps a hazard, they are hit with a one-shot HAZARD_ENTRY_PENALTY. If they remain on the hazard in subsequent frames, a continuous HAZARD_DRAIN_RATE is applied via the fixed-timestep loop. To prevent players from losing all their health instantly, the continuous hit-response is safely gated behind an invincibility-frame (i-frame) timer handled by our combat utilities.
 
-![Code snippet5](project-docs/report_figures/Figure-14-resolveCollectableType.png)
+<p align="center">
+    <img src="project-docs/report_figures/Figure 14 resolveCollectableType.png" alt="Code snippet 5" width="400" />
+    <br>
+    <sub>Figure 8: Feature Test Examples</sub>
+</p>
 Figure 14: Hazard processing logic showing discrete penalties vs. continuous drain.
 
 The culmination of this resource loop is the workshopSystem, a frontend UI overlay. The challenge here was ensuring a completely async UI could safely mutate the gameplay state. The workshop operates independently of the main update() loop. When a user clicks an upgrade, the system calculates the exponential cost scaling (Math.ceil(upgrade.cost * 1.5)), verifies the player's scrap count, directly mutates the player's upgrade levels, and instantly triggers a state-recalculation (e.g., immediately refilling the player's power to match the newly purchased maximum capacity). This strict separation of concerns ensures the UI never blocks the physics thread while providing immediate, satisfying feedback to the player.
