@@ -5,17 +5,29 @@
 		   COMSM0166 - Group 1 (2026) <br/></h1>
 		</div>
 		<div align="center">
-		   <h2> THE ABYSS </h2> 
-			Somewhere above the surface awaits <br/><br/>
-			[ADD PROMO IMAGE]
+			<a href="https://uob-comsm0166.github.io/2026-group-1/"><img width="4314" height="1449" alt="633366E9-8455-45F0-8D67-0C95AD609FA3_1_201_a" src="https://github.com/user-attachments/assets/644a519f-0c25-4b48-93d2-f74f054544b2" /></a>
+			<h3>Somewhere above the surface awaits </h3>
 		</div>
 		<div align="center">
- 			<h3 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/">Play Current Version - V4</a></h3>
+ 			<h2 align=center><a href="https://uob-comsm0166.github.io/2026-group-1/">CLICK HERE TO PLAY</a></h2>
 		</div>
 	</body>
 </html>
-
-
+	
+## Table of Contents
+0. [Our Team](#our-team)
+1. [Introduction](#1-introduction)
+2. [Requirements](#2-requirements)
+3. [Design](#3-design)
+4. [Implementation](#4-implementation)
+5. [Evaluation](#5-evaluation)
+6. [Process](#6-process)
+7. [Sustainability](#7-sustainability)
+8. [Conclusion](#8-conclusion)
+9. [Contribution Statement](#9-contribution-statement)
+10. [AI Statement](#10-ai-statement)
+11. [References](#11-references)
+    
 
 ### Video DEMO v4 (2-3 mins long max)
 *(updated 05/03/26)*
@@ -25,7 +37,7 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 <br/>
 
 
-# Our Team - Group 1
+# Our Team
 
 ![Group1](/project-docs/images/Group1.jpeg)
 
@@ -33,7 +45,7 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 
 |Name|Email|Role|
 |:-|:-|:-|
-|Archie Brown|cq25988@bristol.ac.uk| UI and Upgrade Systems, CameraSystem and transition effects, VFX |
+|Archie Brown|cq25988@bristol.ac.uk| UI and Upgrade Systems, CameraSystem and transition effects, VFX, CI Testing |
 |Monal Gupta|ta25702@bristol.ac.uk| EnemySystem; ResourceManagmentSystem, Menus, Sound FX |
 |Ben Mounce|wv25183@bristol.ac.uk| SonarSystem, MissileSystem & visuals |
 |Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer; Systems Architect; Lighting Systems & effects; Code reviewer, GameWorld Design |
@@ -385,7 +397,7 @@ The structural architecture diagram shows how the main systems are connected. Th
 This flow shows that sonar is not drawn directly from player input. The input first becomes an intent, then the relevant systems update resources, visibility, enemy behaviour, and rendering in sequence. This keeps the core mechanic modular and prevents rendering logic from being mixed with gameplay logic.
 
 
-## 4. Implementation
+### 4. Implementation
 
 Before tackling the core mechanics of our game, we established a foundational architecture using an Object-Oriented approach. All physical entities inherit from a base Hitbox class, ensuring a standardised method for position tracking and collision detection. Initial physics implementation proved difficult, particularly maintaining consistent movement speeds across varying frame rates. To resolve this, we implemented a fixed timestep loop (TIME.fixedDeltaTime), which detached the game logic from the rendering framerate. This ensured smooth and predictable movement for both the player and dynamic objects.
 
@@ -459,7 +471,7 @@ Handling environmental hazards required an entirely different collision paradigm
 The culmination of this resource loop is the workshopSystem, a frontend UI overlay. The challenge here was ensuring a completely async UI could safely mutate the gameplay state. The workshop operates independently of the main update() loop. When a user clicks an upgrade, the system calculates the exponential cost scaling (Math.ceil(upgrade.cost * 1.5)), verifies the player's scrap count, directly mutates the player's upgrade levels, and instantly triggers a state-recalculation (e.g., immediately refilling the player's power to match the newly purchased maximum capacity). This strict separation of concerns ensures the UI never blocks the physics thread while providing immediate, satisfying feedback to the player.
 
 
-### 5. Evaluation (DL: 27 Apr 2026)
+### 5. Evaluation
 
 - 15% ~750 words
 - One qualitative evaluation (of your choice) 
@@ -597,7 +609,9 @@ We decided during development to have pre-determined room layouts which are not 
         </tr>
         <tr>
             <td>Archie Brown</td>
-            <td align="left"></td>
+            <td align="left">
+				UI and upgrade systems (shop, power bar, controls overlay), diagnostic tooling (tile/room test pages), and CI infrastructure
+			</td>
         </tr>
         <tr>
             <td>Monal Gupta</td>
@@ -645,6 +659,8 @@ AI image generators were used to generate the main menu image and sprites for th
 </table>
 
 Overall, AI helped us move faster, but moving further still required professional software engineering skills, including architectural understanding, debugging, code review, testing, and design judgement. As AI makes code generation easier, critical thinking becomes more important than ever. In the end, final responsibility for the project remained with the developers.
+
+### 11. References
 
 
 ### Additional Marks
