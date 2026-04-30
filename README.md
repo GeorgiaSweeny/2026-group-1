@@ -45,7 +45,7 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 
 |Name|Email|Role|
 |:-|:-|:-|
-|Archie Brown|cq25988@bristol.ac.uk| UI and Upgrade Systems, CameraSystem and transition effects, VFX |
+|Archie Brown|cq25988@bristol.ac.uk| UI and Upgrade Systems, CameraSystem and transition effects, VFX, CI Testing |
 |Monal Gupta|ta25702@bristol.ac.uk| EnemySystem; ResourceManagmentSystem, Menus, Sound FX |
 |Ben Mounce|wv25183@bristol.ac.uk| SonarSystem, MissileSystem & visuals |
 |Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer; Systems Architect; Lighting Systems & effects; Code reviewer, GameWorld Design |
@@ -541,7 +541,9 @@ We decided during development to have pre-determined room layouts which are not 
         </tr>
         <tr>
             <td>Archie Brown</td>
-            <td align="left"></td>
+            <td align="left">
+				UI and upgrade systems (shop, power bar, controls overlay), diagnostic tooling (tile/room test pages), and CI infrastructure
+			</td>
         </tr>
         <tr>
             <td>Monal Gupta</td>
