@@ -798,7 +798,7 @@ Future work could include additional enemy types, more complex boss encounters, 
         <tr>
             <td>Archie Brown</td>
             <td align="left">
-				UI and upgrade systems (shop, power bar, controls overlay), diagnostic tooling (tile/room test pages), and CI infrastructure
+				CI/CD Testing, Camera System, UI and upgrade systems (shop, power bar, controls overlay), diagnostic tooling (tile/room test pages),  
 			</td>
         </tr>
         <tr>
