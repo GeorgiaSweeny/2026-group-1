@@ -50,7 +50,7 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 |Ben Mounce|wv25183@bristol.ac.uk| SonarSystem, MissileSystem & visuals |
 |Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer; Systems Architect; Lighting Systems & effects; Code reviewer, GameWorld Design |
 |Nick Jankov|ve21144@bristol.ac.uk| HitboxSystem, Code Reviewer |
-|Jude Hsu|ca20853@bristol.ac.uk| Report contributor; Co-developer; PauseMenu |
+|Jude Hsu|ca20853@bristol.ac.uk| Report contributor; Co-developer |
 
 </br>
 
