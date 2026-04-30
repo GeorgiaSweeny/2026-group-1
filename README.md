@@ -487,7 +487,7 @@ Overall, the team’s process evolved from open-ended exploration into a more st
 
 As software developers we acknowledge that the software development process is deeply integrated into many industries and as a result has a large effect on the environment. It is our responsibility to mitigate the environmental impacts of our project by following a sustainable workflow. To aid in this we have followed the sustainability awareness framework (SusAF) closely to identify any large impacts our game has and to reduce the impact caused by them during the development process. We have taken 3 main sections from the SusAF – environmental, technical and individual that align the most with our project. 
 
-Environmental 
+## 7.1 Environmental 
 
 It was important for us to look at our overall project from an environmental perspective, as developers we use a wide variety of tools that although increase the speed and efficiency of coding can lead to some negative long term environmental consequences which we would like to mitigate where possible. 
 
@@ -495,7 +495,7 @@ AI is an example of a resource intensive tool and has been used in this project 
 
 We were commited in this project to keeping the codebase clean with any legacy code removed and old inefficient systems being replaced. This reduces the runtime requirements of the game and reduces long term energy usage leading to environmental benefits. It also benefits users with less powerful computers and allows them to play the game with minimal lag. In addition, the large amount of object data required for the maps, enemies and player were extracted from compact json files reducing overall project file size. 
 
-Technical 
+## 7.2 Technical 
 
 From a programmer's perspective creating readable and maintainable code is important in the development process and we have taken steps throught the project to implement maintainability in our codebase. 
 
@@ -503,7 +503,7 @@ To aid in maintainability for both our group members and any potential contribut
 
 Additionally, we have included a comprehensive set of test scripts in our code base. To ensure that new commits are functional, we have included a pre commit bash script that runs through each test when a pull request is submitted. This helps ensure our system is stable and any potential bugs are caught that a reviewer might miss. 
 
-Individual 
+## 7.3 Individual 
 
 Since we are developing a game that is intended to be played by multiple people, we saw it fit to examine our game on an individual basis. We did so by analysing the effects our game has on the individual considering usage and user experience. 
 
