@@ -858,7 +858,7 @@ Overall, AI helped us move faster, but moving further still required professiona
 
 [4] Fowler, M. (2018). *Continuous Integration*. Martin Fowler. https://martinfowler.com/articles/continuousIntegration.html - Principles of continuous integration.
 
-[5] Gamma, E., Helm, R., Johnson, R., & Vlissides, J. (1995). *Design Patterns: Elements of Reusable Object-Oriented Software*. Addison-Wesley. - Classic reference for software architecture patterns including Model-View-Controller.
+[5] Gamma, E., Helm, R., Johnson, R., & Vlissides, J. (1995). *Design Patterns: Elements of Reusable Object-Oriented Software*. Addison-Wesley. 
 
 [6] Beck, K. (2003). *Test Driven Development: By Example*. Addison-Wesley. - TDD methodology and best practices.
 
@@ -880,7 +880,5 @@ Overall, AI helped us move faster, but moving further still required professiona
 
 [15] ACM. (2004). *Metroidvania Game Design*. Digital Games. https://dl.acm.org/doi/pdf/10.1145/1077246.1077253#page=7
 
-[16] UK Government. (2024). *GOV.UK*. http://gov.uk
-
-[17] Photobucket. (2024). *Dithering Graphics Example*. https://i57.photobucket.com/albums/g209/phototekcub/ditherreduxgif.gif
+[16] Photobucket. (2024). *Dithering Graphics Example*. https://i57.photobucket.com/albums/g209/phototekcub/ditherreduxgif.gif
 
