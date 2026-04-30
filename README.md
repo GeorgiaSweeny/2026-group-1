@@ -394,36 +394,45 @@ Before tackling the core mechanics of our game, we established a foundational ar
 ### Technical Challenge 1: The Sonar Pulse Mechanic
 
 ![Figure 1: Sonar Pulse Mechanic](./project-docs/report_figures/SonarPulse.gif)
+Figure 8: Sonar Pulse in-game mechanic 
 
 Given the dark nature of our underwater setting, the sonar pulse is a critical navigation mechanic used to reveal terrain, enemies, and hazards. Implementing this presented significant performance and architectural challenges. Our primary design goal was to achieve this without mutating the shared game state of our room and entities, ensuring the rendering pipeline remained decoupled from the physics engine.
 
 Instead of a simple expanding radius, we built a custom ray-casting engine. When triggered, the system spawns a Pulse object consisting of 180 individual particles. These particles are assigned velocity vectors pointing outward at equal intervals using p5.Vector.fromAngle. Every frame, these particles step outward and check for point-vs-bounding-box collisions against normalised spatial data (walls, hazards, and enemies).
 
-Figure 2: Code snippet showing the 180-degree ray-casting initialisation and vector mathematics.
+![Main Gameplay Screen](./project-docs/report_figures/Figure 9 rayCount.png)
+Figure 9: Code snippet showing the 180-degree ray-casting initialisation and vector mathematics.
 
 A major technical hurdle was managing the temporary visual "revealed" state of the environment without directly modifying the physical objects. To solve this, we utilised JavaScript WeakMap structures (wallAlpha, hazardAlpha, etc.). When a sonar ray collides with an entity, the particle is destroyed, and the entity is used as a key in the WeakMap to store an alpha transparency value. This value degrades over time in the update() loop.
 
 This approach completely decouples the visual pulse from the core game physics and inherently prevents memory leaks; if a wall is destroyed by a player's missile, the WeakMap automatically collects the unused reference without crashing the sonar system.
 
-Figure 3: Code snippet demonstrating WeakMap state management and garbage collection logic.
+![Main Gameplay Screen](./project-docs/report_figures/Figure 10 WeakMap.png)
+Figure 10: Code snippet demonstrating WeakMap state management and garbage collection logic.
 
 Furthermore, the system was designed to be highly scalable to accommodate player progression. As the player upgrades their sonar, the system dynamically recalculates several variables: the fade rate decreases linearly, the effective range expands, and the cooldown timer is reduced in inverse proportion to the square root of the sonar level (BASE_COOLDOWN_MS / Math.sqrt(sonarLevel)). The ray speed is also dynamically scaled to ensure the pulse always travels the newly calculated effective range within its fixed mathematical lifetime.
 
 ### Technical Challenge 2: Resource Economy and State Synchronisation
 
+![Main Gameplay Screen](./project-docs/report_figures/Figure 11 Workshop.png)
+Figure 11: In-game Workshop feature
+
 The second major technical hurdle was designing a scalable resource and hazard economy. This required parsing raw map data into actionable game logic and synchronising player state across multiple decoupled systems (the physics loop, the resource manager, and the UI workshop) without creating race conditions or tightly coupled spaghetti code.
 
 The first step was dynamically resolving items loaded from the roomSystem. Our maps are built using Tiled (JSON), meaning objects are imported with generic Global Tile IDs (GIDs). Rather than hardcoding specific IDs into the game loop, we wrote a dynamic resolveCollectableType algorithm. This function cross-references the item's GID against the imported tileset's firstgid ranges, converting raw map data into contextual gameplay tags (e.g., "scrap" or "power") at runtime.
 
-Figure 4: Code snippet of resolveCollectableType converting Tiled GIDs into game logic.
+![Main Gameplay Screen](./project-docs/report_figures/Figure 12 processCollectables.png)
+Figure 12: Code snippet of resolveCollectableType converting Tiled GIDs into game logic.
 
 Managing the physical collection of these items presented a memory management challenge. Initially, processing collisions against arrays of collectables could result in a single item being "collected" multiple times in a single frame before the engine destroyed it. To solve this, we implemented a JavaScript Set (collectedEntities). Because sets guarantee uniqueness and offer O(1) lookup times, we can instantly verify if an item has already been collected. Furthermore, this decoupled the rendering logic from the physical map data; rather than deleting the item from memory, the renderer simply filters out any entity present in the Set. When a player dies or resets the level, calling collectedEntities.clear() instantly "respawns" all items.
 
-Figure 5: Code snippet demonstrating O(1) Set lookups for collection processing.
+![Main Gameplay Screen](./project-docs/report_figures/Figure 13 processHazards.png)
+Figure 13: Code snippet demonstrating O(1) Set lookups for collection processing.
 
 Handling environmental hazards required an entirely different collision paradigm. Unlike discrete collectables (which trigger once), hazards require both immediate and continuous effects. Within processHazards(), we programmed a state-machine approach. When a player initially overlaps a hazard, they are hit with a one-shot HAZARD_ENTRY_PENALTY. If they remain on the hazard in subsequent frames, a continuous HAZARD_DRAIN_RATE is applied via the fixed-timestep loop. To prevent players from losing all their health instantly, the continuous hit-response is safely gated behind an invincibility-frame (i-frame) timer handled by our combat utilities.
 
-Figure 6: Hazard processing logic showing discrete penalties vs. continuous drain.
+![Main Gameplay Screen](./project-docs/report_figures/Figure 14 resolveCollectableType.png)
+Figure 14: Hazard processing logic showing discrete penalties vs. continuous drain.
 
 The culmination of this resource loop is the workshopSystem, a frontend UI overlay. The challenge here was ensuring a completely async UI could safely mutate the gameplay state. The workshop operates independently of the main update() loop. When a user clicks an upgrade, the system calculates the exponential cost scaling (Math.ceil(upgrade.cost * 1.5)), verifies the player's scrap count, directly mutates the player's upgrade levels, and instantly triggers a state-recalculation (e.g., immediately refilling the player's power to match the newly purchased maximum capacity). This strict separation of concerns ensures the UI never blocks the physics thread while providing immediate, satisfying feedback to the player.
 
