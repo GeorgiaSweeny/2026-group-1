@@ -51,24 +51,22 @@ https://github.com/user-attachments/assets/511bb68b-5e3b-4c63-b410-d253316b1b56
 # Project Report
 
 ## 1. Introduction
-Our game is a tense, underwater exploration adventure where players navigate their way out of abyss using movement, resource management, and environmental interaction. The core twist is the 
-echolocation-based sonar mechanic, which allows players to temporarily reveal their surroundings in an otherwise dark and hazardous environment. This mechanic drives both gameplay and atmosphere,
-creating tension and encouraging strategic decision-making.
+- 5% ~250 words 
+- Describe your game, what is based on, what makes it novel? (what's the "twist"?)
 
-The game draws inspiration from Metroidvania-style design, featuring interconnected rooms, gated areas unlocked through new abilities, and challenges that reward exploration and mastery. Unlike traditional
-underwater games, the use of sonar as a primary navigation and discovery tool sets it apart, providing a fresh experience where visibility is limited and deliberate planning is essential.
+The Abyss is a tense underwater, Metroidvania-style game with a playful blocky aesthetic, focused on exploration and challenging resource management in near-complete darkness.
 
-Players must manage resources such as power, and health while exploring unknown areas. Strategic use of the torch and sonar is crucial, as these tools consume resources but are necessary for
-survival and progression. This combination of limited visibility, environmental hazards, and resource management emphasizes careful exploration over fast-paced action, creating an immersive and atmospheric
-gameplay loop.
+When a deep sea scientific expedition takes a sudden turn after the submersible suffers a major malfunction, the player is left stranded deep within the abyss and must find a way back to the surface from an unknown location. Like traditional Metroidvania games, progression is based on exploration, mastery of abilities, and unlocking tools that grant access to previously unreachable areas. Players are frequently placed in situations where they must quickly learn the layout of the environment and identify hazards in order to survive and progress. The game also supports multiple playstyles through system upgrades and missile-based combat, allowing players to either adopt a cautious, navigation-focused approach or play more aggressively by using salvaged scrap to craft missiles and eliminate threats.
 
-The game’s novelty lies in how the sonar mechanic integrates with world design, enemies, and lighting. It encourages players to think tactically, interact meaningfully with the environment, and engage with
-risk versus reward. By combining a familiar exploration framework with a unique visibility mechanic, the game provides a distinctive experience** that is both challenging and rewarding, appealing to players
-seeking depth, immersion, and discovery in an underwater setting**.
+Rather than being a gimmick, the setting directly supports the core mechanic and central twist: a sonar-based navigation system. Instead of constant visibility, players use sonar to temporarily reveal surrounding areas. A limited torch system is also available, but it acts as a trade-off, draining the player’s already scarce power resource. In addition, the game features a sonar-based minimap system, which gradually updates as the player explores. This minimap is revealed through both sonar scans and torch usage, reinforcing the player’s understanding of explored and unexplored areas over time. Together, these systems create a gameplay loop based on scanning, interpretation, and memory rather than continuous vision, making movement deliberate and uncertain. Although set in darkness, the abyss is far from empty, with bioluminescent jellyfish, glowing biomatter, and salvage from the surface scattered throughout the environment to encourage exploration and risk-taking.
+
+The game also features a resource management and upgrade system. Players must manage limited power while navigating environmental hazards and interacting with objects that can either assist or hinder progression. This reinforces a consistent risk–reward structure, where deeper exploration offers greater rewards but increases danger. With the ultimate goal of returning to the surface, every decision carries weight.
+
+Overall, the game combines traditional Metroidvania design principles with a sonar-based visibility and mapping system alongside resource management mechanics. This reshapes how players perceive and interact with the environment, while maintaining a focus on progression through exploration and discovery.
 
 ## 2. Requirements 
 ### 2.1 Early Stage Design & Ideation
-The game concept was developed collaboratively through group discussions and pitch proposals. During the early design phase, we used [Notion](https://www.notion.so/Software-Engineering-Project-2eef3902b1f080668320f5a1a2d17915)to document and refine ideas. Each team member proposed a concept [Figure 1: Game Ideas], and the team then voted on their preferred option [Figure 2: Poll Results for Game Ideas]. Two of the proposed concepts were centred on echolocation, which helped establish it as the foundation of the project. Through further discussion, the selected concept evolved into an underwater exploration game, where limited visibility creates tension and supports the overall atmosphere. The game’s core differentiator is its sonar-based mechanic, supported by darkness and resource management systems.
+We were inspired by classic flash games from our childhood like; Club Penguin's Aqua Grabber, Motherload as well as modern titles, Hollow Knight and Subnautica. The game concept was developed collaboratively through group discussions and pitch proposals. During the early design phase, we used [Notion](https://www.notion.so/Software-Engineering-Project-2eef3902b1f080668320f5a1a2d17915)to document and refine ideas. Each team member proposed a concept [Figure 1: Game Ideas], and the team then voted on their preferred option [Figure 2: Poll Results for Game Ideas]. Two of the proposed concepts were centred on echolocation, which helped establish it as the foundation of the project. Through further discussion, the selected concept evolved into an underwater exploration game, where limited visibility creates tension and supports the overall atmosphere. The game’s core differentiator is its sonar-based mechanic, supported by darkness and resource management systems.
 
 ``` jude: Please check that non-members can access the Notion link before submission.```
 
@@ -109,34 +107,81 @@ Based on this feedback, the team shaped the game around exploration, tension, an
 </p>
 
 ### 2.4 Epics and User Stories
-We used epics and user stories to structure the game idea into a clearer and manageable development plan that the team could actually work with. At the start of the project, the overall concept was a bit too broad, so epics helped us organise the project into major areas of player experience and technical functionality, such as player movement, resource management, sonar and lighting, enemies, world progression, interface, and system architecture. 
+We used epics and user stories to structure the game concept into a clear and manageable development plan. At the start of the project, the overall design was too broad, so epics were used to organise development into key areas of player experience and technical functionality. These included player movement, resource management, sonar and lighting systems, enemies, world progression, interface design, and system architecture.
 
-For each epic, we wrote features from the perspective of the player, and in some cases from the perspective of the developer. This forced us to think about why a feature mattered, not just what needed to be coded.
+For each epic, features were defined primarily from the perspective of the player, and in some cases from the perspective of the developer. This encouraged consideration of why each feature was important, rather than focusing solely on implementation.
 
-We also used acceptance criteria to define what "completed" looked like. This helped make features more concrete and reduced ambiguity during implementation. It also make it easier to determine what belonged in the MVP and what could be ranked as lower priority.
+Acceptance criteria were also defined to establish what “complete” meant for each feature. This made requirements more concrete, reduced ambiguity during development, and supported prioritisation between core MVP features and lower-priority enhancements.
 
-The main thing we learned from this process was that epics and user stories were most useful when they stayed practical. They helped the team focus on player experience, communicate implementation priorities more clearly.
+Overall, epics and user stories were most effective when kept practical and closely aligned with gameplay systems. They helped maintain a focus on player experience while improving clarity in planning and implementation priorities.
 
-For repo readibility, we listed two representative examples below. The full set of epics, user stories, and acceptance criteria can be found in the following link: [Full list](Epics_and_user_stories.md)
+### EPIC 1 – Core Player Interaction
+**Description:** The player must move, explore, and interact with the underwater world intuitively. 
 
-#### EPIC 1 – Core Player Interaction
-**Description:** The player must move, explore, and interact with the underwater world intuitively.  
 **User Stories:**  
-- As a competitive player, I want responsive movement, so that I feel in control underwater.
-- As a player, I want to navigate vertical spaces, so that I can truly explore.
-- As a casual player, I want intuitive controls, so that I can start playing immediately. 
-- As a disabled player, I want remappable controls, so that I can play comfortably.
-  
-**Acceptance Criteria:** Movement and physics are frame-rate independent; input is separated from logic; drag and capped fall speed applied consistently.
+- As a player, I want responsive movement so that I feel in control while navigating underwater.
+- As a player, I want to navigate vertical space so that I can fully explore the environment.
+- As a player, I want intuitive controls so that I can begin playing without a steep learning curve.
+- As a player with accessibility needs, I want remappable controls so that I can play comfortably.
 
-#### EPIC 2 – Resource & Survival Systems
-**Description:** Players manage limited resources to create tension and strategic decision-making.  
+**Acceptance Criteria:**
+- Movement and physics are independent of frame rate.
+- Input handling is separated from game logic.
+- Movement includes consistent drag and controlled vertical velocity limits.
+- Controls can be remapped without affecting core gameplay systems.
+
+### EPIC 2 - Resource & Survival Systems
+**Description:** The player must manage limited resources to create tension and encourage strategic decision-making.
+
 **User Stories:**  
-- As a player, I want power to drain over time, so that exploration feels risky.
-- As a player, I want torch and sonar to consume additional power, so that I must choose when to use them.
-- As a player, I want health to decrease when colliding with enemies, so there are tangable consequences.  
+- As a player, I want power to drain over time so that exploration feels increasingly risky.
+- As a player, I want sonar and torch usage to consume additional power so that I must choose when to use them.
+- As a player, I want health to decrease when colliding with enemies so that there are meaningful consequences for mistakes.
   
-**Acceptance Criteria:** Resources drain continuously and predictably; Game Over triggers if any resource reaches zero; UI displays all resources clearly.
+**Acceptance Criteria:**
+- Resource values decrease continuously and consistently over time or usage.
+- Game Over is triggered when any critical resource reaches zero.
+- UI clearly displays all active resource levels at all times.
+- Resource changes are immediately reflected in gameplay state.
+
+### EPIC 3 – World Structure & Progression
+**Description:** The world supports non-linear exploration and ability-based progression. 
+
+**User Stories:**  
+- As a player, I want interconnected rooms so that exploration feels cohesive.
+- As a player, I want gated paths so that new abilities unlock new areas.
+
+**Acceptance Criteria:**
+- Multiple interconnected rooms with clear transitions.
+- Progression is gated through unlockable abilities.
+- Reaching the final area triggers a win state.
+
+### EPIC 4 – Interface & Game States
+**Description:** The interface clearly communicates game state and core systems.
+
+**User Stories:**  
+- As a player, I want an in-game UI displaying resources so that I can manage survival.
+- As a player, I want clear game states (start, pause, win, loss) so that the game flow is understandable.
+
+**Acceptance Criteria:**
+- UI displays all active resource values consistently.
+- Menus correctly pause and resume gameplay.
+- Game Over and Win states trigger correctly.
+
+### EPIC 5 – Technical Architecture & Maintainability
+**Description:** The system is modular and scalable to support consistent gameplay and future development. 
+
+**User Stories:**  
+- As a developer, I want systems to be modular so that features can be developed and debugged independently.
+- As a developer, I want all time-based behaviour to use deltaTime so that gameplay is consistent across frame rates.
+- As a developer, I want logic and rendering to be separated so that systems like lighting and sonar can be extended.
+  
+**Acceptance Criteria:**
+- Systems are modularised (Input, Physics, Resource, Lighting, Enemy).
+- All time-dependent behaviour is frame-rate independent.
+- Rendering is decoupled from game logic.
+- A central update loop manages execution order.
+
 
 In addition to the inital concept proposals, the lead developer documented discussion points from the ideation stage and produced sevearal early room sketches and map layouts. These drawings helped the team make abstract ideas more concrete, compare possible structures, and visualise how exploration and progression might work in practice. Selectd examples of the maps are included below.
 
