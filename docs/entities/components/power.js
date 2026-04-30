@@ -61,6 +61,10 @@ export class PowerSystem {
       this.current = Math.max(0, Math.min(this.current - rate * TIME.fixedDeltaTime, this.maxPower));
    }
 
+   charge(rate) {
+      this.current = Math.min(this.maxPower, this.current + rate * TIME.fixedDeltaTime);
+   }
+
    isEmpty() {
       return this.current <= 0;
    }

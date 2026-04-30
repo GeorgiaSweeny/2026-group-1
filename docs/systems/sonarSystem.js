@@ -266,7 +266,7 @@ export function createSonarSystem(player, getWalls, getHazards = () => [], getCo
         }
         const rectInfo = readWallRect(wall);
         if (rectInfo) {
-          reveals.push({ ...rectInfo, alpha: Math.max(0, Math.min(255, alpha)) });
+          reveals.push({ ...rectInfo, alpha: Math.max(0, Math.min(255, alpha)), isBreakable: wall.isBreakable ?? false });
         }
       }
       return reveals;

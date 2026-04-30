@@ -39,8 +39,10 @@ import {
   GAMEPLAY_OVERLAY,
   MINIMAP,
   HUD_DIALS,
-  GAME_VERSIONS,
 } from "./config.js";
+
+const GAME_ROOMS = ["demoStart", "tunnel", "theDrop", "endlessAbyss", "crabCaverns", "spikeMaze", "jellyfishAtrium", "theSurface"];
+const GAME_START_ROOM = "demoStart";
 import { Player } from "./entities/player.js";
 import { createResourceManagementSystem } from "./systems/resourceManagementSystem.js";
 import { createMainPageSystem } from "./systems/mainPageSystem.js";
@@ -94,8 +96,6 @@ let storyDialogActive = false;     // story dialog shown on game start
 let hasSeenIntro = false;          // true after player passes STORY_PAGE → CONTROLS flow
 let settingsReturnState = "MENU"; // state to restore when settings overlay closes
 let controlsReturnState = null;   // non-null when controls page opened from settings/overlay
-let gameVersion = "full"; // "demo" | "full"
-let sessionVersion = "full";   // locked-in version for the current session
 let sessionDifficulty = null;  // locked-in difficulty for the current session ("EASY"|"HARD")
 let menuSystem;
 let winScreenSystem;
@@ -108,10 +108,7 @@ const GAME_OVER_STATE = "GAME_OVER";
 let assets = {};
 // NOTE: Some rooms are placeholders (see docs/data/rooms/*.json) so the build runs end-to-end.
 // Prototype rooms are preloaded for testing but not part of any game version.
-const ROOM_IDS = [
-  "roomA", "roomB",
-  ...new Set(Object.values(GAME_VERSIONS).flatMap(v => v.rooms)),
-];
+const ROOM_IDS = ["roomA", "roomB", ...GAME_ROOMS];
 const roomData = {};
 const FIT_CANVAS_TO_ROOM = false;
 let useDevResolution = false;
@@ -595,7 +592,7 @@ function setup() {
 
   player = new Player(PLAYER);
 
-  const initialRoom = GAME_VERSIONS.demo.startRoom;
+  const initialRoom = GAME_START_ROOM;
   roomSystem = createRoomSystem({
     initialRoom,
     roomData,
@@ -618,8 +615,8 @@ function setup() {
       soundSystem?.play('win', 0.4);
       gameState = WIN_STATE;
     },
-    getAllowedRooms: () => GAME_VERSIONS[gameVersion].rooms,
-    getGameVersion: () => gameVersion,
+    getAllowedRooms: () => GAME_ROOMS,
+    getGameVersion: () => "full",
     soundSystem,
   });
   roomSystem.goToRoom(initialRoom, { spawnId: "default" });
@@ -1100,25 +1097,11 @@ function mousePressed() {
   if (gameState === "MENU") {
     const selection = menuSystem.checkClick(mouseX, mouseY);
 
-    if (selection === "DEMO") {
+    if (selection === "EASY" || selection === "HARD") {
       soundSystem?.stop('introMusic');
       soundSystem?.play('buttonClick', 0.8);
       soundSystem?.play('waterSplash', 1.0);
       soundSystem?.loop('gamebg1', 0.7);
-      gameVersion = "demo";
-      sessionVersion = "demo";
-      sessionDifficulty = GAME_VERSIONS.demo.difficulty;
-      applyDifficultyConfig(sessionDifficulty);
-      resetGameToStart();
-      storyDialogActive = !hasSeenIntro;
-      gameState = "PLAYING";
-    } else if (selection === "EASY" || selection === "HARD") {
-      soundSystem?.stop('introMusic');
-      soundSystem?.play('buttonClick', 0.8);
-      soundSystem?.play('waterSplash', 1.0);
-      soundSystem?.loop('gamebg1', 0.7);
-      gameVersion = "full";
-      sessionVersion = "full";
       sessionDifficulty = selection;
       applyDifficultyConfig(selection);
       resetGameToStart();
@@ -1199,7 +1182,6 @@ function applyDisplayScale() {
 }
 
 function restartCurrentSession() {
-  gameVersion = sessionVersion;
   if (sessionDifficulty) {
     applyDifficultyConfig(sessionDifficulty);
   }
@@ -1208,7 +1190,7 @@ function restartCurrentSession() {
 
 function resetGameToStart() {
   // 1. Send the player back to the first room
-  const startRoom = GAME_VERSIONS[gameVersion].startRoom;
+  const startRoom = GAME_START_ROOM;
   roomSystem.goToRoom(startRoom, { spawnId: "default" });
 
   // 2. Snap the player's physical coordinates to the spawn point
