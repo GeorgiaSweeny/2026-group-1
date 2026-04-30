@@ -583,24 +583,6 @@ The second sprint therefore focused more strongly on integration. Instead of cre
 
 Overall, the team’s process evolved from open-ended exploration into a more structured development workflow. The early prototyping stage helped us discover the strongest mechanics, while the later integration stage helped us turn those mechanics into a playable game. The main lesson was that creative experimentation is useful at the start of a project, but it needs to be followed by clear ownership, integration planning, code review, and regular communication.
 
-## 7. Sustainability
-
-As software developers we acknowledge that the software development process is deeply integrated into many industries and as a result has a large effect on the environment. It is our responsibility to mitigate the environmental impacts of our project by following a sustainable workflow. To aid in this we have followed the sustainability awareness framework (SusAF) closely to identify any large impacts our game has and to reduce the impact caused by them during the development process. We have taken 3 main sections from the SusAF – environmental, technical and individual that align the most with our project. 
-
-#### 7.1 Environmental 
-
-It was important for us to look at our overall project from an environmental perspective, as developers we use a wide variety of tools that although increase the speed and efficiency of coding can lead to some negative long term environmental consequences which we would like to mitigate where possible. 
-
-AI is an example of a resource intensive tool and has been used in this project as it is useful for development. AI however has come under scrutiny due to its large land, water and energy usage. This has been mitigated by using AI sparingly in our project only when necessary to fix difficult problems with our code. General coding work was not done with AI and some sprites were drawn by hand to avoid AI overuse. 
-
-We were commited in this project to keeping the codebase clean with any legacy code removed and old inefficient systems being replaced. This reduces the runtime requirements of the game and reduces long term energy usage leading to environmental benefits. It also benefits users with less powerful computers and allows them to play the game with minimal lag. In addition, the large amount of object data required for the maps, enemies and player were extracted from compact json files reducing overall project file size. 
-
-#### 7.2 Technical 
-
-From a programmer's perspective creating readable and maintainable code is important in the development process and we have taken steps throught the project to implement maintainability in our codebase. 
-
-To aid in maintainability for both our group members and any potential contributors we adhered to a model controller structure with a game engine class for controller registration. This allows other developers to develop their own controllers which can then be easily registered with the game engine. Controllers can then interact easily with data carrying classes such as the player or enemies. Rendering is kept separate from game logic and is stored in its own file allowing for easier testing of controllers and models and implementation of new graphics easily if desired.  
-
 #### CI/CD Pipeline
 
 The project uses GitHub Actions <sup>[3]</sup> for continuous integration and deployment. By automating integration and deployment, we significantly reduced mean time to recovery (MTTR) when bugs were found, forcing developers to only commit working code and ensuring quality commit standards. The goal is a always-deployable main branch — changes are small, frequently integrated, and validated automatically. The pipeline ran on every push to main and on all pull requests, providing automated validation before changes reach the main branch, enforcing the "always deployable" principle.
@@ -768,6 +750,24 @@ Contract tests verify that systems interact correctly:
 - Tests were written after feature implementation rather than during — coverage is uneven
 - `miniMapSystem.js` has 1% coverage despite being a core feature — low-priority tests lagged behind rapid feature development
 - `config.js` exports changed without updating dependent tests
+
+## 7. Sustainability
+
+As software developers we acknowledge that the software development process is deeply integrated into many industries and as a result has a large effect on the environment. It is our responsibility to mitigate the environmental impacts of our project by following a sustainable workflow. To aid in this we have followed the sustainability awareness framework (SusAF) closely to identify any large impacts our game has and to reduce the impact caused by them during the development process. We have taken 3 main sections from the SusAF – environmental, technical and individual that align the most with our project. 
+
+#### 7.1 Environmental 
+
+It was important for us to look at our overall project from an environmental perspective, as developers we use a wide variety of tools that although increase the speed and efficiency of coding can lead to some negative long term environmental consequences which we would like to mitigate where possible. 
+
+AI is an example of a resource intensive tool and has been used in this project as it is useful for development. AI however has come under scrutiny due to its large land, water and energy usage. This has been mitigated by using AI sparingly in our project only when necessary to fix difficult problems with our code. General coding work was not done with AI and some sprites were drawn by hand to avoid AI overuse. 
+
+We were commited in this project to keeping the codebase clean with any legacy code removed and old inefficient systems being replaced. This reduces the runtime requirements of the game and reduces long term energy usage leading to environmental benefits. It also benefits users with less powerful computers and allows them to play the game with minimal lag. In addition, the large amount of object data required for the maps, enemies and player were extracted from compact json files reducing overall project file size. 
+
+#### 7.2 Technical 
+
+From a programmer's perspective creating readable and maintainable code is important in the development process and we have taken steps throught the project to implement maintainability in our codebase. 
+
+To aid in maintainability for both our group members and any potential contributors we adhered to a model controller structure with a game engine class for controller registration. This allows other developers to develop their own controllers which can then be easily registered with the game engine. Controllers can then interact easily with data carrying classes such as the player or enemies. Rendering is kept separate from game logic and is stored in its own file allowing for easier testing of controllers and models and implementation of new graphics easily if desired.  
 
 #### 7.3 Individual 
 
