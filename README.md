@@ -806,9 +806,9 @@ Our Evaluation results confirmed that the core design intention, tension through
             <td>Monal Gupta</td>
             <td align="left"> Proposed the core Echo-Location mechanics. Designed the Resource Management System (power-ups, health, enemy). Created Enemy System with different behaviours for Crabs (wall bound), Jellyfishes (sinusoidal movement) and Piranhas (sonar pulse attracted). Built starting UI flow (Intro, Story and Controls screens). Integrated spatial audio/SFX and background music. Prepared member slides for video. </td>
         </tr>
-        <tr>
+       <tr>
             <td>Ben Mounce</td>
-            <td align="left"></td>
+            <td align="left">Built the sonar system using a particle-based, ray-casting pulse that revealed the dark environment. Implemented a WeakMap structure to manage the temporary alpha-fading of walls and hazards. Also built a homing missile using continuous vector interpolation to track enemies and breakable walls. </td>
         </tr>
         <tr>
             <td>Georgia Sweeny</td>
