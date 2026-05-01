@@ -779,11 +779,13 @@ We decided during development to have pre-determined room layouts which are not 
 
 ### 8. Conclusion 
 
-The Abyss represents a successful implementation of a Metroidvania-style game with a unique sonar-based navigation mechanic. Throughout the development process, the team learned valuable lessons about modular architecture, system integration, and collaborative development.
+The Abyss set out to turn darkness into the defining challenge of the game, forcing players to navigate, survive, and make decisions with only brief glimpses of the world around them. 
+What makes the game distinctive also makes it technically demanding: visibility must be generated on-the-fly through coordinated systems (sonar, lighting, rendering) without breaking state consistency or introducing tight coupling. By embedding this mechanic within a Metroidvania progression structure, we forced progression to directly interact with core systems, meaning upgrades do not just unlock content but fundamentally change how information is revealed, decisions are made, and risks are taken. Our modular, state-driven engine satisfied our Epics and user stories by implementing complex systems such as the sonar pulse, where ray-casting and WeakMap-based visual state management enabled dynamic environment interaction without compromising performance or introducing tight coupling. Similarly, the resource and hazard systems demonstrate robust state synchronisation across independent subsystems.
 
-Key achievements include the implementation of the sonar pulse mechanic using ray-casting and WeakMap structures for memory-efficient visibility management, a robust resource economy system with dynamic item resolution, and a comprehensive testing strategy with CI/CD integration.
+Our development process highlights a clear progression from exploratory prototyping to structured system integration. Early-stage experimentation was effective in identifying a compelling core mechanic, while later iterations exposed the practical challenges of dependency management, shared state, and team coordination. The adoption of CI/CD, modular testing, and iterative refinement ensured the project remained stable and maintainable despite increasing system complexity.
 
-Future work could include additional enemy types, more complex boss encounters, expanded map areas, and potential sequel development with new abilities and story elements.
+Our Evaluation results confirmed that the core design intention, tension through limited visibility, is effective. Players naturally adapted to the visibility constraints without explicit instruction, using sonar deliberately rather than excessively and navigating with caution in unlit areas. This indicates that the relationship between darkness, resource management, and movement is well-balanced and intuitively understood. 
+
 
 ### 9. Contribution Statement
 
