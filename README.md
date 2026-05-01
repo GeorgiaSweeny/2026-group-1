@@ -1,12 +1,22 @@
+<div align="center">
+
 # The Abyss
 
 **University of Bristol — COMSM0166 - Group 1 (2026)**
 
-[![Play The Abyss](https://github.com/user-attachments/assets/644a519f-0c25-4b48-93d2-f74f054544b2)](https://uob-comsm0166.github.io/2026-group-1/)
+<a href="https://uob-comsm0166.github.io/2026-group-1/">
+  <img src="https://github.com/user-attachments/assets/644a519f-0c25-4b48-93d2-f74f054544b2" alt="Play The Abyss" />
+</a>
 
-*Somewhere above the surface awaits*
+**Somewhere above the surface awaits**
 
-**[CLICK HERE TO PLAY](https://uob-comsm0166.github.io/2026-group-1/)**
+<br>
+
+<a href="https://uob-comsm0166.github.io/2026-group-1/"><strong>▶ PLAY GAME</strong></a> &nbsp;&nbsp;|&nbsp;&nbsp;
+<a href="https://youtu.be/itvz9Tkm6_s"><strong>🎥 VIDEO REPORT</strong></a>
+
+</div>
+
 	
 ## Table of Contents
 0. [Our Team](#our-team)
@@ -68,6 +78,14 @@ Click to watch or follow [link](https://youtu.be/CvOZ20M2DBA)
 The Abyss is a tense underwater, Metroidvania-style game with a playful blocky aesthetic, focused on exploration and challenging resource management in near-complete darkness.
 
 When a deep sea scientific expedition takes a sudden turn after the submersible suffers a major malfunction, the player is left stranded deep within the abyss and must find a way back to the surface from an unknown location. Like traditional Metroidvania games, progression is based on exploration, mastery of abilities, and unlocking tools that grant access to previously unreachable areas. Players are frequently placed in situations where they must quickly learn the layout of the environment and identify hazards in order to survive and progress. The game also supports multiple playstyles through system upgrades and missile-based combat, allowing players to either adopt a cautious, navigation-focused approach or play more aggressively by using salvaged scrap to craft missiles and eliminate threats.
+| Asset | Image | Description |
+|-------|-------|-------------|
+| <strong>Submarine</strong> | <img width="120" src="https://github.com/user-attachments/assets/393b72f6-0774-478e-9e39-20bcb6b98438" /> | Player vehicle; manages power, sonar, and light. |
+| <strong>Power Cell</strong> | <img width="120" src="https://github.com/user-attachments/assets/da3fcc1a-22f5-4738-a02a-36f9b8a997e9" /> | Restores power. |
+| <strong>Scrap</strong> | <img width="120" src="https://github.com/user-attachments/assets/493aa199-e023-4bd6-a8db-df181a435b47" /> | Crafting resource. |
+| <strong>Jellyfish</strong> | <img width="120" src="https://github.com/user-attachments/assets/98a9a99b-5225-45a5-a418-dc1479b3d3ce" /> | Passive; electric effects help or harm. |
+| <strong>Crab</strong> | <img width="120" src="https://github.com/user-attachments/assets/c7101405-04c0-4a5a-9a33-69d7766cc0c7" /> | Passive seabed creature. |
+| <strong>Piranha</strong> | <img width="120" src="https://github.com/user-attachments/assets/82e7ea81-de95-4682-b68a-13f7e92f0bd0" /> | Aggressive; reacts to sonar. |
 
 Rather than being a gimmick, the setting directly supports the core mechanic and central twist: a sonar-based navigation system. Instead of constant visibility, players use sonar to temporarily reveal surrounding areas. A limited torch system is also available, but it acts as a trade-off, draining the player’s already scarce power resource. In addition, the game features a sonar-based minimap system, which gradually updates as the player explores. This minimap is revealed through both sonar scans and torch usage, reinforcing the player’s understanding of explored and unexplored areas over time. Together, these systems create a gameplay loop based on scanning, interpretation, and memory rather than continuous vision, making movement deliberate and uncertain. Although set in darkness, the abyss is far from empty, with bioluminescent jellyfish, glowing biomatter, and salvage from the surface scattered throughout the environment to encourage exploration and risk-taking.
 
