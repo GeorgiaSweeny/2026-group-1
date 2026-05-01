@@ -49,7 +49,7 @@ Click to watch or follow [link](https://youtu.be/CvOZ20M2DBA)
 |Ben Mounce|wv25183@bristol.ac.uk| SonarSystem, MissileSystem & visuals |
 |Georgia Sweeny|dp25498@bristol.ac.uk| Lead developer; Systems Architect; Lighting Systems & effects; Code reviewer, GameWorld Design |
 |Nick Jankov|ve21144@bristol.ac.uk| HitboxSystem, Code Reviewer |
-|Jude Hsu|ca20853@bristol.ac.uk| Report contributor; Co-developer; PauseMenu |
+|Jude Hsu|ca20853@bristol.ac.uk| Report contributor; Co-developer |
 
 </br>
 
@@ -463,36 +463,11 @@ The culmination of this resource loop is the workshopSystem, a frontend UI overl
 
 ### 5. Evaluation
 
-We evaluated the game using a **think-aloud protocol**, an empirical method in which users narrate their thoughts, decisions, and reactions in real time while performing specific tasks with software. This method generates rich qualitative insight into the user experience and is particularly effective for identifying navigational confusion, missing feedback, and design assumptions that are invisible to the development team.
+We evaluated the game using one qualitative method, one quantitative method, and code testing. The qualitative method was a heuristic evaluation, which helped us identify usability problems in the interface and gameplay flow. The quantitative method was a simplified raw NASA TLX questionnaire, which measured the perceived workload of the game after playtesting.
 
-One participant was recruited from an adjacent project group. Two observers took notes independently. Participants were briefed beforehand: there were no correct answers, and criticism of the design was welcomed explicitly. They were asked to think aloud continuously and were prompted with *"what are you thinking?"* if they went silent. Two tasks were set:
+#### Qualitative Evaluation: Heuristic Evaluation
 
-- **Task 1:** Navigate from the starting room to the next area using the sonar mechanic.
-- **Task 2:** Survive for as long as possible while managing the power resource.
-
-**Findings.** Three key observations emerged from the think-aloud sessions.
-
-The **core tension is working as intended.** Players instinctively avoided unlit areas without being told to — the limited torch radius created genuine curiosity and caution. This confirmed that the atmospheric design premise was landing. The sonar pulse was used purposefully rather than spammed; players fired it, waited for the reveal, then moved deliberately.
-
-The **absence of narrative direction was the most raised issue.** Participants reported uncertainty about what they were working toward. Without a stated objective, exploration felt aimless rather than purposeful. One participant noted that even a minimal story setup — a distress signal, a missing crew — would give the sonar mechanic a reason to exist beyond pure puzzle-solving.
-
-**Enemy encounters created no strategic tension.** Players navigated around enemies without engagement. Participants suggested that enemies visibly reacting to sonar — speeding up, entering an alert state, or changing direction — would make encounters feel deliberate rather than accidental.
-
-## User & Heuristic Evaluation
-
-One participant was recruited from an adjacent group. Two observers recorded critical moments while the participant played through the prototype, verbalising their thoughts. Two tasks were set:
-- Navigate from the starting room to the next area using the sonar mechanic
-- Survive for as long as possible while managing the power resource
-
-### Findings
-
-**Atmosphere and core tension are working.** The limited torch radius created genuine curiosity. Players instinctively avoided unlit areas without being told to. The core design premise is landing as intended.
-
-**No narrative direction was the most commonly raised issue.** Without a clear objective, players explored aimlessly and reported uncertainty about what they were working toward. Pete also highlighted this directly, even a minimal story setup (distress signal, missing crew) would give exploration a purpose. If the objective(collectible item) is hidden and sonar reveals it, the mechanic becomes narratively meaningful rather than purely mechanical.
-
-**Enemies created no real tension.** Players navigated around them without strategic thought. Enemies reacting visibly to sonar like speeding up, changing direction, entering an alert state, would make encounters feel meaningful.
-
-## Heuristic Evaluation
+We conducted a heuristic evaluation using frequency, impact, and persistence. Each issue was given a severity score calculated as:
 
 > **Severity = (Frequency + Impact + Persistence) / 3**
 
@@ -507,13 +482,37 @@ One participant was recruited from an adjacent group. Two observers recorded cri
 | Gameplay | Enemies deal contact damage with no warning animation or sound | H5 – Error Prevention | 3 | 3 | 3 | 3.0 |
 | Game Over screen | No cause of death shown. Player cannot identify what went wrong | H9 – Help Users Recover from Errors | 3 | 3 | 3 | 3.0 |
 
-### Difficulty Levels
-Two difficulty levels will be selectable from the main menu:
+### Findings
+**Atmosphere and core tension are working.** The limited torch radius created genuine curiosity. Players instinctively avoided unlit areas without being told to. The core design premise is landing as intended.
 
-**Easy** — slower power drain, wider torch radius, slower enemies, more pickups.
+**No narrative direction was the most commonly raised issue.** Without a clear objective, players explored aimlessly and reported uncertainty about what they were working toward. Pete also highlighted this directly, even a minimal story setup (distress signal, missing crew) would give exploration a purpose. If the objective(collectible item) is hidden and sonar reveals it, the mechanic becomes narratively meaningful rather than purely mechanical.
 
-**Hard** — faster drain, narrower torch radius, more aggressive enemies, 
-fewer or no pickups.
+**Enemies created no real tension.** Players navigated around them without strategic thought. Enemies reacting visibly to sonar like speeding up, changing direction, entering an alert state, would make encounters feel meaningful.
+
+FFor the quantitative evaluation, seven test players completed a simplified raw NASA TLX questionnaire after playing the game. We chose this method because we were particularly interested in whether the game caused frustration, and whether that frustration came from challenge, controls, time pressure, or unclear progression. Players answered the following questions, each rated from 0 to 100:
+
+For the quantitative evaluation, seven test players completed a simplified raw NASA TLX questionnaire after playing the game. We chose this method because we were particularly interested in whether the game caused frustration, and whether that frustration came from challenge, controls, time pressure, or unclear progression. Players answered the following questions, each rated from 0 to 100.
+
+| Dimension | Question | Average Score |
+|---|---|---:|
+| Mental Demand | How mentally demanding was the task? | 35.0 |
+| Physical Demand | How physically demanding was the task? | 26.4 |
+| Temporal Demand | How rushed or time-pressured did you feel? | 31.4 |
+| Performance | How unsuccessful did you feel? 0 = perfect, 100 = failure | 70.0 |
+| Effort | How hard did you have to work to play successfully? | 30.7 |
+| Frustration | How irritated, discouraged, or frustrated did you feel? | 68.3 |
+
+The average raw TLX score across the seven players was 43.6 out of 100, calculated by averaging the six dimensions. This indicates a moderate perceived workload, which is appropriate for *The Abyss* because the game is intended to create tension through darkness, limited resources, and sonar-based exploration. A much lower score could suggest that the game lacked challenge, while a much higher score could indicate that the prototype was confusing or overwhelming.
+
+<p align="center">
+  <img src="project-docs/report_figures/nasa-tlx-results.png" alt="Average Raw NASA TLX Subscale Scores" width="500" />
+  <br>
+  <sub>Figure X: Average Raw NASA TLX Subscale Scores</sub>
+</p>
+
+The individual subscale results provide a more detailed explanation of the player experience. Mental demand, physical demand, temporal demand, and effort were relatively low to moderate, with average scores of 35.0, 26.4, 31.4, and 30.7 respectively. This suggests that the main source of difficulty was not the basic controls, physical interaction, time pressure, or overall effort required to play. In contrast, perceived performance and frustration were considerably higher, with average scores of 70.0 and 68.3. This indicates that players often felt they were not progressing successfully, even though the task itself was not especially difficult to control or understand.
+
+Player comments helped explain this pattern. Several players reported that the coin and shop system interrupted the exploration loop, as collecting coins and then stopping active gameplay to access the shop felt unclear and disruptive. Some players also lost motivation after a few minutes, despite the game not being set to a high difficulty level. This suggests that frustration was caused less by mechanical difficulty and more by unclear progression, limited feedback, and a mismatch between the shop design and players' expectations of a continuous gameplay flow.
 
 ---
 
@@ -821,7 +820,7 @@ Our Evaluation results confirmed that the core design intention, tension through
         </tr>
         <tr>
             <td>Jude Hsu</td>
-            <td align="left"></td>
+            <td align="left">Contributed to the initial UI and camera systems; implemented the start and win screens; contributed to report writing; drafted slides for the video report.</td>
         </tr>
     </table>
     <sub>Table 1: Team Contributions</sub>
