@@ -804,7 +804,7 @@ Our Evaluation results confirmed that the core design intention, tension through
         </tr>
         <tr>
             <td>Monal Gupta</td>
-            <td align="left"> Proposed the core Echo-Location mechanics. Designed the Resource Management System (power-ups, health, enemy). Created Enemy System with different behaviours for Crabs(wall bound), Jellyfishes (sinusoidal movement) and Piranhas (sonar pulse attracted). Built starting UI flow (Intro, Story and Controls screens). Integrated spatial audio/SFX and background music. </td>
+            <td align="left"> Proposed the core Echo-Location mechanics. Designed the Resource Management System (power-ups, health, enemy). Created Enemy System with different behaviours for Crabs (wall bound), Jellyfishes (sinusoidal movement) and Piranhas (sonar pulse attracted). Built starting UI flow (Intro, Story and Controls screens). Integrated spatial audio/SFX and background music. Prepared member slides for video. </td>
         </tr>
         <tr>
             <td>Ben Mounce</td>
