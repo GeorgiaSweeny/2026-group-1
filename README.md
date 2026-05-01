@@ -817,7 +817,7 @@ Our Evaluation results confirmed that the core design intention, tension through
         </tr>
         <tr>
             <td>Nick Jankov</td>
-            <td align="left"></td>
+            <td align="left"> Implemented hitbox system, implemented fixed physics engine and frame rate independent rendering, implemented sustainability and AI usage sections to report, co-reviewer for pull requests, assisted with game testing</td>
         </tr>
         <tr>
             <td>Jude Hsu</td>
