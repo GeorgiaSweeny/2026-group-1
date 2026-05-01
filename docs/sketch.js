@@ -12,6 +12,8 @@ DESCRIPTION:
 - contains fixed deltatime logic for update
   cycle (Nick)
 ========================================
+REFERENCES:
+- ideas for accumulator loop taken from https://gafferongames.com/post/fix_your_timestep/ 
 */
 
 //======================================
