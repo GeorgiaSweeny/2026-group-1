@@ -72,8 +72,7 @@ Click to watch or follow [link](https://youtu.be/CvOZ20M2DBA)
 # Project Report
 
 ## 1. Introduction
-- 5% ~250 words 
-- Describe your game, what is based on, what makes it novel? (what's the "twist"?)
+
 
 The Abyss is a tense underwater, Metroidvania-style game with a playful blocky aesthetic, focused on exploration and challenging resource management in near-complete darkness.
 
